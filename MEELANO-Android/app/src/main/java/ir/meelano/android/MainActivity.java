@@ -3819,7 +3819,7 @@ public class MainActivity extends Activity {
             case "products": loadProducts(productsCacheQuery == null ? "" : productsCacheQuery, productsCacheFilter == null ? "all" : productsCacheFilter); break;
             case "sales": loadTable("فروش و اسناد", "نمای مستقیم از جدول فروش", "sailfact", ""); break;
             case "checks": loadTable("چک‌ها و وصول", "نمای مستقیم از چک‌های دریافتی", "getchk", ""); break;
-            case "reports": loadReports(); break;
+            case "reports": if (MANAGER_EDITION) loadManagerReports(); else loadReports(); break;
             case "settings": renderSettings(); break;
             case "management": loadAccessManagement(); break;
             case "manager_more": renderManagerMorePage(); break;
@@ -11605,6 +11605,126 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(116), 1f); lp.setMargins(dp(4), 0, dp(4), 0); parent.addView(tile, lp);
     }
 
+    // =============================== Phase 4+: smart categorized manager reports ===============================
+    private void loadManagerReports() {
+        content.removeAllViews();
+        addHero("گزارش‌های مدیریت", "تحلیل دسته‌بندی‌شدهٔ فروش، خرید، چک‌ها، مشتریان و پرسنل — ارقام مستقیم از آتیران.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(this::queryDashboard, new DbCallback() {
+            @Override public void ok(String body) { try { renderManagerReports(new JSONObject(body)); } catch (Exception e) { showPageError("گزارش‌ها", e, () -> loadManagerReports()); } }
+            @Override public void fail(Exception e) { showPageError("گزارش‌ها", e, () -> loadManagerReports()); }
+        });
+    }
+
+    private void renderManagerReports(JSONObject dash) {
+        content.removeAllViews();
+        addHero("گزارش‌های مدیریت", "تحلیل دسته‌بندی‌شدهٔ فروش، خرید، چک‌ها، مشتریان و پرسنل — ارقام مستقیم از آتیران.");
+        JSONObject today = dash.optJSONObject("today");
+        if (today == null) today = new JSONObject();
+        addReportDailySection("فروش روز", "↗", navAccent("reports"), today.optJSONObject("sales"));
+        addReportDailySection("خرید روز", "⇩", navAccent("reports"), today.optJSONObject("purchases"));
+        addReportChecksSection("چک‌های دریافتی", "✓", SUCCESS, today.optJSONObject("getChecks"));
+        addReportChecksSection("چک‌های پرداختی", "⇄", WARNING, today.optJSONObject("putChecks"));
+        addReportCustomersSection(today);
+        addReportTeamSection(today.optJSONObject("teamBrief"));
+        addDeveloperCredit(content);
+    }
+
+    private void addReportLine(LinearLayout parent, String label, String value, int valueColor) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(2), dp(3), dp(2), dp(3));
+        TextView l = text(label, 10.8f, MUTED, Typeface.NORMAL);
+        l.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView v = text(value, 11.4f, valueColor, Typeface.BOLD);
+        row.addView(l); row.addView(v);
+        parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    private LinearLayout addReportCard(String title, String glyph, int accent) {
+        LinearLayout c = card();
+        c.setBackground(themedSectionBg("reports", 26));
+        c.addView(visitorSectionTitle(title, glyph, accent), new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12));
+        content.addView(c, lp);
+        return c;
+    }
+
+    private void addReportDailySection(String title, String glyph, int accent, JSONObject block) {
+        LinearLayout c = addReportCard(title, glyph, accent);
+        if (block == null) { c.addView(text("داده‌ای برای این بخش ثبت نشده است.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
+        c.addView(text("تاریخ: " + faDigits(block.optString("date", "—")), 10.2f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        JSONArray m = block.optJSONArray("metrics");
+        if (m != null) for (int i = 0; i < m.length(); i++) { JSONObject o = m.optJSONObject(i); if (o != null) addReportLine(c, o.optString("label", "—"), o.optString("value", "—"), TEXT); }
+        JSONArray items = block.optJSONArray("items");
+        if (items != null && items.length() > 0) {
+            TextView h = text("اقلام پرفروش روز:", 10.8f, accent, Typeface.BOLD);
+            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(8), 0, 0);
+            c.addView(h, hp);
+            for (int i = 0; i < Math.min(5, items.length()); i++) {
+                JSONObject o = items.optJSONObject(i); if (o == null) continue;
+                double amt = o.optDouble("total", o.optDouble("value", o.optDouble("amount", Double.NaN)));
+                String nm = o.optString("name", o.optString("label", "—"));
+                addReportLine(c, nm, Double.isNaN(amt) ? o.optString("value", "—") : money(Math.round(amt)), TEXT);
+            }
+        }
+    }
+
+    private void addReportChecksSection(String title, String glyph, int accent, JSONObject block) {
+        LinearLayout c = addReportCard(title, glyph, accent);
+        if (block == null) { c.addView(text("داده‌ای برای این بخش ثبت نشده است.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
+        c.addView(text("تاریخ: " + faDigits(block.optString("date", "—")), 10.2f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        JSONArray m = block.optJSONArray("metrics");
+        if (m != null) for (int i = 0; i < m.length(); i++) { JSONObject o = m.optJSONObject(i); if (o != null) addReportLine(c, o.optString("label", "—"), o.optString("value", "—"), TEXT); }
+        JSONArray bd = block.optJSONArray("breakdown");
+        if (bd != null && bd.length() > 0) {
+            TextView h = text("دسته‌بندی چک‌ها:", 10.8f, accent, Typeface.BOLD);
+            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(8), 0, 0);
+            c.addView(h, hp);
+            for (int i = 0; i < Math.min(6, bd.length()); i++) {
+                JSONObject o = bd.optJSONObject(i); if (o == null) continue;
+                double amt = o.optDouble("total", o.optDouble("value", o.optDouble("amount", Double.NaN)));
+                String cnt = formatNumber(o.optLong("count", 0));
+                String lbl = o.optString("label", o.optString("party", "دسته چک"));
+                addReportLine(c, lbl, cnt + " فقره • " + (Double.isNaN(amt) ? "—" : money(Math.round(amt))), TEXT);
+            }
+        }
+    }
+
+    private void addReportCustomersSection(JSONObject today) {
+        LinearLayout c = addReportCard("مشتریان و وصول", "♙", navAccent("customers"));
+        JSONArray debtors = today.optJSONArray("topDebtors");
+        JSONArray overdue = today.optJSONArray("overdueInvoices");
+        JSONArray inactive = today.optJSONArray("inactiveCustomers");
+        if ((debtors == null || debtors.length() == 0) && (overdue == null || overdue.length() == 0)) {
+            c.addView(text("مورد فوری وصول وجود ندارد. ✨", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        }
+        if (overdue != null && overdue.length() > 0) {
+            TextView h = text("فاکتورهای سررسیده:", 10.8f, DANGER, Typeface.BOLD);
+            c.addView(h, new LinearLayout.LayoutParams(-1, -2));
+            for (int i = 0; i < Math.min(5, overdue.length()); i++) { JSONObject o = overdue.optJSONObject(i); if (o == null) continue;
+                addReportLine(c, o.optString("party", "—") + " • " + o.optString("hint", ""), money(Math.round(o.optDouble("amount", 0))), DANGER); }
+        }
+        if (debtors != null && debtors.length() > 0) {
+            TextView h = text("بدهکاران اولویت‌دار:", 10.8f, WARNING, Typeface.BOLD);
+            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(8), 0, 0);
+            c.addView(h, hp);
+            for (int i = 0; i < Math.min(5, debtors.length()); i++) { JSONObject o = debtors.optJSONObject(i); if (o == null) continue;
+                addReportLine(c, o.optString("party", "—"), money(Math.round(o.optDouble("amount", 0))), WARNING); }
+        }
+        if (inactive != null) addReportLine(c, "مشتریان غیرفعال", formatNumber(inactive.length()), MUTED);
+    }
+
+    private void addReportTeamSection(JSONObject brief) {
+        LinearLayout c = addReportCard("پرسنل و همکاری", "♟", navAccent("personnel"));
+        if (brief == null) { c.addView(text("داده‌ای برای این بخش ثبت نشده است.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
+        addReportLine(c, "حاضر امروز", formatNumber(brief.optLong("attendanceToday", 0)) + " نفر", TEXT);
+        addReportLine(c, "مرخصی در انتظار تأیید", formatNumber(brief.optLong("pendingLeaves", 0)) + " مورد", brief.optLong("pendingLeaves", 0) > 0 ? tc(WARNING) : TEXT);
+        addReportLine(c, "پیام‌های سنجاق‌شده", formatNumber(brief.optLong("pinnedMessages", 0)), TEXT);
+        addReportLine(c, "اعضای اتاق گفتگو", formatNumber(brief.optLong("chatMembers", 0)) + " نفر", TEXT);
+    }
+
     // =============================== Phase 3: manager daily report (PDF + share) ===============================
     private void generateManagerReportPdf() {
         if (designPreview) { buildAndShareManagerReport(new JSONObject()); return; }
@@ -11718,7 +11838,7 @@ public class MainActivity extends Activity {
             LinearLayout c = approvalCard("مرخصی", pendingCount(leaves));
             for (int i = 0; i < leaves.length(); i++) { JSONObject r = leaves.optJSONObject(i); if (r == null || !"pending".equals(r.optString("status"))) continue;
                 long id = r.optLong("id");
-                addApprovalRow(c, r.optString("display") + " • " + r.optString("type"), r.optString("start") + " تا " + r.optString("end") + " • " + r.optString("hours"),
+                addApprovalRow(c, r.optString("display") + " • " + r.optString("type"), faDigits(r.optString("start")) + " تا " + faDigits(r.optString("end")) + " • " + faDigits(r.optString("hours")),
                         () -> decideLeave(id, true, this::loadManagerApprovals), () -> decideLeave(id, false, this::loadManagerApprovals)); }
         }
         if (adv != null && adv.length() > 0) {
@@ -11736,7 +11856,7 @@ public class MainActivity extends Activity {
         if (inc != null && inc.length() > 0) {
             LinearLayout c = approvalCard("تردد ناقص", inc.length());
             for (int i = 0; i < inc.length(); i++) { JSONObject r = inc.optJSONObject(i); long id = r.optLong("id");
-                addApprovalRow(c, r.optString("display") + " • " + r.optString("date"), "اولین ورود " + stringOr(r.optString("in"), "—"),
+                addApprovalRow(c, r.optString("display") + " • " + faDigits(r.optString("date")), "اولین ورود " + faDigits(stringOr(r.optString("in"), "—")),
                         () -> decideIncomplete(id, true), () -> decideIncomplete(id, false)); }
         }
         if (total == 0) addEmptyTo(content, "صف تأییدها خالی است — همه‌چیز رسیدگی شده. ✨");
