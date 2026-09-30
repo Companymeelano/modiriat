@@ -250,6 +250,9 @@ public class MainActivity extends Activity {
     private LinearLayout pageDock;
     private LinearLayout managerApprovalsRow;
     private TextView managerAppTitle;
+    private int managerReportRange = 0;
+    private int managerReportListCap = 5;
+    private String managerReportsCacheJson;
     private TextView status;
     private TextView subtitle;
     private TextView connectionIndicator;
@@ -1191,7 +1194,7 @@ public class MainActivity extends Activity {
                 .apply();
     }
 
-    private String defaultThemeId() { return MANAGER_EDITION ? "pearl_platinum" : STAFF_EDITION ? "amethyst_pearl" : STORE_EDITION ? "emerald_royal" : DEFAULT_THEME; }
+    private String defaultThemeId() { return MANAGER_EDITION ? (prefs != null && prefs.getBoolean("manager_default_espresso", false) ? "espresso_gold" : "pearl_platinum") : STAFF_EDITION ? "amethyst_pearl" : STORE_EDITION ? "emerald_royal" : DEFAULT_THEME; }
 
     private boolean isLightThemeId(String id) {
         String v = id == null ? "" : id.trim();
@@ -2394,6 +2397,14 @@ public class MainActivity extends Activity {
                 .create();
         addThemeOption(box, dialog, THEME_AUTO, "خودکار", "روشن در روز، تیره در شب — هماهنگ با گوشی", new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(5, 8, 18)});
         if (MANAGER_EDITION) addThemeOption(box, dialog, "espresso_gold", "اسپرسو طلایی", "تیرهٔ لوکس هم‌خانواده با آیکون مدیر", new int[]{Color.rgb(23, 16, 9), Color.rgb(200, 154, 63), Color.rgb(228, 197, 124)});
+        if (MANAGER_EDITION) {
+            android.widget.CheckBox esp = new android.widget.CheckBox(this);
+            esp.setText("اسپرسو طلایی به‌عنوان تم پیش‌فرض مدیر");
+            esp.setTextColor(tc(TEXT));
+            esp.setChecked(prefs.getBoolean("manager_default_espresso", false));
+            esp.setOnCheckedChangeListener((v, on) -> prefs.edit().putBoolean("manager_default_espresso", on).apply());
+            box.addView(esp, new LinearLayout.LayoutParams(-1, -2));
+        }
         if (STAFF_EDITION) addThemeOption(box, dialog, "amethyst_pearl", "آمتیست مرواریدی", "تم پیش‌فرض پرسنل • هم‌رنگ آیکون", new int[]{Color.rgb(248, 245, 252), Color.rgb(88, 44, 150), Color.rgb(176, 132, 52)});
         if (STORE_EDITION) addThemeOption(box, dialog, "emerald_royal", "زمرد سلطنتی", "تم پیش‌فرض فروشگاه • هم‌رنگ آیکون", new int[]{Color.rgb(243, 249, 245), Color.rgb(7, 104, 70), Color.rgb(184, 142, 58)});
         if (VISITOR_EDITION && !STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "azure_diamond", "الماس آبی", "تم پیش‌فرض " + editionTitle(), new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(24, 190, 255)});
@@ -11611,24 +11622,130 @@ public class MainActivity extends Activity {
         content.removeAllViews();
         addHero("گزارش‌های مدیریت", "تحلیل دسته‌بندی‌شدهٔ فروش، خرید، چک‌ها، مشتریان و پرسنل — ارقام مستقیم از آتیران.");
         content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
-        runDb(this::queryDashboard, new DbCallback() {
-            @Override public void ok(String body) { try { renderManagerReports(new JSONObject(body)); } catch (Exception e) { showPageError("گزارش‌ها", e, () -> loadManagerReports()); } }
-            @Override public void fail(Exception e) { showPageError("گزارش‌ها", e, () -> loadManagerReports()); }
+        runDb(this::queryManagerReports, new DbCallback() {
+            @Override public void ok(String body) { try { managerReportsCacheJson = body; prefs.edit().putString("cache_manager_reports", body).apply(); renderManagerReports(new JSONObject(body)); } catch (Exception e) { showPageError("گزارش‌ها", e, () -> loadManagerReports()); } }
+            @Override public void fail(Exception e) {
+                String cached = prefs.getString("cache_manager_reports", "");
+                if (cached != null && !cached.trim().isEmpty()) { managerReportsCacheJson = cached; try { renderManagerReports(new JSONObject(cached)); addCacheBanner("گزارش‌ها آفلاین", "اتصال برقرار نشد؛ آخرین گزارش ذخیره‌شده نمایش داده می‌شود."); return; } catch (Exception ignored) { } }
+                showPageError("گزارش‌ها", e, () -> loadManagerReports());
+            }
         });
     }
 
     private void renderManagerReports(JSONObject dash) {
         content.removeAllViews();
+        managerApprovalsRow = null;
         addHero("گزارش‌های مدیریت", "تحلیل دسته‌بندی‌شدهٔ فروش، خرید، چک‌ها، مشتریان و پرسنل — ارقام مستقیم از آتیران.");
-        JSONObject today = dash.optJSONObject("today");
-        if (today == null) today = new JSONObject();
-        addReportDailySection("فروش روز", "↗", navAccent("reports"), today.optJSONObject("sales"));
-        addReportDailySection("خرید روز", "⇩", navAccent("reports"), today.optJSONObject("purchases"));
-        addReportChecksSection("چک‌های دریافتی", "✓", SUCCESS, today.optJSONObject("getChecks"));
-        addReportChecksSection("چک‌های پرداختی", "⇄", WARNING, today.optJSONObject("putChecks"));
-        addReportCustomersSection(today);
-        addReportTeamSection(today.optJSONObject("teamBrief"));
+        int range = dash.optInt("range", 0);
+        LinearLayout filters = new LinearLayout(this);
+        filters.setOrientation(LinearLayout.HORIZONTAL);
+        String[] labels = {"امروز", "۷ روز اخیر", "۳۰ روز اخیر"};
+        for (int i = 0; i < 3; i++) {
+            final int rr = i;
+            Button b = i == range ? primaryButton(labels[i]) : secondaryButton(labels[i]);
+            b.setOnClickListener(v -> { managerReportRange = rr; loadManagerReports(); });
+            filters.addView(b, weightedButtonLp());
+        }
+        LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
+        content.addView(filters, fp);
+        JSONObject sales = dash.optJSONObject("sales");
+        JSONObject purchases = dash.optJSONObject("purchases");
+        addReportRangeSection("فروش", "↗", navAccent("reports"), sales, range);
+        addReportRangeSection("خرید", "⇩", navAccent("reports"), purchases, range);
+        addReportMarginCard(sales, purchases);
+        JSONArray trend = dash.optJSONArray("trend");
+        if (trend != null && trend.length() > 0) {
+            LinearLayout c = addReportCard("روند فروش ۷ روز اخیر", "↯", navAccent("reports"));
+            ManagerTrendChartView chart = new ManagerTrendChartView(this, trend);
+            c.addView(chart, new LinearLayout.LayoutParams(-1, dp(150)));
+        }
+        addReportCheckBucketsCard(dash.optJSONObject("checkBuckets"));
+        addReportCustomersSection(dash);
+        addReportTeamSection(dash.optJSONObject("teamBrief"));
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        Button pdf = primaryButton("PDF گزارش");
+        pdf.setOnClickListener(v -> generateManagerReportPdfFromReports(dash));
+        Button copy = secondaryButton("کپی خلاصه");
+        copy.setOnClickListener(v -> copyManagerReportsSummary(dash));
+        actions.addView(pdf, weightedButtonLp());
+        actions.addView(copy, weightedButtonLp());
+        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2); ap.setMargins(0, 0, 0, dp(12));
+        content.addView(actions, ap);
         addDeveloperCredit(content);
+    }
+
+    private void addReportRangeSection(String title, String glyph, int accent, JSONObject block, int range) {
+        LinearLayout c = addReportCard(title + (range == 0 ? " روز" : range == 1 ? " ۷ روز اخیر" : " ۳۰ روز اخیر"), glyph, accent);
+        if (block == null || block.optDouble("total", 0) <= 0 && block.optLong("docs", 0) <= 0) { c.addView(text("داده‌ای برای این بازه ثبت نشده است.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
+        c.addView(text("تا تاریخ: " + faDigits(block.optString("date", "—")), 10.2f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        addReportLine(c, "جمع", money(Math.round(block.optDouble("total", 0))), TEXT);
+        addReportLine(c, "تعداد اسناد", formatNumber(block.optLong("docs", 0)), TEXT);
+        addReportLine(c, "طرف‌حساب", formatNumber(block.optLong("parties", 0)), TEXT);
+        addReportLine(c, range == 0 ? "دریافتی" : "پرداختی/دریافتی", money(Math.round(block.optDouble("paid", 0))), TEXT);
+    }
+
+    private void addReportMarginCard(JSONObject sales, JSONObject purchases) {
+        double sv = sales == null ? 0 : sales.optDouble("total", 0);
+        double bv = purchases == null ? 0 : purchases.optDouble("total", 0);
+        if (sv <= 0 && bv <= 0) return;
+        LinearLayout c = addReportCard("تحلیل سود بازه", "◎", sv - bv >= 0 ? SUCCESS : DANGER);
+        double margin = sv - bv;
+        addReportLine(c, "فروش بازه", money(Math.round(sv)), TEXT);
+        addReportLine(c, "خرید بازه", money(Math.round(bv)), TEXT);
+        addReportLine(c, "حاشیه ناخالص", money(Math.round(margin)), margin >= 0 ? tc(SUCCESS) : tc(DANGER));
+        c.addView(text(margin >= 0 ? "فروش از خرید جلوتر است — وضعیت سالم." : "خرید از فروش جلوتر است — پرداخت‌ها را پایش کنید.", 10.4f, margin >= 0 ? tc(SUCCESS) : tc(WARNING), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    private void addReportCheckBucketsCard(JSONObject b) {
+        if (b == null || (b.optJSONObject("over") == null && b.optJSONObject("soon") == null && b.optJSONObject("ok") == null)) return;
+        LinearLayout c = addReportCard("سررسید چک‌های دریافتی", "✓", navAccent("reports"));
+        JSONObject over = b.optJSONObject("over"), soon = b.optJSONObject("soon"), ok = b.optJSONObject("ok");
+        if (over != null) addReportLine(c, "معوق", formatNumber(over.optLong("count", 0)) + " فقره • " + money(Math.round(over.optDouble("total", 0))), tc(DANGER));
+        if (soon != null) addReportLine(c, "سررسید ≤ ۷ روز", formatNumber(soon.optLong("count", 0)) + " فقره • " + money(Math.round(soon.optDouble("total", 0))), tc(WARNING));
+        if (ok != null) addReportLine(c, "سررسید نشده", formatNumber(ok.optLong("count", 0)) + " فقره • " + money(Math.round(ok.optDouble("total", 0))), tc(SUCCESS));
+    }
+
+    private void generateManagerReportPdfFromReports(JSONObject dash) {
+        try {
+            MeelanoDailyReportPdf.Data d = new MeelanoDailyReportPdf.Data();
+            d.title = "گزارش مدیریت";
+            d.visitor = session == null ? "" : session.userName;
+            d.date = faDigits(todayDateText());
+            d.developer = DEVELOPER_NAME;
+            d.appVersion = appVersionName();
+            d.managerBrand = true;
+            int range = dash.optInt("range", 0);
+            JSONObject sales = dash.optJSONObject("sales"), purchases = dash.optJSONObject("purchases");
+            if (sales != null) d.summary.add(new String[]{"فروش بازه", money(Math.round(sales.optDouble("total", 0)))});
+            if (purchases != null && d.summary.size() < 4) d.summary.add(new String[]{"خرید بازه", money(Math.round(purchases.optDouble("total", 0)))});
+            JSONArray od = dash.optJSONArray("overdueInvoices");
+            if (od != null && od.length() > 0 && d.summary.size() < 4) d.summary.add(new String[]{"فاکتور سررسیده", formatNumber(od.length())});
+            JSONArray td = dash.optJSONArray("topDebtors");
+            if (td != null && td.length() > 0 && d.summary.size() < 4) d.summary.add(new String[]{"بدهکار فعال", formatNumber(td.length())});
+            d.note = "بازه: " + (range == 0 ? "امروز" : range == 1 ? "۷ روز اخیر" : "۳۰ روز اخیر") + " — ارقام از پایگاه آتیران.";
+            String fileName = "Darakhshan-Manager-Report-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(new java.util.Date()) + ".pdf";
+            File out = new File(MeelanoShareProvider.shareDir(this), fileName);
+            MeelanoDailyReportPdf.write(this, d, MEELANO_REGULAR, MEELANO_BOLD, out);
+            MeelanoShareProvider.share(this, out, "application/pdf", "گزارش مدیریت " + d.visitor);
+        } catch (Exception ex) { showNotice("ساخت گزارش PDF ممکن نشد: " + shortError(ex), true); }
+    }
+
+    private void copyManagerReportsSummary(JSONObject dash) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("گزارش مدیریت • ").append(faDigits(todayDateText())).append('\n');
+        JSONObject sales = dash.optJSONObject("sales"), purchases = dash.optJSONObject("purchases");
+        if (sales != null) sb.append("فروش: ").append(money(Math.round(sales.optDouble("total", 0)))).append(" (").append(formatNumber(sales.optLong("docs", 0))).append(" سند)\n");
+        if (purchases != null) sb.append("خرید: ").append(money(Math.round(purchases.optDouble("total", 0)))).append('\n');
+        JSONObject b = dash.optJSONObject("checkBuckets");
+        if (b != null && b.optJSONObject("over") != null) sb.append("چک معوق: ").append(formatNumber(b.optJSONObject("over").optLong("count", 0))).append(" فقره • ").append(money(Math.round(b.optJSONObject("over").optDouble("total", 0)))).append('\n');
+        JSONArray od = dash.optJSONArray("overdueInvoices");
+        if (od != null) sb.append("فاکتور سررسیده: ").append(formatNumber(od.length())).append('\n');
+        try {
+            android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("گزارش مدیریت", sb.toString()));
+            showNotice("خلاصه گزارش کپی شد.", false);
+        } catch (Exception ex) { showNotice("کپی ممکن نشد.", true); }
     }
 
     private void addReportLine(LinearLayout parent, String label, String value, int valueColor) {
@@ -11652,67 +11769,34 @@ public class MainActivity extends Activity {
         return c;
     }
 
-    private void addReportDailySection(String title, String glyph, int accent, JSONObject block) {
-        LinearLayout c = addReportCard(title, glyph, accent);
-        if (block == null) { c.addView(text("داده‌ای برای این بخش ثبت نشده است.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
-        c.addView(text("تاریخ: " + faDigits(block.optString("date", "—")), 10.2f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        JSONArray m = block.optJSONArray("metrics");
-        if (m != null) for (int i = 0; i < m.length(); i++) { JSONObject o = m.optJSONObject(i); if (o != null) addReportLine(c, o.optString("label", "—"), o.optString("value", "—"), TEXT); }
-        JSONArray items = block.optJSONArray("items");
-        if (items != null && items.length() > 0) {
-            TextView h = text("اقلام پرفروش روز:", 10.8f, accent, Typeface.BOLD);
-            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(8), 0, 0);
-            c.addView(h, hp);
-            for (int i = 0; i < Math.min(5, items.length()); i++) {
-                JSONObject o = items.optJSONObject(i); if (o == null) continue;
-                double amt = o.optDouble("total", o.optDouble("value", o.optDouble("amount", Double.NaN)));
-                String nm = o.optString("name", o.optString("label", "—"));
-                addReportLine(c, nm, Double.isNaN(amt) ? o.optString("value", "—") : money(Math.round(amt)), TEXT);
-            }
-        }
-    }
-
-    private void addReportChecksSection(String title, String glyph, int accent, JSONObject block) {
-        LinearLayout c = addReportCard(title, glyph, accent);
-        if (block == null) { c.addView(text("داده‌ای برای این بخش ثبت نشده است.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
-        c.addView(text("تاریخ: " + faDigits(block.optString("date", "—")), 10.2f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        JSONArray m = block.optJSONArray("metrics");
-        if (m != null) for (int i = 0; i < m.length(); i++) { JSONObject o = m.optJSONObject(i); if (o != null) addReportLine(c, o.optString("label", "—"), o.optString("value", "—"), TEXT); }
-        JSONArray bd = block.optJSONArray("breakdown");
-        if (bd != null && bd.length() > 0) {
-            TextView h = text("دسته‌بندی چک‌ها:", 10.8f, accent, Typeface.BOLD);
-            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(8), 0, 0);
-            c.addView(h, hp);
-            for (int i = 0; i < Math.min(6, bd.length()); i++) {
-                JSONObject o = bd.optJSONObject(i); if (o == null) continue;
-                double amt = o.optDouble("total", o.optDouble("value", o.optDouble("amount", Double.NaN)));
-                String cnt = formatNumber(o.optLong("count", 0));
-                String lbl = o.optString("label", o.optString("party", "دسته چک"));
-                addReportLine(c, lbl, cnt + " فقره • " + (Double.isNaN(amt) ? "—" : money(Math.round(amt))), TEXT);
-            }
-        }
-    }
-
-    private void addReportCustomersSection(JSONObject today) {
+    private void addReportCustomersSection(JSONObject dash) {
         LinearLayout c = addReportCard("مشتریان و وصول", "♙", navAccent("customers"));
-        JSONArray debtors = today.optJSONArray("topDebtors");
-        JSONArray overdue = today.optJSONArray("overdueInvoices");
-        JSONArray inactive = today.optJSONArray("inactiveCustomers");
+        JSONArray debtors = dash.optJSONArray("topDebtors");
+        JSONArray overdue = dash.optJSONArray("overdueInvoices");
+        JSONArray inactive = dash.optJSONArray("inactiveCustomers");
+        int cap = managerReportListCap;
         if ((debtors == null || debtors.length() == 0) && (overdue == null || overdue.length() == 0)) {
             c.addView(text("مورد فوری وصول وجود ندارد. ✨", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         }
         if (overdue != null && overdue.length() > 0) {
-            TextView h = text("فاکتورهای سررسیده:", 10.8f, DANGER, Typeface.BOLD);
+            TextView h = text("فاکتورهای سررسیده (" + formatNumber(overdue.length()) + "):", 10.8f, DANGER, Typeface.BOLD);
             c.addView(h, new LinearLayout.LayoutParams(-1, -2));
-            for (int i = 0; i < Math.min(5, overdue.length()); i++) { JSONObject o = overdue.optJSONObject(i); if (o == null) continue;
+            for (int i = 0; i < Math.min(cap, overdue.length()); i++) { JSONObject o = overdue.optJSONObject(i); if (o == null) continue;
                 addReportLine(c, o.optString("party", "—") + " • " + o.optString("hint", ""), money(Math.round(o.optDouble("amount", 0))), DANGER); }
         }
         if (debtors != null && debtors.length() > 0) {
-            TextView h = text("بدهکاران اولویت‌دار:", 10.8f, WARNING, Typeface.BOLD);
+            TextView h = text("بدهکاران اولویت‌دار (" + formatNumber(debtors.length()) + "):", 10.8f, WARNING, Typeface.BOLD);
             LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(8), 0, 0);
             c.addView(h, hp);
-            for (int i = 0; i < Math.min(5, debtors.length()); i++) { JSONObject o = debtors.optJSONObject(i); if (o == null) continue;
+            for (int i = 0; i < Math.min(cap, debtors.length()); i++) { JSONObject o = debtors.optJSONObject(i); if (o == null) continue;
                 addReportLine(c, o.optString("party", "—"), money(Math.round(o.optDouble("amount", 0))), WARNING); }
+        }
+        boolean more = (overdue != null && overdue.length() > cap) || (debtors != null && debtors.length() > cap);
+        if (more) {
+            Button mb = secondaryButton("نمایش موارد بیشتر");
+            mb.setOnClickListener(v -> { managerReportListCap += 5; if (managerReportsCacheJson != null) { try { renderManagerReports(new JSONObject(managerReportsCacheJson)); } catch (Exception ignored) { loadManagerReports(); } } else loadManagerReports(); });
+            LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(-1, dp(46)); mp.setMargins(0, dp(10), 0, 0);
+            c.addView(mb, mp);
         }
         if (inactive != null) addReportLine(c, "مشتریان غیرفعال", formatNumber(inactive.length()), MUTED);
     }
@@ -11724,6 +11808,132 @@ public class MainActivity extends Activity {
         addReportLine(c, "مرخصی در انتظار تأیید", formatNumber(brief.optLong("pendingLeaves", 0)) + " مورد", brief.optLong("pendingLeaves", 0) > 0 ? tc(WARNING) : TEXT);
         addReportLine(c, "پیام‌های سنجاق‌شده", formatNumber(brief.optLong("pinnedMessages", 0)), TEXT);
         addReportLine(c, "اعضای اتاق گفتگو", formatNumber(brief.optLong("chatMembers", 0)) + " نفر", TEXT);
+    }
+
+    // =============================== Phase 4++: manager reports data (range, trend, check buckets) ===============================
+    private String queryManagerReports() throws Exception {
+        try (Connection c = openConnection()) {
+            JSONObject out = new JSONObject();
+            int range = managerReportRange;
+            out.put("range", range);
+            out.put("sales", queryRangeBlock(c, true, range));
+            out.put("purchases", queryRangeBlock(c, false, range));
+            out.put("trend", querySalesTrend(c));
+            out.put("checkBuckets", queryCheckBuckets(c));
+            out.put("topDebtors", queryTopDebtors(c));
+            out.put("overdueInvoices", queryOverdueInvoices(c));
+            out.put("teamBrief", queryCollaborationBrief(c));
+            return out.toString();
+        }
+    }
+
+    private JSONObject queryRangeBlock(Connection c, boolean sales, int range) throws Exception {
+        JSONObject o = new JSONObject();
+        String table = sales ? "sailfact" : "buyfact";
+        Set<String> cols = columns(c, table);
+        String dateCol = sales ? resolve(cols, "date") : resolve(cols, "DATE", "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = sales ? resolve(cols, "shfacfo") : resolve(cols, "shfackh");
+        String partyCol = resolve(cols, "shmo");
+        String paidCol = sales ? resolve(cols, "MabDaryaftFactor", "Daryaft", "received") : resolve(cols, "MablaghPardakht", "Pardakht", "paid");
+        String latest = dateCol == null ? null : latestDate(c, table, dateCol);
+        o.put("date", latest == null || latest.isEmpty() ? "—" : latest);
+        double total = 0, paid = 0; long docs = 0, parties = 0;
+        if (dateCol != null && amountCol != null && latest != null && !latest.isEmpty()) {
+            String q = "N'" + latest.replace("'", "''") + "'";
+            String dExpr = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
+            String cond;
+            if (range == 0) cond = "(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=" + q + " OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(" + q + ",10))";
+            else if (range == 1) cond = dExpr + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
+            else cond = dExpr + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
+            String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+            String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+            String source = dedupeFactorSource(table, cols, numberCol, "h", innerWhere);
+            String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
+                    (partyCol == null ? "CAST(0 AS bigint)" : "COUNT(DISTINCT h.[" + partyCol + "])") + ", " +
+                    (paidCol == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(SUM(" + sqlNumberExpr("h", paidCol, "decimal(19,2)") + "),0)") + " FROM " + source;
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                try (ResultSet r = ps.executeQuery()) { if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); } }
+            }
+        }
+        o.put("total", total); o.put("docs", docs); o.put("parties", parties); o.put("paid", paid);
+        return o;
+    }
+
+    private JSONArray querySalesTrend(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        if (dateCol == null || amountCol == null) return arr;
+        String dExpr = "TRY_CONVERT(nvarchar(10),TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),h.[" + dateCol + "])),23)";
+        String innerWhere = "WHERE x.[" + dateCol + "] IS NOT NULL" + activeAnd(cols, "x");
+        String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
+        String sql = "SELECT TOP (7) " + dExpr + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + dExpr + " ORDER BY 1 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", stringOr(r.getString(1), "—")); o.put("value", r.getDouble(2)); arr.put(o); } }
+        }
+        return arr;
+    }
+
+    private JSONObject queryCheckBuckets(Connection c) throws Exception {
+        JSONObject o = new JSONObject();
+        Set<String> cols = columns(c, "getchk");
+        String amount = resolve(cols, "getchkmab", "mablagh", "amount");
+        String dateCol = resolve(cols, "sarresid", "getchkdate", "chkdate", "date", "t_date");
+        if (amount == null || dateCol == null) return o;
+        String d = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + dateCol + "]))";
+        String bucket = "CASE WHEN " + d + "<CONVERT(date,GETDATE()) THEN N'over' WHEN " + d + "<=DATEADD(day,7,CONVERT(date,GETDATE())) THEN N'soon' ELSE N'ok' END";
+        String sql = "SELECT " + bucket + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[getchk] WHERE " + d + " IS NOT NULL GROUP BY " + bucket;
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) {
+                while (r.next()) {
+                    JSONObject b = new JSONObject(); b.put("count", r.getLong(2)); b.put("total", r.getDouble(3));
+                    String k = stringOr(r.getString(1), "ok");
+                    o.put("over".equals(k) ? "over" : "soon".equals(k) ? "soon" : "ok", b);
+                }
+            }
+        }
+        return o;
+    }
+
+    /** Gold bar chart of the last 7 sales days (right = most recent). */
+    private class ManagerTrendChartView extends View {
+        private final JSONArray data;
+        private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        ManagerTrendChartView(Context ctx, JSONArray data) { super(ctx); this.data = data; }
+        @Override protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            int w = getWidth(), h = getHeight();
+            if (w <= 0 || h <= 0 || data == null || data.length() == 0) return;
+            double max = 1;
+            for (int i = 0; i < data.length(); i++) max = Math.max(max, data.optJSONObject(i) == null ? 0 : data.optJSONObject(i).optDouble("value", 0));
+            int n = data.length();
+            float bw = (float) w / n;
+            for (int i = 0; i < n; i++) {
+                JSONObject o = data.optJSONObject(i); if (o == null) continue;
+                double v = o.optDouble("value", 0);
+                float bh = (float) (h * 0.58 * v / max);
+                float x = w - bw * (i + 1) + bw * 0.18f;
+                float barW = bw * 0.64f;
+                p.setStyle(Paint.Style.FILL);
+                p.setColor(i == 0 ? GOLD : alpha(GOLD, 150));
+                canvas.drawRoundRect(new android.graphics.RectF(x, h * 0.72f - bh, x + barW, h * 0.72f), dp(4), dp(4), p);
+                p.setColor(tc(MUTED));
+                p.setTextSize(dp(8.4f));
+                p.setTextAlign(Paint.Align.CENTER);
+                String lbl = o.optString("label", "");
+                if (lbl.length() > 5) lbl = lbl.substring(lbl.length() - 5);
+                canvas.drawText(faDigits(lbl), x + barW / 2, h * 0.86f, p);
+                if (bw > dp(52)) {
+                    p.setColor(tc(TEXT));
+                    p.setTextSize(dp(8f));
+                    canvas.drawText(formatNumber(Math.round(v / 1000000.0)) + " م", x + barW / 2, h * 0.72f - bh - dp(4), p);
+                }
+            }
+        }
     }
 
     // =============================== Phase 3: manager daily report (PDF + share) ===============================
