@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>پخش درخشان مدیریت — پروتوتایپ رابط کاربری</title>
+<style>
+@font-face{font-family:Vazir;src:url(fonts/Vazirmatn-Regular.ttf) format('truetype');font-weight:400}
+@font-face{font-family:Vazir;src:url(fonts/Vazirmatn-Bold.ttf) format('truetype');font-weight:700}
+
+:root{
+  /* پالت «اونیکس طلایی» — پیش‌فرض تیره (مشتق از تم onyx_gold برنامه) */
+  --bg:#08090A; --surface:#121417; --surface2:#1A1D22; --line:rgba(255,255,255,.09);
+  --text:#F3F1EC; --muted:#9AA0A8; --brand:#CC9941; --brand2:#5BC597;
+  --danger:#E2635C; --warn:#E0A33C; --ok:#5BC597; --info:#5AA9E6;
+  --card:rgba(255,255,255,.04); --shadow:0 10px 30px rgba(0,0,0,.45);
+}
+body.light{
+  /* پالت «پلاتین سرمه‌ای» — پیش‌فرض روشن (مشتق از تم pearl_platinum برنامه) */
+  --bg:#F5F7FB; --surface:#FFFFFF; --surface2:#EEF2F8; --line:rgba(15,25,45,.10);
+  --text:#12171F; --muted:#5C6575; --brand:#1F3A68; --brand2:#A87A2C;
+  --danger:#B3382F; --warn:#9A6A12; --ok:#1E7A55; --info:#1B5FA8;
+  --card:rgba(15,25,45,.03); --shadow:0 8px 24px rgba(20,30,55,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Vazir,system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 16px 60px;
+  transition:background .25s,color .25s}
+
+/* ---- نوار ابزار بالای صفحه (خارج از قاب گوشی) ---- */
+.topbar{width:100%;max-width:960px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;justify-content:space-between}
+.topbar h1{font-size:18px;font-weight:700;letter-spacing:.2px}
+.topbar p{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.9}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.btn{height:40px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  color:var(--text);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:.18s}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#0B0B0C}
+body.light .btn.primary{color:#fff}
+
+.stage{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+
+/* ---- قاب گوشی ---- */
+.phone{width:390px;height:844px;border-radius:44px;padding:12px;background:linear-gradient(160deg,#23262b,#0d0f12);
+  box-shadow:0 30px 70px rgba(0,0,0,.55);flex:none}
+.screen{position:relative;width:100%;height:100%;border-radius:33px;overflow:hidden;background:var(--bg);
+  display:flex;flex-direction:column}
+.notch{position:absolute;top:10px;right:50%;transform:translateX(50%);width:110px;height:26px;border-radius:14px;background:#000;z-index:40}
+.status{height:44px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;padding:0 22px 6px;
+  font-size:11px;font-weight:700;color:var(--muted)}
+
+/* ---- هدر ۶۴dp ---- */
+.hdr{height:64px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;
+  background:linear-gradient(180deg,var(--surface2),transparent);border-bottom:1px solid var(--line)}
+.hdr .ttl{font-size:16px;font-weight:700}
+.hdr .sub{font-size:10.5px;color:var(--muted);margin-top:2px}
+.hdr .sp{flex:1}
+.icobtn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;font-size:15px;cursor:pointer;position:relative}
+.icobtn.gold{color:var(--brand)}
+.dot{position:absolute;top:6px;left:6px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--surface)}
+
+/* ---- بدنه ---- */
+.body{flex:1;overflow-y:auto;padding:14px 14px 8px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.page{display:none;animation:fade .22s ease}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.card.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 22%,var(--surface)),var(--surface));
+  border-color:color-mix(in srgb,var(--brand) 45%,transparent)}
+.h{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.h .badge{margin-inline-start:auto;font-size:10.5px;font-weight:700;color:var(--muted)}
+.mut{font-size:11.5px;color:var(--muted);line-height:2}
+.money{font-weight:700;font-variant-numeric:tabular-nums}
+
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi .l{font-size:11px;color:var(--muted)}
+.kpi .v{font-size:18px;font-weight:700;margin-top:6px}
+.kpi .d{font-size:10.5px;margin-top:4px}
+.up{color:var(--ok)}.down{color:var(--danger)}.flat{color:var(--muted)}
+
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.av{width:36px;height:36px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:700;
+  background:color-mix(in srgb,var(--brand) 22%,transparent);color:var(--brand)}
+.grow{flex:1;min-width:0}
+.t1{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2{font-size:11px;color:var(--muted);margin-top:3px}
+
+.btn5{height:40px;border-radius:12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+  padding:0 14px;border:1px solid transparent;transition:.16s;white-space:nowrap}
+.b-primary{background:var(--brand);color:#0B0B0C}
+body.light .b-primary{color:#fff}
+.b-ghost{background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand)}
+.b-line{background:transparent;border-color:var(--line);color:var(--text)}
+.b-danger{background:transparent;color:var(--danger)}
+.btn5:active{transform:scale(.97)}
+.btnrow{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
+  font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#0B0B0C}
+body.light .chip.on{color:#fff}
+
+.tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px}
+.t-warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.t-ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.t-dng{background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger)}
+.t-inf{background:color-mix(in srgb,var(--info) 18%,transparent);color:var(--info)}
+
+.bar{height:6px;border-radius:999px;background:var(--surface2);overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;border-radius:999px;background:var(--brand)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;transition:.16s}
+.tile:hover{border-color:var(--brand)}
+.tile .g{font-size:17px;color:var(--brand)}
+.tile .n{font-size:12.5px;font-weight:700;margin-top:6px}
+.tile .s{font-size:10.5px;color:var(--muted);margin-top:3px}
+
+/* ---- نمودارها ---- */
+.chart{display:flex;align-items:flex-end;gap:7px;height:120px;padding-top:10px}
+.chart .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.chart .c i{width:100%;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--brand),color-mix(in srgb,var(--brand) 35%,transparent))}
+.chart .c.gold i{background:linear-gradient(180deg,var(--brand2),color-mix(in srgb,var(--brand2) 30%,transparent))}
+.chart .c span{font-size:9.5px;color:var(--muted)}
+
+/* ---- داک پایین ---- */
+.dock{flex:none;height:74px;display:flex;padding:8px 6px 14px;border-top:1px solid var(--line);
+  background:linear-gradient(0deg,var(--surface2),transparent)}
+.dock a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  font-size:10px;color:var(--muted);cursor:pointer;position:relative;text-decoration:none}
+.dock a .g{font-size:18px;line-height:1}
+.dock a.on{color:var(--brand);font-weight:700}
+.dock a.on::before{content:"";position:absolute;top:-8px;width:26px;height:3px;border-radius:99px;background:var(--brand)}
+.dock a .n{position:absolute;top:6px;right:calc(50% - 20px);min-width:16px;height:16px;border-radius:99px;
+  background:var(--danger);color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+
+/* ---- حالت متن درشت (دسترس‌پذیری) ---- */
+body.bigfont .mut{font-size:13px}
+body.bigfont .t1{font-size:14.5px}
+body.bigfont .t2{font-size:12.5px}
+body.bigfont .h{font-size:16.5px}
+body.bigfont .kpi .l{font-size:12.5px}
+body.bigfont .kpi .v{font-size:20px}
+body.bigfont .kpi .d{font-size:12px}
+body.bigfont .btn5{font-size:13.5px;height:44px}
+body.bigfont .chip{font-size:13px;height:36px}
+body.bigfont .tile .n{font-size:14px}
+body.bigfont .tile .s{font-size:12px}
+body.bigfont .dock a{font-size:11.5px}
+body.bigfont .hdr .ttl{font-size:17.5px}
+
+.legend{max-width:430px;font-size:11.5px;color:var(--muted);line-height:2.2}
+.legend b{color:var(--text)}
+.legend ul{padding-inline-start:18px;margin-top:6px}
+.note{max-width:960px;font-size:11.5px;color:var(--muted);text-align:center;line-height:2.1;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>پخش درخشان مدیریت — پروتوتایپ رابط کاربری</h1>
+    <p>طرح پیشنهادی نسخهٔ پنجم اندروید (`manager` flavor) • RTL • فونت Vazirmatn • پالت مشتق از تم‌های موجود برنامه</p>
+  </div>
+  <div class="tools">
+    <button class="btn primary" onclick="toggleTheme()" id="themeBtn">پالت روشن (پلاتین سرمه‌ای)</button>
+    <button class="btn" onclick="setFont(false)">فونت عادی</button>
+    <button class="btn" onclick="setFont(true)">فونت درشت</button>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- ================= گوشی ================= -->
+  <div class="phone"><div class="screen">
+    <div class="notch"></div>
+    <div class="status"><span>۹:۴۱</span><span>پخش درخشان مدیریت • آتیران</span><span>🔋 ۸۴٪</span></div>
+
+    <div class="hdr">
+      <div class="av" style="background:color-mix(in srgb,var(--brand) 30%,transparent)">م</div>
+      <div>
+        <div class="ttl" id="hTitle">خانهٔ مدیریت</div>
+        <div class="sub" id="hSub">سه‌شنبه ۸ مهر ۱۴۰۵ • مدیرکل</div>
+      </div>
+      <div class="sp"></div>
+      <div class="icobtn" title="بروزرسانی">⟳</div>
+      <div class="icobtn gold" title="هشدارها">🔔<i class="dot"></i></div>
+    </div>
+
+    <div class="body">
+
+      <!-- ---------- خانه ---------- -->
+      <section class="page on" id="p-home">
+        <div class="card hero">
+          <div class="h">صبح‌بخیر مدیر 👋 <span class="badge">آخرین بروزرسانی ۲ دقیقه پیش</span></div>
+          <div class="mut" style="margin-top:6px">امروز ۹ ویزیت در جریان است، ۳ درخواست منتظر تأیید شماست و وصولی امروز ۱۲٪ از دیروز جلوتر است.</div>
+          <div class="btnrow">
+            <button class="btn5 b-ghost" onclick="go('approvals')">۳ کار منتظر تأیید</button>
+            <button class="btn5 b-primary" onclick="go('reports')">گزارش امروز</button>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="l">فروش امروز</div><div class="v">۱٬۲۸۴٬۵۰۰٬۰۰۰</div><div class="d up">▲ ۱۲٪ نسبت به دیروز</div></div>
+          <div class="kpi"><div class="l">وصولی امروز</div><div class="v">۸۶۲٬۰۰۰٬۰۰۰</div><div class="d up">▲ ۸٪</div></div>
+          <div class="kpi"><div class="l">ماندهٔ بدهکار</div><div class="v">۹٬۴۳۰٬۰۰۰٬۰۰۰</div><div class="d down">▲ ۳٫۲٪ ریسک</div></div>
+          <div class="kpi"><div class="l">پیش‌فاکتور باز</div><div class="v">۱۷</div><div class="d flat">۴ مورد در انتظار تأیید</div></div>
+        </div>
+
+        <div class="card">
+          <div class="h">عملکرد ۷ روز اخیر <span class="badge">میلیون ریال</span></div>
+          <div class="chart">
+            <div class="c"><i style="height:42%"></i><span>ش</span></div>
+            <div class="c"><i style="height:63%"></i><span>ی</span></div>
+            <div class="c"><i style="height:51%"></i><span>د</span></div>
+            <div class="c gold"><i style="height:78%"></i><span>س</span></div>
+            <div class="c"><i style="height:58%"></i><span>چ</span></div>
+            <div class="c"><i style="height:88%"></i><span>پ</span></div>
+            <div class="c"><i style="height:34%"></i><span>ج</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="h">تیم فروش امروز <span class="badge">۶ ویزیتور</span></div>
+          <div class="row"><div class="av">س</div><div class="grow"><div class="t1">سارا رحیمی</div><div class="t2">۶ ویزیت • ۴۱۲٬۰۰۰٬۰۰۰ ریال</div><div class="bar"><i style="width:88%"></i></div></div><span class="tag t-ok">۸۸٪ هدف</span></div>
+          <div class="row"><div class="av">ا</div><div class="grow"><div class="t1">اسما حمدانی</div><div class="t2">۳ ویزیت • ۱۹۸٬۰۰۰٬۰۰۰ ریال</div><div class="bar"><i style="width:46%"></i></div></div><span class="tag t-warn">۴۶٪ هدف</span></div>
+          <div class="row"><div class="av">ف</div><div class="grow"><div class="t1">فاطمه محمودی</div><div class="t2">۰ ویزیت • بدون فعالیت</div><div class="bar"><i style="width:6%"></i></div></div><span class="tag t-dng">بی‌فعالیت</span></div>
+        </div>
+
+        <div class="card">
+          <div class="h">هشدارهای مدیریتی <span class="badge">۴ مورد</span></div>
+          <div class="row"><span class="tag t-dng">سررسید</span><div class="grow"><div class="t1">۹ فاکتور گذشته از سررسید</div><div class="t2">جمع ۱٬۸۲۰٬۰۰۰٬۰۰۰ ریال • قدیمی‌ترین ۱۱۲ روز</div></div></div>
+          <div class="row"><span class="tag t-warn">موجودی</span><div class="grow"><div class="t1">۵ کالا رو به اتمام</div><div class="t2">پسته اکبری، زعفران، کشمش پلویی</div></div></div>
+          <div class="row"><span class="tag t-inf">حضور</span><div class="grow"><div class="t1">۲ تردد ناقص دیروز</div><div class="t2">نیازمند اصلاح مدیر</div></div></div>
+        </div>
+      </section>
+
+      <!-- ---------- تأییدها ---------- -->
+      <section class="page" id="p-approvals">
+        <div class="card">
+          <div class="h">صف تأییدها <span class="badge">۳ از ۳ صف</span></div>
+          <div class="mut">هر تصمیم با نام شما و زمان دقیق ثبت و در گزارش ممیزی نگهداری می‌شود.</div>
+        </div>
+
+        <div class="chips">
+          <span class="chip on">همه ۳</span><span class="chip">مشتری جدید ۱</span><span class="chip">مرخصی ۱</span><span class="chip">مساعده ۱</span><span class="chip">تردد ناقص ۲</span>
+        </div>
+
+        <div class="card">
+          <div class="h">مشتری جدید <span class="tag t-warn">منتظر تأیید</span></div>
+          <div class="mut" style="margin-top:6px">«آجیل البرز» • درخواست از سارا رحیمی • موبایل ۰۹۱۲•••۴۵۶۷ • مسیر ۴ • کد ملی ثبت شده</div>
+          <div class="btnrow">
+            <button class="btn5 b-danger">رد</button>
+            <button class="btn5 b-line">جزئیات</button>
+            <button class="btn5 b-primary">تأیید و ساخت در آتیران</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="h">درخواست مرخصی <span class="tag t-inf">۲ روز</span></div>
+          <div class="mut" style="margin-top:6px">اسما حمدانی • ۱۰ تا ۱۱ مهر • استحقاقی • ماندهٔ مرخصی ۶٫۵ روز</div>
+          <div class="btnrow">
+            <button class="btn5 b-danger">رد</button>
+            <button class="btn5 b-primary">تأیید</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="h">مساعدهٔ حقوق <span class="tag t-warn">۸٬۰۰۰٬۰۰۰ تومان</span></div>
+          <div class="mut" style="margin-top:6px">مهدی کاظمی • راننده • درخواست ۷ مهر • سقف مجاز باقی‌مانده ۱۲٬۰۰۰٬۰۰۰</div>
+          <div class="btnrow">
+            <button class="btn5 b-danger">رد</button>
+            <button class="btn5 b-primary">تأیید و ثبت در حقوق</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- گزارش‌ها ---------- -->
+      <section class="page" id="p-reports">
+        <div class="chips">
+          <span class="chip on">امروز</span><span class="chip">این هفته</span><span class="chip">این ماه</span><span class="chip">فصل</span><span class="chip">بازهٔ دلخواه</span>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="l">فروش کل</div><div class="v">۸٬۹۲۰٬۰۰۰٬۰۰۰</div><div class="d up">▲ ۶٪</div></div>
+          <div class="kpi"><div class="l">وصولی</div><div class="v">۵٬۴۱۰٬۰۰۰٬۰۰۰</div><div class="d up">▲ ۴٪</div></div>
+          <div class="kpi"><div class="l">چک‌های معوق</div><div class="v">۲۳</div><div class="d down">۹ مورد واخواست‌شده</div></div>
+          <div class="kpi"><div class="l">سود ناخالص</div><div class="v">۲٬۱۱۰٬۰۰۰٬۰۰۰</div><div class="d up">▲ ۲٫۱٪</div></div>
+        </div>
+
+        <div class="card">
+          <div class="h">سنی بدهی مشتریان <span class="badge">میلیون ریال</span></div>
+          <div class="chart">
+            <div class="c"><i style="height:38%"></i><span>۰–۳۰</span></div>
+            <div class="c"><i style="height:66%"></i><span>۳۱–۶۰</span></div>
+            <div class="c gold"><i style="height:92%"></i><span>۶۱–۹۰</span></div>
+            <div class="c"><i style="height:48%"></i><span>+۹۰</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="h">پرفروش‌ترین کالاها</div>
+          <div class="row"><div class="av">۱</div><div class="grow"><div class="t1">پسته اکبری ۱ کیلویی</div><div class="t2">۱٬۲۴۰ قلم • ۳٬۱۰۰٬۰۰۰٬۰۰۰ ریال</div></div></div>
+          <div class="row"><div class="av">۲</div><div class="grow"><div class="t1">زعفران نگین ۴٫۶ گرمی</div><div class="t2">۸۹۰ قلم • ۲٬۶۵۰٬۰۰۰٬۰۰۰ ریال</div></div></div>
+          <div class="row"><div class="av">۳</div><div class="grow"><div class="t1">کشمش پلویی</div><div class="t2">۲٬۱۰۰ قلم • ۱٬۴۸۰٬۰۰۰٬۰۰۰ ریال</div></div></div>
+        </div>
+
+        <div class="btnrow" style="justify-content:stretch">
+          <button class="btn5 b-ghost" style="flex:1">ارسال PDF روزانه</button>
+          <button class="btn5 b-primary" style="flex:1">اتاق فرمان هوشمند</button>
+        </div>
+      </section>
+
+      <!-- ---------- پرسنل ---------- -->
+      <section class="page" id="p-people">
+        <div class="card">
+          <div class="h">حضور امروز <span class="badge">۱۴ از ۱۸ نفر</span></div>
+          <div class="bar"><i style="width:78%"></i></div>
+          <div class="mut" style="margin-top:8px">۲ تأخیر • ۲ تردد ناقص • ۳ مرخصی تأییدشده</div>
+        </div>
+
+        <div class="card">
+          <div class="h">ترددهای نیازمند اصلاح <span class="tag t-dng">۲</span></div>
+          <div class="row"><div class="av">م</div><div class="grow"><div class="t1">مهدی کاظمی</div><div class="t2">دیروز • خروج ثبت نشده • موقعیت GPS دارد</div></div><button class="btn5 b-ghost">اصلاح</button></div>
+          <div class="row"><div class="av">ز</div><div class="grow"><div class="t1">زهرا نوری</div><div class="t2">دیروز • ورود ۰۸:۴۷ خارج از بازهٔ شیفت</div></div><button class="btn5 b-ghost">اصلاح</button></div>
+        </div>
+
+        <div class="card">
+          <div class="h">حقوق مهر ۱۴۰۵ <span class="badge">طبق قانون کار ۱۴۰۵</span></div>
+          <div class="row"><div class="grow"><div class="t1">کارکرد ثبت‌شده</div><div class="t2">۱۸ نفر • ۲٬۳۴۰ ساعت • ۱۲۰ ساعت اضافه‌کار</div></div><span class="money">—</span></div>
+          <div class="row"><div class="grow"><div class="t1">جمع حقوق و مزایا</div><div class="t2">پیش از کسر بیمه و مالیات</div></div><span class="money">۲٬۹۸۰٬۰۰۰٬۰۰۰</span></div>
+          <div class="row"><div class="grow"><div class="t1">مساعدهٔ پرداخت‌شده</div><div class="t2">۳ نفر</div></div><span class="money">۲۴٬۰۰۰٬۰۰۰</span></div>
+          <div class="btnrow"><button class="btn5 b-line">تعریف شیفت و منطقه</button><button class="btn5 b-primary">محاسبهٔ ماه</button></div>
+        </div>
+      </section>
+
+      <!-- ---------- بیشتر ---------- -->
+      <section class="page" id="p-more">
+        <div class="card"><div class="h">ابزارهای مدیریتی</div><div class="mut">همهٔ بخش‌ها بر پایهٔ نقش شما باز می‌شوند؛ دسترسی هر کاربر از همین‌جا قابل تغییر است.</div></div>
+        <div class="grid2">
+          <div class="tile"><div class="g">🛡</div><div class="n">مدیریت دسترسی کاربران</div><div class="s">۱۴ نقش • ۴۰ کلید دسترسی</div></div>
+          <div class="tile"><div class="g">🚚</div><div class="n">مدیریت تحویل بار</div><div class="s">۷ بار باز • ۲ معطل</div></div>
+          <div class="tile"><div class="g">🧾</div><div class="n">سامانهٔ مودیان</div><div class="s">۳۲ صورتحساب امروز</div></div>
+          <div class="tile"><div class="g">💬</div><div class="n">مدیریت گفتگو</div><div class="s">بستن، پین، سکوت، اخراج</div></div>
+          <div class="tile"><div class="g">📍</div><div class="n">مسیر بازدید تیم</div><div class="s">نقشهٔ امروز ۶ ویزیتور</div></div>
+          <div class="tile"><div class="g">🩺</div><div class="n">سلامت اتصال</div><div class="s">آتیران • تأخیر ۸۲ms</div></div>
+          <div class="tile"><div class="g">🎨</div><div class="n">تم و ظاهر</div><div class="s">۱۲ پالت + حالت خودکار</div></div>
+          <div class="tile"><div class="g">🔄</div><div class="n">بروزرسانی برنامه</div><div class="s">نسخهٔ ۶٫۰٫۱ نصب است</div></div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ---------- داک ---------- -->
+    <nav class="dock">
+      <a class="on" data-p="home" onclick="go('home')"><span class="g">⌂</span><span>خانه</span></a>
+      <a data-p="approvals" onclick="go('approvals')"><span class="g">✓</span><span>تأییدها</span><span class="n">۳</span></a>
+      <a data-p="reports" onclick="go('reports')"><span class="g">↗</span><span>گزارش‌ها</span></a>
+      <a data-p="people" onclick="go('people')"><span class="g">☰</span><span>پرسنل</span></a>
+      <a data-p="more" onclick="go('more')"><span class="g">⋯</span><span>بیشتر</span></a>
+    </nav>
+  </div></div>
+
+  <!-- ================= راهنما ================= -->
+  <div class="legend">
+    <b>این پروتوتایپ چیست؟</b>
+    <ul>
+      <li>طرح تأییدیِ <b>نسخهٔ پنجم اندروید</b> (`manager` flavor) پیش از نوشتن کد جاوا.</li>
+      <li>ساختار داک، صفحهٔ «تأییدها» و ترتیب کارت‌ها دقیقاً همان چیزی است که در فاز ۱ و ۲ پیاده می‌شود.</li>
+      <li>پالت‌ها از تم‌های موجود برنامه مشتق شده‌اند: <b>اونیکس طلایی</b> (تیره) و <b>پلاتین سرمه‌ای</b> (روشن).</li>
+      <li>قواعد رعایت‌شده: دکمهٔ ۴۸dp با شعاع ۱۴، شبکهٔ ۸dp، ۵ اندازهٔ متن، ارقام فارسی با جداکنندهٔ هزارگان، هدر ۶۴dp با عنوان صفحهٔ فعال.</li>
+      <li>داده‌ها <b>نمونه</b> هستند؛ در اپ واقعی مستقیم از آتیران خوانده می‌شوند.</li>
+    </ul>
+    <div style="margin-top:12px"><b>نکتهٔ مهم:</b> صفحهٔ «تأییدها» تازه ساخته می‌شود (تجمیع ۵ صف موجود در پایگاه داده).
+    بقیهٔ صفحه‌ها در کد امروز وجود دارند و فقط قفل‌اند — جزئیات در `docs/MANAGEMENT-EDITION-fa.md` بخش ۲ و ۳.</div>
+  </div>
+</div>
+
+<div class="note">نسخهٔ کد مرجع: 6.0.1 (versionCode 108) • پروتوتایپ طراحی — نه اپ قابل نصب</div>
+
+<script>
+const titles={home:['خانهٔ مدیریت','سه‌شنبه ۸ مهر ۱۴۰۵ • مدیرکل'],
+  approvals:['صف تأییدها','۳ مورد منتظر تصمیم شما'],
+  reports:['گزارش‌ها','بازهٔ امروز • آتیران'],
+  people:['پرسنل و حضور','۱۸ نفر • مهر ۱۴۰۵'],
+  more:['بیشتر','ابزارهای مدیریتی']};
+function go(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('on'));
+  document.getElementById('p-'+p).classList.add('on');
+  document.querySelectorAll('.dock a').forEach(a=>a.classList.toggle('on',a.dataset.p===p));
+  document.getElementById('hTitle').textContent=titles[p][0];
+  document.getElementById('hSub').textContent=titles[p][1];
+  document.querySelector('.body').scrollTop=0;
+}
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent =
+    document.body.classList.contains('light') ? 'پالت تیره (اونیکس طلایی)' : 'پالت روشن (پلاتین سرمه‌ای)';
+}
+// بزرگ‌کردن متن = حالت دسترس‌پذیری (معادل fontScale اندروید)؛ فقط اندازه‌های متن عوض می‌شوند.
+function setFont(big){
+  document.body.classList.toggle('bigfont', big===1.15);
+  document.querySelectorAll('.tools .btn').forEach(b=>{
+    if(b.textContent.indexOf('فونت')===0) b.classList.toggle('primary',
+      (b.textContent.indexOf('درشت')>0) === (big===1.15));
+  });
+}
+</script>
+</body>
+</html>
