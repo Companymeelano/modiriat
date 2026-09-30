@@ -1,2 +1,4 @@
-09-30 07:20:42.834   552  1928 D CoreBackPreview: Window{98470ab u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
-09-30 07:20:42.837   552  1157 W InputManager-JNI: Input channel object '98470ab ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+09-30 07:44:56.356  1175  1212 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.staff.debug/ir.meelano.android.MainActivity}
+09-30 07:44:57.287   557   578 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +3s132ms
+09-30 07:45:03.809   557  1578 D CoreBackPreview: Window{938a66a u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
+09-30 07:45:03.811   557  1626 W InputManager-JNI: Input channel object '938a66a ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
