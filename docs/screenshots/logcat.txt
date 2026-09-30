@@ -1,5 +1,8 @@
-09-30 03:52:57.685  8077  8121 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
-09-30 03:52:57.685  8077  8121 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
-09-30 03:52:57.690   556   575 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +3s131ms
-09-30 03:53:04.293   556  1891 W InputManager-JNI: Input channel object '54b8486 ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
-09-30 03:53:04.384   556  1889 D CoreBackPreview: Window{c237a6e u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@1b87fa5, mPriority=-1, mIsAnimationCallback=false}
+09-30 04:11:43.960  3669  3690 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.store.debug/ir.meelano.android.MainActivity}
+09-30 04:11:44.107  8453  8494 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
+09-30 04:11:44.107  8453  8494 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
+09-30 04:11:44.120   560   582 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +2s539ms
+09-30 04:11:44.151  3669  3690 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.visitor.debug/ir.meelano.android.MainActivity}
+09-30 04:11:44.159  3669  3690 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.staff.debug/ir.meelano.android.MainActivity}
+09-30 04:11:50.561   560  1785 D CoreBackPreview: Window{50644eb u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
+09-30 04:11:50.569   560  1785 W InputManager-JNI: Input channel object '50644eb ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
