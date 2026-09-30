@@ -1885,7 +1885,7 @@ public class MainActivity extends Activity {
         shell.setClipChildren(false);
         shell.setClipToPadding(false);
         shell.setPadding(dp(3), dp(3), dp(3), dp(3));
-        shell.setBackground(roundedStroke(alpha(Color.WHITE, isLightTheme() ? 70 : 18), 20, alpha(GOLD, isLightTheme() ? 95 : 120)));
+        shell.setBackground(MANAGER_EDITION ? roundedStroke(Color.rgb(40, 30, 17), 20, alpha(GOLD_2, 170)) : roundedStroke(alpha(Color.WHITE, isLightTheme() ? 70 : 18), 20, alpha(GOLD, isLightTheme() ? 95 : 120)));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) shell.setElevation(dp(7));
         // App mark = the same gold «D» as the launcher icon, so header, login and home-screen icon match.
         ImageView logo = new ImageView(this);
@@ -1896,6 +1896,28 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) logo.setClipToOutline(true);
         shell.addView(logo, new FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER));
         return shell;
+    }
+
+    /** Phase 4: manager brand logo tile — launcher art as a rounded, elevated dark tile so its backdrop reads intentional. */
+    private ImageView managerLogoTile(int size, float radiusDp) {
+        ImageView v = new ImageView(this);
+        v.setImageResource(R.drawable.meelano_3d);
+        v.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        v.setBackground(roundedStroke(Color.rgb(40, 30, 17), radiusDp, alpha(GOLD_2, 190)));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { v.setClipToOutline(true); v.setElevation(dp(8)); }
+        v.setContentDescription("لوگوی مدیریت");
+        return v;
+    }
+
+    /** Phase 4: dark espresso panel with warm golden radial glow — echoes the launcher icon backdrop. */
+    private GradientDrawable managerBrandBg(float radiusDp) {
+        GradientDrawable d = new GradientDrawable();
+        d.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        d.setGradientRadius(dp(190));
+        d.setColors(new int[]{Color.rgb(97, 73, 35), Color.rgb(52, 39, 21), Color.rgb(26, 19, 11)});
+        d.setCornerRadius(dp(radiusDp));
+        d.setStroke(dp(1), alpha(GOLD_2, 120));
+        return d;
     }
 
     private static final float LOGO_REST_T = (float) (3 * Math.PI);
@@ -2142,6 +2164,7 @@ public class MainActivity extends Activity {
         titles.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
         titles.setPadding(dp(8), 0, dp(8), 0);
         TextView appTitle = text(editionTitle(), 15.8f, tc(GOLD_2), Typeface.BOLD);
+        if (MANAGER_EDITION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) appTitle.setAutoSizeTextTypeUniformWithConfiguration(10, 16, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
         appTitle.setSingleLine(true);
         appTitle.setEllipsize(TextUtils.TruncateAt.END);
         appTitle.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
@@ -2424,7 +2447,13 @@ public class MainActivity extends Activity {
     }
 
     private android.graphics.drawable.Drawable meelanoButtonBg(int tone, boolean primary) {
-        GradientDrawable shape = rounded(primary ? tone : alpha(tone, isLightTheme() ? 30 : 52), BUTTON_RADIUS);
+        GradientDrawable shape;
+        if (MANAGER_EDITION && primary && tone == GOLD) {
+            shape = gradient(new int[]{Color.rgb(206, 164, 74), Color.rgb(168, 122, 44), Color.rgb(133, 95, 30)}, GradientDrawable.Orientation.TOP_BOTTOM, BUTTON_RADIUS);
+            shape.setStroke(dp(1), alpha(Color.rgb(240, 210, 140), 160));
+        } else {
+            shape = rounded(primary ? tone : alpha(tone, isLightTheme() ? 30 : 52), BUTTON_RADIUS);
+        }
         int ripple = primary ? alpha(onColorFor(tone), 70) : alpha(tone, 70);
         GradientDrawable mask = rounded(Color.WHITE, BUTTON_RADIUS);
         return new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(ripple), shape, mask);
@@ -2943,10 +2972,33 @@ public class MainActivity extends Activity {
         LinearLayout loginCard = card();
         loginCard.setGravity(Gravity.CENTER_HORIZONTAL);
         loginCard.setPadding(dp(22), dp(24), dp(22), dp(22));
-        loginCard.setBackground(gradient(new int[]{alpha(Color.WHITE, 38), alpha(GOLD_2, 48), alpha(INFO, 28), alpha(SURFACE, 252)}, GradientDrawable.Orientation.TL_BR, 34));
+        if (MANAGER_EDITION) loginCard.setBackground(roundedStroke(alpha(Color.WHITE, 250), 34, alpha(GOLD, 90)));
+        else loginCard.setBackground(gradient(new int[]{alpha(Color.WHITE, 38), alpha(GOLD_2, 48), alpha(INFO, 28), alpha(SURFACE, 252)}, GradientDrawable.Orientation.TL_BR, 34));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) loginCard.setElevation(dp(12));
         outer.addView(loginCard, new LinearLayout.LayoutParams(-1, -2));
 
+        if (MANAGER_EDITION) {
+            LinearLayout brand = new LinearLayout(this);
+            brand.setOrientation(LinearLayout.VERTICAL);
+            brand.setGravity(Gravity.CENTER_HORIZONTAL);
+            brand.setBackground(managerBrandBg(26));
+            brand.setPadding(dp(16), dp(20), dp(16), dp(18));
+            ImageView mlogo = managerLogoTile(dp(108), 24);
+            LinearLayout.LayoutParams ml = new LinearLayout.LayoutParams(dp(108), dp(108));
+            ml.setMargins(0, 0, 0, dp(10));
+            brand.addView(mlogo, ml);
+            TextView mh = text("ورود مدیر", 22, Color.rgb(250, 244, 232), Typeface.BOLD);
+            mh.setGravity(Gravity.CENTER);
+            brand.addView(mh, new LinearLayout.LayoutParams(-1, -2));
+            TextView msub = text("نسخهٔ اختصاصی مدیرکل و مدیر • پخش درخشان", 11.5f, alpha(GOLD_2, 235), Typeface.NORMAL);
+            msub.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams msp = new LinearLayout.LayoutParams(-1, -2);
+            msp.setMargins(0, dp(6), 0, 0);
+            brand.addView(msub, msp);
+            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, -2);
+            bp.setMargins(0, 0, 0, dp(16));
+            loginCard.addView(brand, bp);
+        } else {
         ImageView logo = new ImageView(this);
         logo.setImageResource(ir.meelano.android.R.drawable.meelano_3d);
         logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -2956,16 +3008,17 @@ public class MainActivity extends Activity {
         logoLp.setMargins(0, 0, 0, dp(8));
         loginCard.addView(logo, logoLp);
 
-        TextView h = text(MANAGER_EDITION ? "ورود مدیر" : STAFF_EDITION ? "ورود پرسنل" : STORE_EDITION ? "ورود کارکنان فروشگاه" : VISITOR_EDITION ? "ورود ویزیتور" : "ورود پخش درخشان", 23, TEXT, Typeface.BOLD);
+        TextView h = text(STAFF_EDITION ? "ورود پرسنل" : STORE_EDITION ? "ورود کارکنان فروشگاه" : VISITOR_EDITION ? "ورود ویزیتور" : "ورود پخش درخشان", 23, TEXT, Typeface.BOLD);
         h.setGravity(Gravity.CENTER);
         loginCard.addView(h, new LinearLayout.LayoutParams(-1, -2));
 
-        TextView sub = text(MANAGER_EDITION ? "این نسخه مخصوص مدیرکل و مدیر است." : VISITOR_EDITION ? "با نام کاربری و رمز خود وارد شوید." : "ورود امن به پخش درخشان", 12.5f, MUTED, Typeface.NORMAL);
+        TextView sub = text(VISITOR_EDITION ? "با نام کاربری و رمز خود وارد شوید." : "ورود امن به پخش درخشان", 12.5f, MUTED, Typeface.NORMAL);
         sub.setGravity(Gravity.CENTER);
         sub.setLineSpacing(dp(2), 1.05f);
         LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, -2);
         sp.setMargins(0, dp(7), 0, dp(14));
         loginCard.addView(sub, sp);
+        }
 
         if (message != null && message.contains("نام کاربری و رمز پخش درخشان را وارد کنید")) message = message.replace("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید.", "").trim();
         if (message != null && !message.trim().isEmpty()) {
