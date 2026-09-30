@@ -3435,6 +3435,7 @@ public class MainActivity extends Activity {
         motionSerial = 0;
         setConnectionStatus("connected");
         subtitle.setText(VISITOR_EDITION || MANAGER_EDITION ? headerSubtitleText() : session.userName);
+        if (MANAGER_EDITION && managerAppTitle != null) managerAppTitle.setText("مدیریت");
         stage.removeAllViews();
         if (VISITOR_EDITION) stage.addView(new VisitorLeatherBackgroundView(this), new FrameLayout.LayoutParams(-1, -1));
 
