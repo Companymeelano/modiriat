@@ -11660,6 +11660,7 @@ public class MainActivity extends Activity {
             c.addView(chart, new LinearLayout.LayoutParams(-1, dp(150)));
         }
         addReportCheckBucketsCard(dash.optJSONObject("checkBuckets"));
+        addReportVisitorShareCard(dash.optJSONArray("visitorShare"), dash.optJSONObject("sales"));
         addReportCustomersSection(dash);
         addReportTeamSection(dash.optJSONObject("teamBrief"));
         LinearLayout actions = new LinearLayout(this);
@@ -11683,6 +11684,12 @@ public class MainActivity extends Activity {
         addReportLine(c, "تعداد اسناد", formatNumber(block.optLong("docs", 0)), TEXT);
         addReportLine(c, "طرف‌حساب", formatNumber(block.optLong("parties", 0)), TEXT);
         addReportLine(c, range == 0 ? "دریافتی" : "پرداختی/دریافتی", money(Math.round(block.optDouble("paid", 0))), TEXT);
+        double prevT = block.optDouble("prevTotal", 0);
+        if (prevT > 0) {
+            double pct = (block.optDouble("total", 0) - prevT) / prevT * 100.0;
+            String sign = pct >= 0 ? "▲ " : "▼ ";
+            addReportLine(c, "نسبت به بازهٔ قبل", sign + faDigits(String.format(java.util.Locale.US, "%.0f", Math.abs(pct))) + "٪", pct >= 0 ? tc(SUCCESS) : tc(DANGER));
+        }
     }
 
     private void addReportMarginCard(JSONObject sales, JSONObject purchases) {
@@ -11704,6 +11711,18 @@ public class MainActivity extends Activity {
         if (over != null) addReportLine(c, "معوق", formatNumber(over.optLong("count", 0)) + " فقره • " + money(Math.round(over.optDouble("total", 0))), tc(DANGER));
         if (soon != null) addReportLine(c, "سررسید ≤ ۷ روز", formatNumber(soon.optLong("count", 0)) + " فقره • " + money(Math.round(soon.optDouble("total", 0))), tc(WARNING));
         if (ok != null) addReportLine(c, "سررسید نشده", formatNumber(ok.optLong("count", 0)) + " فقره • " + money(Math.round(ok.optDouble("total", 0))), tc(SUCCESS));
+    }
+
+    private void addReportVisitorShareCard(JSONArray share, JSONObject sales) {
+        if (share == null || share.length() == 0) return;
+        LinearLayout c = addReportCard("سهم ویزیتورها از فروش بازه", "♜", navAccent("reports"));
+        double total = sales == null ? 0 : sales.optDouble("total", 0);
+        for (int i = 0; i < share.length(); i++) {
+            JSONObject o = share.optJSONObject(i); if (o == null) continue;
+            double v = o.optDouble("total", 0);
+            String shareTxt = total > 0 ? " • " + faDigits(String.format(java.util.Locale.US, "%.0f", v / total * 100.0)) + "٪" : "";
+            addReportLine(c, o.optString("name", "—") + " (" + formatNumber(o.optLong("docs", 0)) + " سند)", money(Math.round(v)) + shareTxt, TEXT);
+        }
     }
 
     private void generateManagerReportPdfFromReports(JSONObject dash) {
@@ -11820,6 +11839,7 @@ public class MainActivity extends Activity {
             out.put("purchases", queryRangeBlock(c, false, range));
             out.put("trend", querySalesTrend(c));
             out.put("checkBuckets", queryCheckBuckets(c));
+            out.put("visitorShare", queryVisitorShare(c, range));
             out.put("topDebtors", queryTopDebtors(c));
             out.put("overdueInvoices", queryOverdueInvoices(c));
             out.put("teamBrief", queryCollaborationBrief(c));
@@ -11856,6 +11876,23 @@ public class MainActivity extends Activity {
                 try (ResultSet r = ps.executeQuery()) { if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); } }
             }
         }
+        double prev = 0;
+        if (dateCol != null && amountCol != null && latest != null && !latest.isEmpty()) {
+            String q2 = "N'" + latest.replace("'", "''") + "'";
+            String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
+            String pcond;
+            if (range == 0) pcond = dX + ">=DATEADD(day,-1,TRY_CONVERT(date," + q2 + ")) AND " + dX + "<TRY_CONVERT(date," + q2 + ")";
+            else if (range == 1) pcond = dX + ">=DATEADD(day,-13,TRY_CONVERT(date," + q2 + ")) AND " + dX + "<DATEADD(day,-6,TRY_CONVERT(date," + q2 + "))";
+            else pcond = dX + ">=DATEADD(month,-2,TRY_CONVERT(date," + q2 + ")) AND " + dX + "<DATEADD(month,-1,TRY_CONVERT(date," + q2 + "))";
+            String innerWhere2 = "WHERE " + pcond + activeAnd(cols, "x");
+            String soft2 = softDeleteCondition(cols, "x"); if (!soft2.isEmpty()) innerWhere2 += " AND " + soft2;
+            String source2 = dedupeFactorSource(table, cols, numberCol, "h", innerWhere2);
+            String sql2 = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source2;
+            try (PreparedStatement ps = c.prepareStatement(sql2)) {
+                try (ResultSet r = ps.executeQuery()) { if (r.next()) prev = r.getDouble(1); }
+            }
+        }
+        o.put("prevTotal", prev);
         o.put("total", total); o.put("docs", docs); o.put("parties", parties); o.put("paid", paid);
         return o;
     }
@@ -11897,6 +11934,37 @@ public class MainActivity extends Activity {
             }
         }
         return o;
+    }
+
+    private JSONArray queryVisitorShare(Connection c, int range) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        String visitorId = resolve(cols, "vis_rdf", "VisitorID", "visitor");
+        String latest = dateCol == null ? null : latestDate(c, "sailfact", dateCol);
+        if (dateCol == null || amountCol == null || visitorId == null || latest == null || latest.isEmpty()) return arr;
+        Set<String> vis = columns(c, "visitors");
+        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        if (visKey == null || visName == null) return arr;
+        String q = "N'" + latest.replace("'", "''") + "'";
+        String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
+        String cond;
+        if (range == 0) cond = "(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=" + q + " OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(" + q + ",10))";
+        else if (range == 1) cond = dX + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
+        else cond = dX + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
+        String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
+        String sql = "SELECT TOP (6) COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'بدون ویزیتور'), ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1) FROM " + source +
+                " LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),h.[" + visitorId + "])" +
+                " GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'بدون ویزیتور') ORDER BY 2 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", stringOr(r.getString(1), "—")); o.put("total", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); } }
+        }
+        return arr;
     }
 
     /** Gold bar chart of the last 7 sales days (right = most recent). */
