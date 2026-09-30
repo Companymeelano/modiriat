@@ -396,7 +396,7 @@ if (MANAGER_EDITION) VISITOR_EDITION = false;   // کلید باز شدن همه
 - `app/src/main/res/values/edition.xml`: `<bool name="meelano_manager_edition">false</bool>`.
 - `app/src/manager/res/values/{edition,strings,colors}.xml`: نام «پخش درخشان مدیریت»، رنگ شروع پلاتین/طلایی.
 - `app/src/manager/res/mipmap-*/`: ۱۰ PNG (۵ چگالی × ساده/گرد) + `drawable-nodpi/{ic_launcher_art,meelano_3d}.png`
-  از آیکون تولیدشده (ساختمان ستون‌دار سرمه‌ای + نمودار صعودی و تاج طلایی = المان مدیریت). منبع: `tools/icon/manager-icon-master.png`.
+  آیکون نهایی (انتخاب شما): حرف **D طلایی سه‌بعدی** (امضای Derakhshan) + **تاج کوچک** (نشان نسخهٔ مدیریت) + **یک برگ پسته‌ای** (اشاره به آجیل و خشکبار) روی **زمینهٔ مرواریدی نورانی** (پالت روشن پیش‌فرض) — خلوت و لوکس. منبع: `tools/icon/manager-icon-master.png` و در همهٔ بخش‌ها (هدر، ورود، اعلان، PDF، لانچر).
 - `MainActivity.java` (۲۸ ویرایش، همگی با کنترل «دقیقاً یک‌بار»):
   - متغیر منبع‌محور `MANAGER_EDITION` (خط ~۱۴۱) + خواندن `R.bool.meelano_manager_edition` در `onCreate`.
   - دروازهٔ «فقط مدیر» در `showApp` → `showManagerGate()`.
