@@ -378,7 +378,7 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:1945:	Avo
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:1970:	UnusedPrivateField:	Avoid unused private fields such as 'compact'.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:1985:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:1992:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2137:	AvoidDuplicateLiterals:	The String literal "\u067e\u062e\u0634 \u062f\u0631\u062e\u0634\u0627\u0646" appears 7 times in this file; the first occurrence is on line 2,137
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2137:	AvoidDuplicateLiterals:	The String literal "\u067e\u062e\u0634 \u062f\u0631\u062e\u0634\u0627\u0646" appears 5 times in this file; the first occurrence is on line 2,137
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2148:	NullAssignment:	Assigning an Object to null is a code smell.  Consider refactoring.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2156:	AvoidDuplicateLiterals:	The String literal "\u0645\u062f\u06cc\u0631\u06cc\u062a \u062f\u0633\u062a\u0631\u0633\u06cc \u06a9\u0627\u0631\u0628\u0631\u0627\u0646" appears 5 times in this file; the first occurrence is on line 2,156
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2156:	AvoidDuplicateLiterals:	The String literal "management" appears 13 times in this file; the first occurrence is on line 2,156
@@ -386,6 +386,7 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2159:	Avo
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2159:	AvoidDuplicateLiterals:	The String literal "settings" appears 28 times in this file; the first occurrence is on line 2,159
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2164:	AvoidDuplicateLiterals:	The String literal "idle" appears 8 times in this file; the first occurrence is on line 2,164
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2164:	AvoidDuplicateLiterals:	The String literal "connected" appears 8 times in this file; the first occurrence is on line 2,164
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2211:	AvoidDuplicateLiterals:	The String literal "\u0645\u062f\u06cc\u0631\u06cc\u062a" appears 6 times in this file; the first occurrence is on line 2,211
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2241:	UnusedAssignment:	The initializer for variable 'n' is never used (overwritten on lines 2243 and 2246)
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2260:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2269:	UnusedPrivateMethod:	Avoid unused private methods such as 'addHeaderTool(LinearLayout, String, String, int, OnClickListener)'.
@@ -995,7 +996,6 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7215:	Avo
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7216:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7217:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7218:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7218:	AvoidDuplicateLiterals:	The String literal "\u0645\u062f\u06cc\u0631\u06cc\u062a" appears 4 times in this file; the first occurrence is on line 7,218
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7219:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7220:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:7230:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
