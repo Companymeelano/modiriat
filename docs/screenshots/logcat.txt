@@ -1,8 +1,6 @@
-09-30 04:11:43.960  3669  3690 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.store.debug/ir.meelano.android.MainActivity}
-09-30 04:11:44.107  8453  8494 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
-09-30 04:11:44.107  8453  8494 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
-09-30 04:11:44.120   560   582 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +2s539ms
-09-30 04:11:44.151  3669  3690 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.visitor.debug/ir.meelano.android.MainActivity}
-09-30 04:11:44.159  3669  3690 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.staff.debug/ir.meelano.android.MainActivity}
-09-30 04:11:50.561   560  1785 D CoreBackPreview: Window{50644eb u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
-09-30 04:11:50.569   560  1785 W InputManager-JNI: Input channel object '50644eb ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+09-30 04:57:30.228  1180  1210 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.manager.debug/ir.meelano.android.MainActivity}
+09-30 04:57:30.245  1180  1210 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.store.debug/ir.meelano.android.MainActivity}
+09-30 04:57:30.364  1180  1210 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.visitor.debug/ir.meelano.android.MainActivity}
+09-30 04:57:30.388  1180  1210 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.staff.debug/ir.meelano.android.MainActivity}
+09-30 04:57:30.908   557   580 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +2s553ms
+09-30 04:57:37.329   557  2073 W InputManager-JNI: Input channel object '86b0760 ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
