@@ -247,6 +247,7 @@ public class MainActivity extends Activity {
     private Typeface MEELANO_BOLD = Typeface.DEFAULT_BOLD;
     private FrameLayout stage;
     private LinearLayout pageDock;
+    private LinearLayout managerApprovalsRow;
     private TextView status;
     private TextView subtitle;
     private TextView connectionIndicator;
@@ -1246,7 +1247,7 @@ public class MainActivity extends Activity {
         String id = themeId == null ? defaultThemeId() : themeId.trim();
         if (id.isEmpty()) return defaultThemeId();
         if ("emerald_royal".equals(id) || "amethyst_pearl".equals(id) || "pearl_platinum".equals(id) || "rose_quartz_lux".equals(id) || "emerald_silk".equals(id) ||
-                "royal_amethyst".equals(id) || "ivory_sunrise".equals(id) || "crystal_lagoon".equals(id) || "azure_diamond".equals(id) || "noir_aurora".equals(id) || "onyx_gold".equals(id) || "hazelnut_gold".equals(id) || THEME_AUTO.equals(id)) return id;
+                "royal_amethyst".equals(id) || "ivory_sunrise".equals(id) || "crystal_lagoon".equals(id) || "azure_diamond".equals(id) || "noir_aurora".equals(id) || "espresso_gold".equals(id) || "onyx_gold".equals(id) || "hazelnut_gold".equals(id) || THEME_AUTO.equals(id)) return id;
         return defaultThemeId();
     }
 
@@ -1482,6 +1483,25 @@ public class MainActivity extends Activity {
             HERO_START = Color.rgb(18, 31, 54);
             HERO_END = Color.rgb(4, 10, 22);
             ON_PRIMARY = Color.WHITE;
+        } else if ("espresso_gold".equals(id)) {
+            // «اسپرسو طلایی» (manager, phase 4): the launcher icon's dark espresso + golden halo as a full app palette.
+            NAVY = Color.rgb(23, 16, 9);
+            SURFACE = Color.rgb(32, 24, 15);
+            SURFACE_2 = Color.rgb(45, 34, 20);
+            GOLD = Color.rgb(200, 154, 63);
+            GOLD_2 = Color.rgb(228, 197, 124);
+            SUCCESS = Color.rgb(96, 190, 150);
+            INFO = Color.rgb(126, 168, 220);
+            WARNING = Color.rgb(226, 170, 80);
+            DANGER = Color.rgb(229, 100, 116);
+            TEXT = Color.rgb(251, 244, 230);
+            MUTED = Color.rgb(186, 170, 141);
+            BORDER = Color.argb(80, 228, 197, 124);
+            HEADER_START = Color.rgb(27, 20, 12);
+            HEADER_END = Color.rgb(38, 28, 16);
+            HERO_START = Color.rgb(45, 34, 20);
+            HERO_END = Color.rgb(23, 16, 9);
+            ON_PRIMARY = Color.rgb(30, 20, 8);
         } else if ("onyx_gold".equals(id)) {
             if (VISITOR_EDITION) {
                 NAVY = Color.rgb(8, 9, 10);
@@ -1620,6 +1640,7 @@ public class MainActivity extends Activity {
         if ("hazelnut_gold".equals(id)) return "فندقی طلایی";
         if ("azure_diamond".equals(id)) return "الماس آبی روشن";
         if ("noir_aurora".equals(id)) return "نوآر شفق لوکس";
+        if ("espresso_gold".equals(id)) return "اسپرسو طلایی مدیریت";
         if ("onyx_gold".equals(id)) return "اونیکس طلایی پخش درخشان";
         if (THEME_AUTO.equals(id)) return "خودکار (هماهنگ با حالت روز/شب گوشی)";
         return "الماس آبی روشن";
@@ -1851,6 +1872,7 @@ public class MainActivity extends Activity {
         t.setTextColor(color);
         t.setTypeface(faceFor(style));
         t.setIncludeFontPadding(true);
+        if (MANAGER_EDITION) t.setLineSpacing(0, 1.45f);
         t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             t.setTextDirection(View.TEXT_DIRECTION_RTL);
@@ -1907,6 +1929,26 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { v.setClipToOutline(true); v.setElevation(dp(8)); }
         v.setContentDescription("لوگوی مدیریت");
         return v;
+    }
+
+    /** Phase 4: skeleton rows with a soft shimmer pulse, shown while manager data loads. */
+    private View managerSkeleton() {
+        LinearLayout sk = new LinearLayout(this);
+        sk.setOrientation(LinearLayout.VERTICAL);
+        sk.setPadding(dp(16), dp(14), dp(16), dp(10));
+        int[] ws = new int[]{0, 40, 110};
+        for (int i = 0; i < 3; i++) {
+            View bar = new View(this);
+            bar.setBackground(rounded(alpha(MUTED, 60), 12));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(i == 0 ? 26 : 15));
+            lp.setMargins(dp(ws[i]), dp(9), 0, 0);
+            sk.addView(bar, lp);
+            if (motionAllowed()) {
+                bar.setAlpha(0.9f);
+                bar.animate().alpha(0.35f).setDuration(450).withEndAction(() -> bar.animate().alpha(0.9f).setDuration(450).start()).start();
+            }
+        }
+        return sk;
     }
 
     /** Phase 4: dark espresso panel with warm golden radial glow — echoes the launcher icon backdrop. */
@@ -2346,6 +2388,7 @@ public class MainActivity extends Activity {
                 .setNegativeButton("بستن", null)
                 .create();
         addThemeOption(box, dialog, THEME_AUTO, "خودکار", "روشن در روز، تیره در شب — هماهنگ با گوشی", new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(5, 8, 18)});
+        if (MANAGER_EDITION) addThemeOption(box, dialog, "espresso_gold", "اسپرسو طلایی", "تیرهٔ لوکس هم‌خانواده با آیکون مدیر", new int[]{Color.rgb(23, 16, 9), Color.rgb(200, 154, 63), Color.rgb(228, 197, 124)});
         if (STAFF_EDITION) addThemeOption(box, dialog, "amethyst_pearl", "آمتیست مرواریدی", "تم پیش‌فرض پرسنل • هم‌رنگ آیکون", new int[]{Color.rgb(248, 245, 252), Color.rgb(88, 44, 150), Color.rgb(176, 132, 52)});
         if (STORE_EDITION) addThemeOption(box, dialog, "emerald_royal", "زمرد سلطنتی", "تم پیش‌فرض فروشگاه • هم‌رنگ آیکون", new int[]{Color.rgb(243, 249, 245), Color.rgb(7, 104, 70), Color.rgb(184, 142, 58)});
         if (VISITOR_EDITION && !STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "azure_diamond", "الماس آبی", "تم پیش‌فرض " + editionTitle(), new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(24, 190, 255)});
@@ -2472,6 +2515,10 @@ public class MainActivity extends Activity {
         b.setPadding(dp(12), 0, dp(12), 0);
         b.setShadowLayer(0, 0, 0, Color.TRANSPARENT);
         b.setBackground(meelanoButtonBg(tone, primary));
+        if (MANAGER_EDITION && !primary && tone == GOLD) {
+            b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(alpha(GOLD, 70)), roundedStroke(alpha(SURFACE, isLightTheme() ? 240 : 46), BUTTON_RADIUS, alpha(mix(GOLD, TEXT, 0.25f), 150)), rounded(Color.WHITE, BUTTON_RADIUS)));
+            b.setTextColor(tc(mix(GOLD, TEXT, 0.30f)));
+        }
         b.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG_RTL);
         b.setGravity(Gravity.CENTER);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { b.setStateListAnimator(null); b.setElevation(0); b.setLetterSpacing(0f); }
@@ -2716,8 +2763,9 @@ public class MainActivity extends Activity {
         c.setOrientation(LinearLayout.VERTICAL);
         int pad = compactUi() ? dp(11) : dp(15);
         c.setPadding(pad, pad, pad, pad);
-        c.setBackground(VISITOR_EDITION ? visitorPanel(currentPageAccent(), compactUi() ? 22 : 28) : premiumPanel(currentPageAccent(), compactUi() ? 19 : 23));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(VISITOR_EDITION ? 9 : 7));
+        if (MANAGER_EDITION) c.setBackground(roundedStroke(alpha(SURFACE, 250), 22, BORDER));
+        else c.setBackground(VISITOR_EDITION ? visitorPanel(currentPageAccent(), compactUi() ? 22 : 28) : premiumPanel(currentPageAccent(), compactUi() ? 19 : 23));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(VISITOR_EDITION ? 9 : MANAGER_EDITION ? 6 : 7));
         animateEntrance(c, motionSerial++);
         return c;
     }
@@ -3615,7 +3663,7 @@ public class MainActivity extends Activity {
         iconWrap.setClipToPadding(false);
         int iconRes = visitorDockIconResource(key, active);
         View bubbleView;
-        int iconColor = active ? tc(accent) : MUTED;
+        int iconColor = active ? tc(accent) : (MANAGER_EDITION ? tc(INFO) : MUTED);
         if (iconRes != 0) {
             ImageView iv = new ImageView(this);
             iv.setImageResource(iconRes);
@@ -3629,7 +3677,13 @@ public class MainActivity extends Activity {
             bubbleView = tv;
         }
         // Material-style active indicator: a soft pill behind the icon, no gradients or shadows.
-        if (active) bubbleView.setBackground(rounded(alpha(accent, isLightTheme() ? 40 : 64), 999));
+        if (active) {
+            if (MANAGER_EDITION) {
+                bubbleView.setBackground(gradient(new int[]{alpha(GOLD_2, 96), alpha(GOLD, 72)}, GradientDrawable.Orientation.TOP_BOTTOM, 999));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) bubbleView.setElevation(dp(3));
+                if (motionAllowed()) { bubbleView.setScaleX(0.85f); bubbleView.setScaleY(0.85f); bubbleView.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); }
+            } else bubbleView.setBackground(rounded(alpha(accent, isLightTheme() ? 40 : 64), 999));
+        }
         iconWrap.addView(bubbleView, new FrameLayout.LayoutParams(dp(60f * dockScale), dp(34f * dockScale), Gravity.CENTER));
         if ("cart".equals(key) && cartHasItems()) {
             TextView badge = text(cartCountText(), 9.0f, onColorFor(GOLD), Typeface.BOLD);
@@ -3651,7 +3705,7 @@ public class MainActivity extends Activity {
         }
         item.addView(iconWrap, new LinearLayout.LayoutParams(wrapW, wrapH));
         String dockLabel = label;
-        TextView title = text(dockLabel, 9.0f * dockScale, active ? tc(accent) : MUTED, active ? Typeface.BOLD : Typeface.NORMAL);
+        TextView title = text(dockLabel, 9.0f * dockScale, active ? tc(accent) : (MANAGER_EDITION ? tc(INFO) : MUTED), active ? Typeface.BOLD : Typeface.NORMAL);
         title.setGravity(Gravity.CENTER);
         title.setSingleLine(true);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
@@ -11564,6 +11618,7 @@ public class MainActivity extends Activity {
             d.date = faDigits(todayDateText());
             d.developer = DEVELOPER_NAME;
             d.appVersion = appVersionName();
+            d.managerBrand = true;
             JSONArray k = dash.optJSONArray("kpis");
             int added = 0;
             if (k != null) for (int i = 0; i < k.length() && added < 4; i++) { JSONObject o = k.optJSONObject(i); if (o != null && o.optBoolean("available")) { d.summary.add(new String[]{o.optString("title"), formatNumber(o.optLong("value"))}); added++; } }
@@ -11621,7 +11676,7 @@ public class MainActivity extends Activity {
     private void loadManagerApprovals() {
         content.removeAllViews();
         addHero("صف تأییدها", "مشتری جدید، مرخصی، مساعده، مأموریت و تردد ناقص — هر تصمیم با نام شما و زمان دقیق ثبت می‌شود.");
-        addLoading(content, "در حال دریافت صف تأییدها…");
+        if (MANAGER_EDITION) content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2)); else addLoading(content, "در حال دریافت صف تأییدها…");
         runDb(this::queryManagerApprovals, new DbCallback() {
             @Override public void ok(String body) { try { renderManagerApprovals(new JSONObject(body)); } catch (Exception e) { showPageError("تأییدها", e, () -> loadManagerApprovals()); } }
             @Override public void fail(Exception e) { showPageError("تأییدها", e, () -> loadManagerApprovals()); }
@@ -11630,6 +11685,7 @@ public class MainActivity extends Activity {
 
     private void renderManagerApprovals(JSONObject d) {
         content.removeAllViews();
+        managerApprovalsRow = null;
         addHero("صف تأییدها", "مشتری جدید، مرخصی، مساعده، مأموریت و تردد ناقص — هر تصمیم با نام شما و زمان دقیق ثبت می‌شود.");
         JSONArray cust = d.optJSONArray("customers"), leaves = d.optJSONArray("leaves"), adv = d.optJSONArray("advances"), mis = d.optJSONArray("missions"), inc = d.optJSONArray("incomplete");
         int total = (cust == null ? 0 : cust.length()) + pendingCount(leaves) + (adv == null ? 0 : adv.length()) + (mis == null ? 0 : mis.length()) + (inc == null ? 0 : inc.length());
@@ -11675,13 +11731,23 @@ public class MainActivity extends Activity {
     private LinearLayout approvalCard(String title, int n) {
         LinearLayout c = card(); c.setBackground(themedSectionBg("manager_approvals", 26));
         c.addView(text(title + "  •  " + formatNumber(n) + " مورد", 14.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
+        if (MANAGER_EDITION && screenWidthDp() >= 600) {
+            if (managerApprovalsRow == null || managerApprovalsRow.getChildCount() >= 2) {
+                managerApprovalsRow = new LinearLayout(this); managerApprovalsRow.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, 0, 0, dp(12)); content.addView(managerApprovalsRow, rp);
+            }
+            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1f); cp.setMargins(0, 0, dp(6), 0);
+            managerApprovalsRow.addView(c, cp);
+        } else {
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
+        }
         return c;
     }
 
     private void addApprovalRow(LinearLayout parent, String t1, String t2, Runnable onOk, Runnable onNo) {
         LinearLayout item = new LinearLayout(this); item.setOrientation(LinearLayout.VERTICAL); item.setPadding(dp(10), dp(9), dp(10), dp(9));
-        item.setBackground(roundedStroke(alpha(navAccent("manager_approvals"), 16), 16, alpha(navAccent("manager_approvals"), 60)));
+        int zebra = parent.getChildCount() % 2 == 0 ? 14 : 30;
+        item.setBackground(roundedStroke(alpha(navAccent("manager_approvals"), zebra), 16, alpha(navAccent("manager_approvals"), zebra + 46)));
         item.addView(text(t1, 12.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         item.addView(text(t2, 10.6f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);

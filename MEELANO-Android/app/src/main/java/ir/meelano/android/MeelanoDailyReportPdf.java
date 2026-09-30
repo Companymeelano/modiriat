@@ -40,6 +40,8 @@ final class MeelanoDailyReportPdf {
         /** rows: time, customer, result */
         final List<String[]> visits = new ArrayList<>();
         String note = "";
+        /** manager edition: espresso+gold brand cover instead of the visitor brown band. */
+        boolean managerBrand = false;
     }
 
     private static final int W = 595, H = 842, M = 34;
@@ -111,7 +113,7 @@ final class MeelanoDailyReportPdf {
     private static int header(Context ctx, Canvas c, Paint p, Data d, Typeface regular, Typeface bold) {
         p.setStyle(Paint.Style.FILL);
         p.setColor(Color.rgb(250, 244, 234)); c.drawRect(0, 0, W, H, p);
-        p.setColor(BROWN); c.drawRoundRect(new RectF(M - 6, 22, W - M + 6, 110), 22, 22, p);
+        p.setColor(d.managerBrand ? Color.rgb(38, 28, 16) : BROWN); c.drawRoundRect(new RectF(M - 6, 22, W - M + 6, 110), 22, 22, p);
         p.setColor(GOLD); c.drawRect(M + 10, 104, W - M - 10, 107, p);
         try {
             Bitmap logo = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.meelano_3d);
@@ -126,7 +128,7 @@ final class MeelanoDailyReportPdf {
         p.setTypeface(regular); p.setTextSize(11); p.setColor(Color.argb(230, 255, 240, 214));
         c.drawText(d.visitor + "  •  " + d.date, W - M - 84, 86, p);
         p.setTextAlign(Paint.Align.LEFT); p.setTypeface(bold); p.setTextSize(12); p.setColor(GOLD);
-        c.drawText("پخش درخشان ویزیتور", M + 8, 60, p);
+        c.drawText(d.managerBrand ? "پخش درخشان مدیریت" : "پخش درخشان ویزیتور", M + 8, 60, p);
         return 128;
     }
 
@@ -134,7 +136,7 @@ final class MeelanoDailyReportPdf {
         p.setColor(LINE); c.drawRect(M, H - 42, W - M, H - 41, p);
         p.setTypeface(regular); p.setTextSize(9); p.setColor(MUTED);
         p.setTextAlign(Paint.Align.RIGHT);
-        c.drawText("پخش درخشان ویزیتور " + d.appVersion + "  •  طراحی و برنامه‌نویسی: " + d.developer, W - M, H - 26, p);
+        c.drawText((d.managerBrand ? "پخش درخشان مدیریت " : "پخش درخشان ویزیتور ") + d.appVersion + "  •  طراحی و برنامه‌نویسی: " + d.developer, W - M, H - 26, p);
         p.setTextAlign(Paint.Align.LEFT);
         c.drawText("صفحه " + faDigits(String.valueOf(pageNo)), M, H - 26, p);
     }
