@@ -11606,7 +11606,7 @@ public class MainActivity extends Activity {
         showNotice("در حال ساخت گزارش مدیر…", false);
         runDb(this::queryDashboard, new DbCallback() {
             @Override public void ok(String body) { try { buildAndShareManagerReport(new JSONObject(body)); } catch (Exception e) { buildAndShareManagerReport(new JSONObject()); } }
-            @Override public void fail(Exception e) { buildAndShareManagerReport(new JSONObject()); }
+            @Override public void fail(Exception e) { showNotice("اتصال برقرار نشد؛ گزارش با دادهٔ خالی ساخته شد.", true); buildAndShareManagerReport(new JSONObject()); }
         });
     }
 
@@ -11619,15 +11619,27 @@ public class MainActivity extends Activity {
             d.developer = DEVELOPER_NAME;
             d.appVersion = appVersionName();
             d.managerBrand = true;
-            JSONArray k = dash.optJSONArray("kpis");
-            int added = 0;
-            if (k != null) for (int i = 0; i < k.length() && added < 4; i++) { JSONObject o = k.optJSONObject(i); if (o != null && o.optBoolean("available")) { d.summary.add(new String[]{o.optString("title"), formatNumber(o.optLong("value"))}); added++; } }
             JSONObject today = dash.optJSONObject("today");
+            int added = 0;
+            String salesDate = "";
             if (today != null) {
+                JSONObject sales = today.optJSONObject("sales");
+                JSONObject purchases = today.optJSONObject("purchases");
+                salesDate = sales == null ? "" : sales.optString("date", "");
+                double sv = metricMoneyValue(sales == null ? null : sales.optJSONArray("metrics"), "جمع فروش");
+                double bv = metricMoneyValue(purchases == null ? null : purchases.optJSONArray("metrics"), "جمع خرید");
+                if (sv > 0 && added < 4) { d.summary.add(new String[]{"جمع فروش روز", money(Math.round(sv))}); added++; }
+                if (bv > 0 && added < 4) { d.summary.add(new String[]{"جمع خرید روز", money(Math.round(bv))}); added++; }
                 JSONArray od = today.optJSONArray("overdueInvoices");
-                if (od != null && added < 4) { d.summary.add(new String[]{"فاکتور سررسیده", formatNumber(od.length())}); added++; }
+                if (od != null && od.length() > 0 && added < 4) { d.summary.add(new String[]{"فاکتور سررسیده", formatNumber(od.length())}); added++; }
+                JSONArray td = today.optJSONArray("topDebtors");
+                if (td != null && td.length() > 0 && added < 4) { d.summary.add(new String[]{"بدهکار فعال", formatNumber(td.length())}); added++; }
             }
-            d.note = "خروجی نسخهٔ مدیریت پخش درخشان — ارقام از پایگاه آتیران.";
+            if (added == 0) {
+                JSONArray k = dash.optJSONArray("kpis");
+                if (k != null) for (int i = 0; i < k.length() && added < 4; i++) { JSONObject o = k.optJSONObject(i); if (o != null && o.optBoolean("available")) { d.summary.add(new String[]{o.optString("title"), formatNumber(o.optLong("value"))}); added++; } }
+            }
+            d.note = "خروجی نسخهٔ مدیریت پخش درخشان — ارقام از پایگاه آتیران" + (salesDate.isEmpty() ? "" : " • آخرین تاریخ فروش: " + faDigits(salesDate)) + ".";
             String fileName = "Darakhshan-Manager-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(new java.util.Date()) + ".pdf";
             File out = new File(MeelanoShareProvider.shareDir(this), fileName);
             MeelanoDailyReportPdf.write(this, d, MEELANO_REGULAR, MEELANO_BOLD, out);
@@ -11707,7 +11719,7 @@ public class MainActivity extends Activity {
         if (adv != null && adv.length() > 0) {
             LinearLayout c = approvalCard("مساعده", adv.length());
             for (int i = 0; i < adv.length(); i++) { JSONObject r = adv.optJSONObject(i); long id = r.optLong("id");
-                addApprovalRow(c, r.optString("display") + " • " + formatNumber(r.optLong("amount")) + " تومان", stringOr(r.optString("reason"), "بدون دلیل"),
+                addApprovalRow(c, r.optString("display") + " • " + money(r.optLong("amount")), stringOr(r.optString("reason"), "بدون دلیل"),
                         () -> decideAdvance(id, true), () -> decideAdvance(id, false)); }
         }
         if (mis != null && mis.length() > 0) {
