@@ -11492,6 +11492,40 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(116), 1f); lp.setMargins(dp(4), 0, dp(4), 0); parent.addView(tile, lp);
     }
 
+    // =============================== Phase 3: manager daily report (PDF + share) ===============================
+    private void generateManagerReportPdf() {
+        if (designPreview) { buildAndShareManagerReport(new JSONObject()); return; }
+        showNotice("در حال ساخت گزارش مدیر…", false);
+        runDb(this::queryDashboard, new DbCallback() {
+            @Override public void ok(String body) { try { buildAndShareManagerReport(new JSONObject(body)); } catch (Exception e) { buildAndShareManagerReport(new JSONObject()); } }
+            @Override public void fail(Exception e) { buildAndShareManagerReport(new JSONObject()); }
+        });
+    }
+
+    private void buildAndShareManagerReport(JSONObject dash) {
+        try {
+            MeelanoDailyReportPdf.Data d = new MeelanoDailyReportPdf.Data();
+            d.title = "گزارش روزانه مدیریت";
+            d.visitor = session == null ? "" : session.userName;
+            d.date = faDigits(todayDateText());
+            d.developer = DEVELOPER_NAME;
+            d.appVersion = appVersionName();
+            JSONArray k = dash.optJSONArray("kpis");
+            int added = 0;
+            if (k != null) for (int i = 0; i < k.length() && added < 4; i++) { JSONObject o = k.optJSONObject(i); if (o != null && o.optBoolean("available")) { d.summary.add(new String[]{o.optString("title"), formatNumber(o.optLong("value"))}); added++; } }
+            JSONObject today = dash.optJSONObject("today");
+            if (today != null) {
+                JSONArray od = today.optJSONArray("overdueInvoices");
+                if (od != null && added < 4) { d.summary.add(new String[]{"فاکتور سررسیده", formatNumber(od.length())}); added++; }
+            }
+            d.note = "خروجی نسخهٔ مدیریت پخش درخشان — ارقام از پایگاه آتیران.";
+            String fileName = "Darakhshan-Manager-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(new java.util.Date()) + ".pdf";
+            File out = new File(MeelanoShareProvider.shareDir(this), fileName);
+            MeelanoDailyReportPdf.write(this, d, MEELANO_REGULAR, MEELANO_BOLD, out);
+            MeelanoShareProvider.share(this, out, "application/pdf", "گزارش مدیریت " + d.visitor);
+        } catch (Exception ex) { showNotice("ساخت گزارش PDF ممکن نشد: " + shortError(ex), true); }
+    }
+
     // =============================== Manager approvals («تأییدها», phase 2) ===============================
     private String queryManagerApprovals() throws Exception {
         try (Connection c = openConnection()) {
@@ -11622,6 +11656,7 @@ public class MainActivity extends Activity {
         addVisitorMoreGroup("مدیریت و دسترسی", "نقش‌ها، دسترسی کاربران و سلامت اتصال", new VisitorToolSpec[]{
                 new VisitorToolSpec("مدیریت دسترسی کاربران", "نقش و دسترسی هر حساب", "♛", navAccent("management"), () -> showApp("management"), canOpenPage("management")),
                 new VisitorToolSpec("صف تأییدها", "مشتری، مرخصی، مساعده، مأموریت", "✓", navAccent("manager_approvals"), () -> showApp("manager_approvals"), canOpenPage("manager_approvals")),
+                new VisitorToolSpec("گزارش PDF مدیر", "روزانه • اشتراک", "⎙", navAccent("reports"), () -> generateManagerReportPdf(), canOpenPage("reports")),
                 new VisitorToolSpec("جستجوی سراسری", "در همه بخش‌ها", "⌕", navAccent("manager_more"), this::showGlobalSearchDialog, true),
                 new VisitorToolSpec("سلامت اتصال", "وضعیت آتیران", "⚕", navAccent("health"), () -> showApp("health"), canOpenPage("health")),
                 new VisitorToolSpec("تنظیمات", "تم، امنیت و بروزرسانی", "⚙", accent, () -> showApp("settings"), canOpenPage("settings"))
