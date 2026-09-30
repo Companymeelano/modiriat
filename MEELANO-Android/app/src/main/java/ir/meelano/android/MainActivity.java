@@ -1,6 +1,7 @@
 package ir.meelano.android;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -248,6 +249,7 @@ public class MainActivity extends Activity {
     private FrameLayout stage;
     private LinearLayout pageDock;
     private LinearLayout managerApprovalsRow;
+    private TextView managerAppTitle;
     private TextView status;
     private TextView subtitle;
     private TextView connectionIndicator;
@@ -2206,7 +2208,7 @@ public class MainActivity extends Activity {
         titles.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
         titles.setPadding(dp(8), 0, dp(8), 0);
         TextView appTitle = text(editionTitle(), 15.8f, tc(GOLD_2), Typeface.BOLD);
-        if (MANAGER_EDITION && session != null) appTitle.setText("پخش درخشان");
+        if (MANAGER_EDITION) { managerAppTitle = appTitle; if (session != null) appTitle.setText("پخش درخشان"); }
         if (MANAGER_EDITION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) appTitle.setAutoSizeTextTypeUniformWithConfiguration(10, 16, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
         appTitle.setSingleLine(true);
         appTitle.setEllipsize(TextUtils.TruncateAt.END);
@@ -2250,7 +2252,10 @@ public class MainActivity extends Activity {
         return headerPersonName() + (MANAGER_EDITION ? " • مدیر" : STAFF_EDITION ? " • پرسنل" : STORE_EDITION ? " • کارمند فروشگاه" : " • ویزیتور فعال");
     }
 
-    private void refreshHeaderName() { if (subtitle != null) subtitle.setText(headerSubtitleText()); }
+    private void refreshHeaderName() {
+        if (subtitle != null) subtitle.setText(headerSubtitleText());
+        if (MANAGER_EDITION && managerAppTitle != null) managerAppTitle.setText(session == null ? editionTitle() : "پخش درخشان");
+    }
 
     private View headerSettingsTool, headerLogoutTool;
 
@@ -3429,7 +3434,7 @@ public class MainActivity extends Activity {
         maybeRestoreAutosavedCart();
         motionSerial = 0;
         setConnectionStatus("connected");
-        subtitle.setText(VISITOR_EDITION ? headerSubtitleText() : session.userName);
+        subtitle.setText(VISITOR_EDITION || MANAGER_EDITION ? headerSubtitleText() : session.userName);
         stage.removeAllViews();
         if (VISITOR_EDITION) stage.addView(new VisitorLeatherBackgroundView(this), new FrameLayout.LayoutParams(-1, -1));
 
@@ -17177,6 +17182,7 @@ public class MainActivity extends Activity {
         @Override protected void onDraw(Canvas c) { super.onDraw(c); c.drawPath(path, p); }
         @Override public boolean onTouchEvent(MotionEvent e) { float x=e.getX(), y=e.getY(); if(e.getAction()==MotionEvent.ACTION_DOWN){ path.moveTo(x,y); invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_MOVE){ path.lineTo(x,y); invalidate(); return true; } return true; }
         void clear() { path.reset(); invalidate(); }
+        @SuppressLint("WrongThread") // tiny signature bitmap; synchronous caller contract (cart receipt).
         String exportPngBase64() { try { Bitmap b=Bitmap.createBitmap(Math.max(1,getWidth()), Math.max(1,getHeight()), Bitmap.Config.ARGB_8888); Canvas c=new Canvas(b); draw(c); ByteArrayOutputStream out=new ByteArrayOutputStream(); b.compress(Bitmap.CompressFormat.PNG, 90, out); return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP); } catch(Exception ex){ return ""; } }
     }
 

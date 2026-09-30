@@ -1,6 +1,7 @@
 package ir.meelano.android;
 
 import android.content.Context;
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -88,6 +89,8 @@ final class MeelanoSignatureView extends View {
     }
 
     /** PNG of the signature (dark ink on white, max 900 px wide) for the receipt row. */
+    // WrongThread suppressed on purpose: tiny user-initiated bitmap with a synchronous caller contract.
+    @SuppressLint("WrongThread")
     byte[] toPng() {
         int w = Math.max(1, getWidth()), h = Math.max(1, getHeight());
         float scale = w > 900 ? 900f / w : 1f;
