@@ -2208,7 +2208,7 @@ public class MainActivity extends Activity {
         titles.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
         titles.setPadding(dp(8), 0, dp(8), 0);
         TextView appTitle = text(editionTitle(), 15.8f, tc(GOLD_2), Typeface.BOLD);
-        if (MANAGER_EDITION) { managerAppTitle = appTitle; if (session != null) appTitle.setText("پخش درخشان"); }
+        if (MANAGER_EDITION) { managerAppTitle = appTitle; if (session != null) appTitle.setText("مدیریت"); }
         if (MANAGER_EDITION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) appTitle.setAutoSizeTextTypeUniformWithConfiguration(10, 16, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
         appTitle.setSingleLine(true);
         appTitle.setEllipsize(TextUtils.TruncateAt.END);
@@ -2254,7 +2254,7 @@ public class MainActivity extends Activity {
 
     private void refreshHeaderName() {
         if (subtitle != null) subtitle.setText(headerSubtitleText());
-        if (MANAGER_EDITION && managerAppTitle != null) managerAppTitle.setText(session == null ? editionTitle() : "پخش درخشان");
+        if (MANAGER_EDITION && managerAppTitle != null) managerAppTitle.setText(session == null ? editionTitle() : "مدیریت");
     }
 
     private View headerSettingsTool, headerLogoutTool;
