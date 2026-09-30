@@ -379,3 +379,39 @@ if (MANAGER_EDITION) VISITOR_EDITION = false;   // کلید باز شدن همه
 | CI | `.github/workflows/build-apk.yml` |
 | اسکرین‌شات خودکار | `.github/scripts/screenshots.sh`, `ui-review.sh` |
 | بازبینی‌های قبلی | `docs/CODE-AUDIT-fa.md`, `docs/UI-REVIEW-fa.md`, `docs/STORE-REVIEW-fa.md` |
+
+---
+
+## ۱۱) وضعیت اجرای فاز ۰ و ۱ (همین نشست) — `arena/01a0efdc-modiriat`
+
+پس از تأیید شما (نام «مدیریت»، پالت روشن متمایز، آیکون هم‌رنگ با المان مدیریتی، دامنهٔ مشاهده+تأییدها+پرسنل،
+شروع از فاز ۰+۱)، موارد زیر **اجرا و commit** شد:
+
+### فاز ۰ — استخراج و هم‌سان‌سازی
+- کل پروژه از `Modirat.zip` به ریشهٔ مخزن باز شد (`MEELANO-Android/`, `docs/`, `.github/`, `tools/`, `.gitignore`).
+- پروتوتایپ رابط کاربری در `prototype/manager/index.html` (هم‌رنگ پالت «پلاتین سرمه‌ای»).
+
+### فاز ۱ — طعم `manager` و بازکردن قفل
+- `app/build.gradle`: طعم `manager` با `applicationId 'ir.meelano.manager'` (+ کامنت).
+- `app/src/main/res/values/edition.xml`: `<bool name="meelano_manager_edition">false</bool>`.
+- `app/src/manager/res/values/{edition,strings,colors}.xml`: نام «پخش درخشان مدیریت»، رنگ شروع پلاتین/طلایی.
+- `app/src/manager/res/mipmap-*/`: ۱۰ PNG (۵ چگالی × ساده/گرد) + `drawable-nodpi/{ic_launcher_art,meelano_3d}.png`
+  از آیکون تولیدشده (ساختمان ستون‌دار سرمه‌ای + نمودار صعودی و تاج طلایی = المان مدیریت). منبع: `tools/icon/manager-icon-master.png`.
+- `MainActivity.java` (۲۸ ویرایش، همگی با کنترل «دقیقاً یک‌بار»):
+  - متغیر منبع‌محور `MANAGER_EDITION` (خط ~۱۴۱) + خواندن `R.bool.meelano_manager_edition` در `onCreate`.
+  - دروازهٔ «فقط مدیر» در `showApp` → `showManagerGate()`.
+  - `canUsePermission` → شاخهٔ `managerEditionPermissionAllowed` (فهرست سفید مدیر: داشبورد/گزارش/فرماندهی/پرسنل/حضور/مشتری/کالا/دسترسی/تحویل‌بار/گفتگو/دستیار/تنظیمات).
+  - `showApp` دیگر `dashboard` را بازنویسی نمی‌کند؛ داک ۵تایی مدیر (خانه/گزارش‌ها/پرسنل/حضور/بیشتر) + صفحهٔ تازهٔ «بیشتر» (`renderManagerMorePage`).
+  - تم پیش‌فرض `pearl_platinum` (روشن متمایز) + هدر و متن ورود مدیر + دکمه‌های «♛ مدیریت دسترسی» و «⌕ جستجوی سراسری» برای مدیر.
+  - `MANAGER_UPDATE_MANIFEST_URL` به `apk/latest-manager.json` همین مخزن.
+- CI: `build-apk.yml` (کپی APK مدیر + `latest-manager.json` + آرتیفکت اسکرین‌شات) و `screenshots.sh`
+  (۱۰ اسکرین‌شات مدیر: ورود/داشبورد/گزارش/پرسنل/حضور/بیشتر/دسترسی/فرماندهی + تیره + تبلت).
+
+### راستی‌آزمایی انجام‌شده در این محیط
+- تجزیهٔ کامل AST `MainActivity.java` با `javalang`: **بدون خطا**؛ شمارش متدها ۱۵۲۵→۱۵۲ (فقط ۳ متد افزوده، صفر حذف).
+- همهٔ ارجاع‌های جدید به منابع (`R.bool`, `R.drawable`, مipmap) موجودند؛ همهٔ XMLهای دست‌خورده well-formed؛ YAML ورک‌فلوها و `screenshots.sh` معتبر.
+
+### محدودیت (شفاف)
+در این سندباکس **کامپایل واقعی ممکن نیست**: نه JDK کامپایلر (`javac`) موجود است و نه دسترسی به
+`dl.google.com`/Maven برای Android SDK و AGP. ساخت و تست واقعی روی **GitHub Actions** همین مخزن انجام می‌شود
+(`gradle assembleManagerDebug` + اسکرین‌شات امولاتور). در صورت سبز نبودن CI، همین شاخه را بازبینی کنید.
