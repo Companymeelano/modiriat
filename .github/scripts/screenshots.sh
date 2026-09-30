@@ -140,6 +140,7 @@ if [ -f app-manager-debug.apk ]; then
   shot 84-manager-attendance attendance pearl_platinum
   shot 85-manager-more manager_more pearl_platinum
   shot 86-manager-access management pearl_platinum
+  shot 90-manager-approvals manager_approvals pearl_platinum
   shot 87-manager-dashboard-dark dashboard noir_aurora
   shot 88-manager-command command pearl_platinum
   adb shell wm size 1600x2560; adb shell wm density 320

@@ -3455,9 +3455,9 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) bar.setElevation(dp(8));
         String[][] items = MANAGER_EDITION ? new String[][]{
                 {"dashboard", "خانه", "⌂"},
+                {"manager_approvals", "تأییدها", "✓"},
                 {"reports", "گزارش‌ها", "↗"},
                 {"personnel", "پرسنل", "♟"},
-                {"attendance", "حضور", "☝"},
                 {"manager_more", "بیشتر", "☰"}
         } : STAFF_EDITION ? new String[][]{
                 {"staff_home", "خانه", "⌂"},
@@ -3502,6 +3502,7 @@ public class MainActivity extends Activity {
     private int visitorDockIconResource(String key, boolean active) {
         if ("visitor_dashboard".equals(key) || "store_home".equals(key) || "staff_home".equals(key) || "dashboard".equals(key)) return active ? R.drawable.mi_home_fill : R.drawable.mi_home;
         if ("reports".equals(key)) return R.drawable.mi_bar_chart;
+        if ("manager_approvals".equals(key)) return R.drawable.mi_task_alt;
         if ("personnel".equals(key)) return R.drawable.mi_group;
         if ("manager_more".equals(key)) return R.drawable.mi_apps;
         if ("attendance".equals(key)) return R.drawable.mi_fingerprint;
@@ -3520,7 +3521,7 @@ public class MainActivity extends Activity {
         if (page == null) return MANAGER_EDITION ? "dashboard" : STAFF_EDITION ? "staff_home" : STORE_EDITION ? "store_home" : "visitor_dashboard";
         if (MANAGER_EDITION) {
             if ("login".equals(page)) return "";
-            if ("dashboard".equals(page) || "reports".equals(page) || "personnel".equals(page) || "attendance".equals(page)) return page;
+            if ("dashboard".equals(page) || "manager_approvals".equals(page) || "reports".equals(page) || "personnel".equals(page)) return page;
             return "manager_more";
         }
         if (STAFF_EDITION) {
@@ -3709,6 +3710,7 @@ public class MainActivity extends Activity {
             case "settings": renderSettings(); break;
             case "management": loadAccessManagement(); break;
             case "manager_more": renderManagerMorePage(); break;
+            case "manager_approvals": loadManagerApprovals(); break;
             case "health": renderConnectionHealthPage(); break;
             case "dashboard":
             default: loadDashboard(); break;
@@ -6574,7 +6576,7 @@ public class MainActivity extends Activity {
                 || "attendance".equals(k) || "attendance_admin".equals(k) || "leave_balance".equals(k) || "leave_request".equals(k)
                 || "customers".equals(k) || "customer_detail".equals(k) || "customer_call".equals(k) || "customer_message".equals(k)
                 || "products".equals(k) || "product_detail".equals(k)
-                || "management_access".equals(k) || "delivery_admin".equals(k) || "assistant".equals(k)
+                || "management_access".equals(k) || "manager_approvals".equals(k) || "delivery_admin".equals(k) || "assistant".equals(k)
                 || "chat".equals(k) || "settings".equals(k) || "connection_health".equals(k);
     }
 
@@ -6589,6 +6591,7 @@ public class MainActivity extends Activity {
         if ("health".equals(page)) return "connection_health";
         if ("management".equals(page)) return "management_access";
         if ("manager_more".equals(page)) return "settings";
+        if ("manager_approvals".equals(page)) return "management_access";
         if ("settings".equals(page)) return "settings";
         return page == null ? "" : page;
     }
@@ -7101,6 +7104,7 @@ public class MainActivity extends Activity {
         if ("settings".equals(page)) return "تنظیمات";
         if ("management".equals(page)) return "مدیریت";
         if ("manager_more".equals(page)) return "ابزارهای مدیریتی";
+        if ("manager_approvals".equals(page)) return "تأییدها";
         return page == null ? "بخش" : page;
     }
 
@@ -8773,7 +8777,8 @@ public class MainActivity extends Activity {
         runDb(() -> { try(Connection c=openConnection()){ ensureMeelanoCollabTables(c); try(PreparedStatement ps=c.prepareStatement("INSERT INTO dbo.meelano_leave_requests(username,display_name,leave_type,start_date,end_date,hours,reason) VALUES(?,?,?,?,?,?,?)")){ ps.setString(1,currentAccountName()); ps.setString(2,session==null?currentAccountName():session.userName); ps.setString(3,type); ps.setString(4,start); ps.setString(5,end); ps.setString(6,hours); ps.setString(7,reason); ps.executeUpdate(); } } return "ok"; }, new DbCallback(){ @Override public void ok(String b){ showNotice("درخواست مرخصی ارسال شد.", false); showLocalNotification("درخواست مرخصی", "درخواست شما ثبت شد و برای مدیر قابل مشاهده است.", false); if (STORE_EDITION) { storeDataCache = null; loadStoreAttendance(); } else loadAttendance(); } @Override public void fail(Exception e){ if (STORE_EDITION) showNotice("درخواست مرخصی ثبت نشد: " + shortError(e), true); else showPageError("مرخصی",e,()->loadAttendance()); }});
     }
 
-    private void decideLeave(long id, boolean approve){ runDb(() -> { try(Connection c=openConnection()){ ensureMeelanoCollabTables(c); try(PreparedStatement ps=c.prepareStatement("UPDATE dbo.meelano_leave_requests SET status=?, decided_at=SYSDATETIME(), manager_note=? WHERE id=?")){ ps.setString(1,approve?"approved":"rejected"); ps.setString(2,approve?"تأیید مدیر":"رد مدیر"); ps.setLong(3,id); ps.executeUpdate(); } } return "ok"; }, new DbCallback(){ @Override public void ok(String b){ loadAttendance(); } @Override public void fail(Exception e){ showPageError("مرخصی",e,()->loadAttendance()); }}); }
+    private void decideLeave(long id, boolean approve){ decideLeave(id, approve, this::loadAttendance); }
+    private void decideLeave(long id, boolean approve, Runnable after){ runDb(() -> { try(Connection c=openConnection()){ ensureMeelanoCollabTables(c); try(PreparedStatement ps=c.prepareStatement("UPDATE dbo.meelano_leave_requests SET status=?, decided_at=SYSDATETIME(), manager_note=? WHERE id=?")){ ps.setString(1,approve?"approved":"rejected"); ps.setString(2,approve?"تأیید مدیر":"رد مدیر"); ps.setLong(3,id); ps.executeUpdate(); } } return "ok"; }, new DbCallback(){ @Override public void ok(String b){ showNotice(approve?"مرخصی تأیید شد.":"مرخصی رد شد.", false); after.run(); } @Override public void fail(Exception e){ showPageError("مرخصی",e,after); }}); }
 
     private interface NetworkJob { String run() throws Exception; }
     private interface NetworkCallback { void ok(String body); void fail(Exception e); }
@@ -11487,6 +11492,124 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(116), 1f); lp.setMargins(dp(4), 0, dp(4), 0); parent.addView(tile, lp);
     }
 
+    // =============================== Manager approvals («تأییدها», phase 2) ===============================
+    private String queryManagerApprovals() throws Exception {
+        try (Connection c = openConnection()) {
+            ensureMeelanoCollabTables(c); ensureMeelanoHrTables(c);
+            JSONObject out = new JSONObject();
+            out.put("customers", queryCustomerRequests(true, false));
+            out.put("leaves", queryLeaveRequests(c));
+            out.put("advances", queryPendingAdvances(c));
+            out.put("missions", queryPendingMissions(c));
+            out.put("incomplete", queryOpenIncomplete(c));
+            return out.toString();
+        }
+    }
+
+    private JSONArray queryPendingAdvances(Connection c) throws Exception {
+        JSONArray a = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement("SELECT TOP (40) id, username, ISNULL(display_name,N''), amount, ISNULL(reason,N''), ISNULL(jdate,N'') FROM dbo.meelano_hr_advance WHERE status=N'pending' ORDER BY id")) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("id", r.getLong(1)); o.put("username", stringOr(r.getString(2), "")); o.put("display", stringOr(r.getString(3), r.getString(2))); o.put("amount", r.getLong(4)); o.put("reason", stringOr(r.getString(5), "")); o.put("jdate", stringOr(r.getString(6), "")); a.put(o); } }
+        }
+        return a;
+    }
+
+    private JSONArray queryPendingMissions(Connection c) throws Exception {
+        JSONArray a = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement("SELECT TOP (40) id, username, ISNULL(display_name,N''), reason, ISNULL(destination,N''), ISNULL(expected_min,0) FROM dbo.meelano_hr_mission WHERE manager_status=N'pending' ORDER BY id")) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("id", r.getLong(1)); o.put("username", stringOr(r.getString(2), "")); o.put("display", stringOr(r.getString(3), r.getString(2))); o.put("reason", stringOr(r.getString(4), "")); o.put("destination", stringOr(r.getString(5), "")); o.put("min", r.getInt(6)); a.put(o); } }
+        }
+        return a;
+    }
+
+    private JSONArray queryOpenIncomplete(Connection c) throws Exception {
+        JSONArray a = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement("SELECT TOP (40) id, username, ISNULL(display_name,N''), work_date, ISNULL(first_in,N''), ISNULL(reason,N'') FROM dbo.meelano_hr_incomplete WHERE status=N'open' ORDER BY id")) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("id", r.getLong(1)); o.put("username", stringOr(r.getString(2), "")); o.put("display", stringOr(r.getString(3), r.getString(2))); o.put("date", stringOr(r.getString(4), "")); o.put("in", stringOr(r.getString(5), "")); o.put("reason", stringOr(r.getString(6), "")); a.put(o); } }
+        }
+        return a;
+    }
+
+    private void loadManagerApprovals() {
+        content.removeAllViews();
+        addHero("صف تأییدها", "مشتری جدید، مرخصی، مساعده، مأموریت و تردد ناقص — هر تصمیم با نام شما و زمان دقیق ثبت می‌شود.");
+        addLoading(content, "در حال دریافت صف تأییدها…");
+        runDb(this::queryManagerApprovals, new DbCallback() {
+            @Override public void ok(String body) { try { renderManagerApprovals(new JSONObject(body)); } catch (Exception e) { showPageError("تأییدها", e, () -> loadManagerApprovals()); } }
+            @Override public void fail(Exception e) { showPageError("تأییدها", e, () -> loadManagerApprovals()); }
+        });
+    }
+
+    private void renderManagerApprovals(JSONObject d) {
+        content.removeAllViews();
+        addHero("صف تأییدها", "مشتری جدید، مرخصی، مساعده، مأموریت و تردد ناقص — هر تصمیم با نام شما و زمان دقیق ثبت می‌شود.");
+        JSONArray cust = d.optJSONArray("customers"), leaves = d.optJSONArray("leaves"), adv = d.optJSONArray("advances"), mis = d.optJSONArray("missions"), inc = d.optJSONArray("incomplete");
+        int total = (cust == null ? 0 : cust.length()) + pendingCount(leaves) + (adv == null ? 0 : adv.length()) + (mis == null ? 0 : mis.length()) + (inc == null ? 0 : inc.length());
+        content.addView(text("در انتظار تصمیم: " + formatNumber(total) + " مورد", 12.5f, total > 0 ? tc(WARNING) : tc(SUCCESS), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+
+        if (cust != null && cust.length() > 0) {
+            LinearLayout c = approvalCard("مشتری جدید", cust.length());
+            for (int i = 0; i < cust.length(); i++) { JSONObject r = cust.optJSONObject(i);
+                addApprovalRow(c, r.optString("name", "مشتری جدید"), "درخواست از " + r.optString("visitor", "") + " • " + r.optString("mobile", ""),
+                        () -> showApproveCustomerRequestDialog(r), () -> showRejectCustomerRequestDialog(r)); }
+        }
+        if (leaves != null && pendingCount(leaves) > 0) {
+            LinearLayout c = approvalCard("مرخصی", pendingCount(leaves));
+            for (int i = 0; i < leaves.length(); i++) { JSONObject r = leaves.optJSONObject(i); if (r == null || !"pending".equals(r.optString("status"))) continue;
+                long id = r.optLong("id");
+                addApprovalRow(c, r.optString("display") + " • " + r.optString("type"), r.optString("start") + " تا " + r.optString("end") + " • " + r.optString("hours"),
+                        () -> decideLeave(id, true, this::loadManagerApprovals), () -> decideLeave(id, false, this::loadManagerApprovals)); }
+        }
+        if (adv != null && adv.length() > 0) {
+            LinearLayout c = approvalCard("مساعده", adv.length());
+            for (int i = 0; i < adv.length(); i++) { JSONObject r = adv.optJSONObject(i); long id = r.optLong("id");
+                addApprovalRow(c, r.optString("display") + " • " + formatNumber(r.optLong("amount")) + " تومان", stringOr(r.optString("reason"), "بدون دلیل"),
+                        () -> decideAdvance(id, true), () -> decideAdvance(id, false)); }
+        }
+        if (mis != null && mis.length() > 0) {
+            LinearLayout c = approvalCard("مأموریت", mis.length());
+            for (int i = 0; i < mis.length(); i++) { JSONObject r = mis.optJSONObject(i); long id = r.optLong("id");
+                addApprovalRow(c, r.optString("display") + " • " + r.optString("reason"), stringOr(r.optString("destination"), "بدون مقصد") + " • " + formatNumber(r.optInt("min")) + " دقیقه",
+                        () -> decideMission(id, true), () -> decideMission(id, false)); }
+        }
+        if (inc != null && inc.length() > 0) {
+            LinearLayout c = approvalCard("تردد ناقص", inc.length());
+            for (int i = 0; i < inc.length(); i++) { JSONObject r = inc.optJSONObject(i); long id = r.optLong("id");
+                addApprovalRow(c, r.optString("display") + " • " + r.optString("date"), "اولین ورود " + stringOr(r.optString("in"), "—"),
+                        () -> decideIncomplete(id, true), () -> decideIncomplete(id, false)); }
+        }
+        if (total == 0) addEmptyTo(content, "صف تأییدها خالی است — همه‌چیز رسیدگی شده. ✨");
+        addDeveloperCredit(content);
+    }
+
+    private int pendingCount(JSONArray rows) { if (rows == null) return 0; int n = 0; for (int i = 0; i < rows.length(); i++) { JSONObject r = rows.optJSONObject(i); if (r != null && "pending".equals(r.optString("status"))) n++; } return n; }
+
+    private LinearLayout approvalCard(String title, int n) {
+        LinearLayout c = card(); c.setBackground(themedSectionBg("manager_approvals", 26));
+        c.addView(text(title + "  •  " + formatNumber(n) + " مورد", 14.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
+        return c;
+    }
+
+    private void addApprovalRow(LinearLayout parent, String t1, String t2, Runnable onOk, Runnable onNo) {
+        LinearLayout item = new LinearLayout(this); item.setOrientation(LinearLayout.VERTICAL); item.setPadding(dp(10), dp(9), dp(10), dp(9));
+        item.setBackground(roundedStroke(alpha(navAccent("manager_approvals"), 16), 16, alpha(navAccent("manager_approvals"), 60)));
+        item.addView(text(t1, 12.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        item.addView(text(t2, 10.6f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
+        Button ok = primaryButton(withIcon("✓", "تأیید")); Button no = secondaryButton(withIcon("×", "رد"));
+        ok.setOnClickListener(v -> onOk.run()); no.setOnClickListener(v -> onNo.run());
+        row.addView(ok, weightedButtonLp()); row.addView(no, weightedButtonLp());
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(8), 0, 0); item.addView(row, rp);
+        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(-1, -2); ip.setMargins(0, dp(8), 0, 0); parent.addView(item, ip);
+    }
+
+    private void decideAdvance(long id, boolean approve) { runDb(() -> { try (Connection c = openConnection()) { ensureMeelanoHrTables(c); try (PreparedStatement ps = c.prepareStatement("UPDATE dbo.meelano_hr_advance SET status=?, decided_by=?, decided_at=SYSDATETIME(), manager_note=? WHERE id=? AND status=N'pending'")) { ps.setString(1, approve ? "approved" : "rejected"); ps.setString(2, currentAccountName()); ps.setString(3, approve ? "تأیید مدیر" : "رد مدیر"); ps.setLong(4, id); ps.executeUpdate(); } } return "ok"; }, new DbCallback() { @Override public void ok(String b) { showNotice(approve ? "مساعده تأیید شد." : "مساعده رد شد.", false); loadManagerApprovals(); } @Override public void fail(Exception e) { showPageError("مساعده", e, () -> loadManagerApprovals()); } }); }
+
+    private void decideMission(long id, boolean approve) { runDb(() -> { try (Connection c = openConnection()) { ensureMeelanoHrTables(c); try (PreparedStatement ps = c.prepareStatement("UPDATE dbo.meelano_hr_mission SET manager_status=?, decided_by=?, decided_at=SYSDATETIME(), manager_note=? WHERE id=? AND manager_status=N'pending'")) { ps.setString(1, approve ? "approved" : "rejected"); ps.setString(2, currentAccountName()); ps.setString(3, approve ? "تأیید مدیر" : "رد مدیر"); ps.setLong(4, id); ps.executeUpdate(); } } return "ok"; }, new DbCallback() { @Override public void ok(String b) { showNotice(approve ? "مأموریت تأیید شد." : "مأموریت رد شد.", false); loadManagerApprovals(); } @Override public void fail(Exception e) { showPageError("مأموریت", e, () -> loadManagerApprovals()); } }); }
+
+    private void decideIncomplete(long id, boolean fix) { runDb(() -> { try (Connection c = openConnection()) { ensureMeelanoHrTables(c); try (PreparedStatement ps = c.prepareStatement("UPDATE dbo.meelano_hr_incomplete SET status=?, fixed_by=?, fixed_at=SYSDATETIME(), manager_note=? WHERE id=? AND status=N'open'")) { ps.setString(1, fix ? "fixed" : "dismissed"); ps.setString(2, currentAccountName()); ps.setString(3, fix ? "اصلاح مدیر" : "چشم‌پوشی مدیر"); ps.setLong(4, id); ps.executeUpdate(); } } return "ok"; }, new DbCallback() { @Override public void ok(String b) { showNotice(fix ? "تردد اصلاح شد." : "تردد بسته شد.", false); loadManagerApprovals(); } @Override public void fail(Exception e) { showPageError("تردد", e, () -> loadManagerApprovals()); } }); }
+
     /** Manager app, «بیشتر»: every management tool in one place, filtered by the signed-in role. */
     private void renderManagerMorePage() {
         content.removeAllViews();
@@ -11498,6 +11621,7 @@ public class MainActivity extends Activity {
 
         addVisitorMoreGroup("مدیریت و دسترسی", "نقش‌ها، دسترسی کاربران و سلامت اتصال", new VisitorToolSpec[]{
                 new VisitorToolSpec("مدیریت دسترسی کاربران", "نقش و دسترسی هر حساب", "♛", navAccent("management"), () -> showApp("management"), canOpenPage("management")),
+                new VisitorToolSpec("صف تأییدها", "مشتری، مرخصی، مساعده، مأموریت", "✓", navAccent("manager_approvals"), () -> showApp("manager_approvals"), canOpenPage("manager_approvals")),
                 new VisitorToolSpec("جستجوی سراسری", "در همه بخش‌ها", "⌕", navAccent("manager_more"), this::showGlobalSearchDialog, true),
                 new VisitorToolSpec("سلامت اتصال", "وضعیت آتیران", "⚕", navAccent("health"), () -> showApp("health"), canOpenPage("health")),
                 new VisitorToolSpec("تنظیمات", "تم، امنیت و بروزرسانی", "⚙", accent, () -> showApp("settings"), canOpenPage("settings"))
