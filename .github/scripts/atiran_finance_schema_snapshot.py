@@ -309,6 +309,13 @@ def restore_and_collect(output_path: Path) -> None:
             "SELECT FormId AS form_id, [Title] AS title, [NameSpace] AS namespace, [Class] AS class_name "
             "FROM security.[Form] ORDER BY FormId",
         ),
+        "menus": query(
+            cursor,
+            "SELECT MenuID AS menu_id, SubSystemID AS subsystem_id, [Text] AS menu_text, "
+            "[Description] AS menu_description, ParentMenuID AS parent_menu_id, FormID AS form_id, "
+            "[order] AS display_order, Shortcut AS shortcut "
+            "FROM security.Menu ORDER BY SubSystemID, [order], MenuID",
+        ),
         "fields": query(
             cursor,
             "SELECT FieldId AS field_id, FormId AS form_id, [Title] AS title "
