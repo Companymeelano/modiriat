@@ -417,7 +417,8 @@ def main():
     # ---------------------------------------------------------------- freshness (is there data now?)
     def freshness():
         res = {}
-        res["_server_now"] = q("SELECT CONVERT(nvarchar(19), SYSDATETIME(), 120) AS now_v")
+        now = q("SELECT CONVERT(nvarchar(19), SYSDATETIME(), 120) AS now_v")
+        res["_server_now"] = now[0] if now else {}
         for tbl in [t for t in ["sailfact", "subsailfact", "getchk", "putchk", "cust_act", "customers",
                                 "bank", "visitors", "salefacttasvieh", "sys_mandeh_customer"]
                     if t in out["tables"]]:
@@ -550,6 +551,9 @@ def write_markdown(o, path):
     add("| جدول | تخمین ردیف | ردیف دقیق |")
     add("|---|---|---|")
     for k, v in sorted((o.get("freshness") or {}).items()):
+        if not isinstance(v, dict):
+            add("| `%s` | %s | |" % (k, v))
+            continue
         add("| `%s` | %s | %s |" % (k, v.get("rows_est"), v.get("rows_exact", v.get("count_error", "—"))))
     add("")
     add("## ۷) خطاهای Probe")
@@ -562,6 +566,9 @@ def write_markdown(o, path):
 
 
 def summary(o):
+    if not o.get("tables"):
+        print("!! no tables in report: %s" % (o.get("fatal") or o.get("errors")))
+        return
     print("---- finance candidates ----")
     for c in (o.get("candidates") or [])[:25]:
         print("  %-28s rows=%-10s score=%-4s hits=%s" % (c["table"], c.get("rows"), c.get("score"),
@@ -582,6 +589,8 @@ def cli():
         tb = traceback.format_exc()
         print("FATAL: " + tb)
         try:
+            if os.path.exists(OUT) and os.path.getsize(OUT) > 5000:
+                raise SystemExit(3)  # keep the real report that was already written
             cur = {"ok": False, "fatal": scrub(ex, []), "generated_utc":
                    datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z",
                    "errors": tb.splitlines()[-6:]}
