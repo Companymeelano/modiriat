@@ -1,0 +1,8 @@
+pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+rootProject.name = 'MEELANO-Android'
+include ':finance'
+
+// The legacy application is supplied separately in the original archive. Keep the finance source
+// buildable in a clean checkout without copying its checked-in install key or embedded legacy config.
+if (file('app/build.gradle').isFile()) include ':app'

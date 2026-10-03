@@ -1,0 +1,57 @@
+plugins { id 'com.android.application' }
+
+// Release signing is intentionally supplied outside the repository (CI secrets or local env).
+// Never fall back to the legacy app's checked-in/local install key.
+def financeStoreFile = project.findProperty('financeReleaseStoreFile') ?: System.getenv('FINANCE_RELEASE_STORE_FILE')
+def financeStorePassword = project.findProperty('financeReleaseStorePassword') ?: System.getenv('FINANCE_RELEASE_STORE_PASSWORD')
+def financeKeyAlias = project.findProperty('financeReleaseKeyAlias') ?: System.getenv('FINANCE_RELEASE_KEY_ALIAS')
+def financeKeyPassword = project.findProperty('financeReleaseKeyPassword') ?: System.getenv('FINANCE_RELEASE_KEY_PASSWORD')
+def financeReleaseSigningReady = [financeStoreFile, financeStorePassword, financeKeyAlias, financeKeyPassword].every { it != null && !it.toString().trim().isEmpty() }
+
+android {
+    namespace 'ir.atiran.finance'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'ir.atiran.finance'
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName '0.1.0-schema-preview'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    if (financeReleaseSigningReady) {
+        signingConfigs {
+            financeRelease {
+                storeFile file(financeStoreFile.toString())
+                storeType 'pkcs12'
+                storePassword financeStorePassword.toString()
+                keyAlias financeKeyAlias.toString()
+                keyPassword financeKeyPassword.toString()
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            // Runtime-entered SQL connection values are accepted only by debuggable builds.
+        }
+        release {
+            // Do not use a repository/local fallback key. Without external signing values,
+            // Gradle may still assemble an unsigned artifact, but it is not distributable.
+            if (financeReleaseSigningReady) signingConfig signingConfigs.financeRelease
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+}
+
+dependencies {
+    implementation 'net.sourceforge.jtds:jtds:1.3.1'
+    testImplementation 'junit:junit:4.13.2'
+}
