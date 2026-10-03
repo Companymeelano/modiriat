@@ -42,8 +42,6 @@ final class MeelanoDailyReportPdf {
         String note = "";
         /** manager edition: espresso+gold brand cover instead of the visitor brown band. */
         boolean managerBrand = false;
-<<<<<<< HEAD
-=======
         /** Reports 2.0: sections are configurable so the same writer serves manager intelligence reports. */
         String preTitle = "\u067e\u06cc\u0634\u200c\u0641\u0627\u06a9\u062a\u0648\u0631\u0647\u0627\u06cc \u0627\u0645\u0631\u0648\u0632";
         String visTitle = "\u0648\u06cc\u0632\u06cc\u062a\u200c\u0647\u0627\u06cc \u0627\u0645\u0631\u0648\u0632";
@@ -51,7 +49,6 @@ final class MeelanoDailyReportPdf {
         String visEmpty = "\u0627\u0645\u0631\u0648\u0632 \u0648\u06cc\u0632\u06cc\u062a\u06cc \u062b\u0628\u062a \u0646\u0634\u062f\u0647 \u0627\u0633\u062a.";
         String[] preHead = {"\u0633\u0627\u0639\u062a", "\u0645\u0634\u062a\u0631\u06cc", "\u0645\u0628\u0644\u063a", "\u0648\u0636\u0639\u06cc\u062a"};
         String[] visHead = {"\u0633\u0627\u0639\u062a", "\u0645\u0634\u062a\u0631\u06cc", "\u0646\u062a\u06cc\u062c\u0647"};
->>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
     }
 
     private static final int W = 595, H = 842, M = 34;
@@ -83,16 +80,6 @@ final class MeelanoDailyReportPdf {
                 y += 84;
             }
 
-<<<<<<< HEAD
-            String[] preHead = {"ساعت", "مشتری", "مبلغ", "وضعیت"};
-            float[] preCols = {0.12f, 0.43f, 0.27f, 0.18f};
-            String[] visHead = {"ساعت", "مشتری", "نتیجه"};
-            float[] visCols = {0.12f, 0.50f, 0.38f};
-
-            Object[][] sections = {
-                    {"پیش‌فاکتورهای امروز", d.prefactors, preHead, preCols, "امروز پیش‌فاکتوری ثبت نشده است."},
-                    {"ویزیت‌های امروز", d.visits, visHead, visCols, "امروز ویزیتی ثبت نشده است."}};
-=======
             String[] preHead = d.preHead;
             float[] preCols = {0.12f, 0.43f, 0.27f, 0.18f};
             String[] visHead = d.visHead;
@@ -101,7 +88,6 @@ final class MeelanoDailyReportPdf {
             Object[][] sections = {
                     {d.preTitle, d.prefactors, preHead, preCols, d.preEmpty},
                     {d.visTitle, d.visits, visHead, visCols, d.visEmpty}};
->>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
             for (Object[] s : sections) {
                 @SuppressWarnings("unchecked") List<String[]> rows = (List<String[]>) s[1];
                 String[] head = (String[]) s[2]; float[] cols = (float[]) s[3];

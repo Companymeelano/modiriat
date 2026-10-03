@@ -12012,8 +12012,6 @@ public class MainActivity extends Activity {
         }
     }
 
-<<<<<<< HEAD
-=======
     // =============================== Phase 14-17: Reports 2.0 (PDF/CSV) + Milo insights ===============================
     private java.util.List<String> managerInsights(JSONObject m) {
         java.util.List<String> out = new java.util.ArrayList<>();
@@ -12134,7 +12132,6 @@ public class MainActivity extends Activity {
         });
     }
 
->>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
     // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
     private LinearLayout managerRangeRow(Runnable reload) {
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
@@ -12367,8 +12364,6 @@ public class MainActivity extends Activity {
         content.addView(filters, fp);
         JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases"), recv = m.optJSONObject("receivables"), cust = m.optJSONObject("customers"), chk = m.optJSONObject("checkBuckets");
         JSONArray visitors = m.optJSONArray("visitors");
-<<<<<<< HEAD
-=======
         LinearLayout quick = new LinearLayout(this); quick.setOrientation(LinearLayout.HORIZONTAL);
         Button q1 = secondaryButton("اتاق فروش"); q1.setTextSize(fs(9.6f)); q1.setOnClickListener(v -> showApp("mgr_cockpit")); quick.addView(q1, weightedButtonLp());
         Button q2 = secondaryButton("وصول"); q2.setTextSize(fs(9.6f)); q2.setOnClickListener(v -> showApp("mgr_collection")); quick.addView(q2, weightedButtonLp());
@@ -12380,7 +12375,6 @@ public class MainActivity extends Activity {
         Button csv = secondaryButton("CSV"); csv.setTextSize(fs(10.2f)); csv.setOnClickListener(v -> exportManagerIntelCsv()); export.addView(csv, weightedButtonLp());
         LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-1, -2); ep.setMargins(0, dp(8), 0, dp(12));
         content.addView(export, ep);
->>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
         LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
         double sv = sales == null ? 0 : sales.optDouble("total", 0);
         double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
@@ -12416,8 +12410,6 @@ public class MainActivity extends Activity {
             if (soon != null) addBarLine(c, "≤ ۷ روز", money(Math.round(soon.optDouble("total", 0))), soon.optDouble("total", 0), mx, WARNING);
             if (chk.optJSONObject("ok") != null) addBarLine(c, "سررسید نشده", money(Math.round(chk.optJSONObject("ok").optDouble("total", 0))), chk.optJSONObject("ok").optDouble("total", 0), mx, SUCCESS);
         }
-<<<<<<< HEAD
-=======
         JSONArray aging = m.optJSONArray("aging");
         if (aging != null && aging.length() > 0) {
             LinearLayout c = addReportCard("سبد سنی مطالبات", "◔", WARNING);
@@ -12425,7 +12417,6 @@ public class MainActivity extends Activity {
             for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, agingColor(o.optString("label", ""))); }
         }
         addInsightsCard(m);
->>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
         addActionCenterCard(m);
         addActivityFeedCard(m.optJSONArray("feed"));
         addDeveloperCredit(content);

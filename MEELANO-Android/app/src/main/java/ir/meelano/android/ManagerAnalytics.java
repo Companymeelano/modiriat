@@ -578,16 +578,10 @@ final class ManagerAnalytics {
         try { out.put("receivables", receivables(c)); } catch (Exception e) { errors.put("receivables: " + String.valueOf(e.getMessage())); }
         try { out.put("debtors", debtors(c, 8)); } catch (Exception e) { errors.put("debtors: " + String.valueOf(e.getMessage())); }
         try { out.put("customers", customerCategories(c, range)); } catch (Exception e) { errors.put("customers: " + String.valueOf(e.getMessage())); }
-<<<<<<< HEAD
-        try { out.put("visitors", visitorPerformance(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage())); }
-        try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage())); }
-        try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage())); }
-=======
         try { out.put("visitors", visitorGoals(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage())); }
         try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage())); }
         try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage())); }
         try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage())); }
->>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
         try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage())); }
         out.put("errors", errors);
         return out;
