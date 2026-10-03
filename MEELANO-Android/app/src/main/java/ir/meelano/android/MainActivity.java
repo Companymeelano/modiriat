@@ -250,7 +250,7 @@ public class MainActivity extends Activity {
     private LinearLayout pageDock;
     private LinearLayout managerApprovalsRow;
     private TextView managerAppTitle;
-    private int managerReportRange = 0;
+    private int managerReportRange = 2; // default 30 days — "today" often has no sales yet and looked like empty reports
     private String managerExecCacheJson;
     private String managerDrillKind = "sales";
     private int managerReportListCap = 5;
@@ -348,6 +348,7 @@ public class MainActivity extends Activity {
         try { MANAGER_EDITION = getResources().getBoolean(R.bool.meelano_manager_edition); } catch (Exception ignored) { MANAGER_EDITION = false; }
         if (MANAGER_EDITION) { STORE_EDITION = false; STAFF_EDITION = false; }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        managerReportRange = prefs.getInt("mgr_range", 2);
         loadMeelanoFonts();
         if (VISITOR_EDITION) prepareVisitorEditionDefaults();
         applyTheme(prefs.getString(KEY_THEME, defaultThemeId()));
@@ -11663,11 +11664,11 @@ public class MainActivity extends Activity {
         int range = dash.optInt("range", 0);
         LinearLayout filters = new LinearLayout(this);
         filters.setOrientation(LinearLayout.HORIZONTAL);
-        String[] labels = {"امروز", "۷ روز اخیر", "۳۰ روز اخیر"};
-        for (int i = 0; i < 3; i++) {
+        String[] labels = {"امروز", "۷ روز", "۳۰ روز", "۱۲ ماه"};
+        for (int i = 0; i < labels.length; i++) {
             final int rr = i;
             Button b = i == range ? primaryButton(labels[i]) : secondaryButton(labels[i]);
-            b.setOnClickListener(v -> { managerReportRange = rr; loadManagerReports(); });
+            b.setOnClickListener(v -> { managerReportRange = rr; prefs.edit().putInt("mgr_range", rr).apply(); loadManagerReports(); });
             filters.addView(b, weightedButtonLp());
         }
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
@@ -12383,8 +12384,8 @@ public class MainActivity extends Activity {
     // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
     private LinearLayout managerRangeRow(Runnable reload) {
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
-        String[] labels = {"امروز", "۷ روز", "۳۰ روز"};
-        for (int i = 0; i < 3; i++) { final int rr = i; Button b = i == managerReportRange ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; reload.run(); }); filters.addView(b, weightedButtonLp()); }
+        String[] labels = {"امروز", "۷ روز", "۳۰ روز", "۱۲ ماه"};
+        for (int i = 0; i < labels.length; i++) { final int rr = i; Button b = i == managerReportRange ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; prefs.edit().putInt("mgr_range", rr).apply(); reload.run(); }); filters.addView(b, weightedButtonLp()); }
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
         filters.setLayoutParams(fp);
         return filters;
