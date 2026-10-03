@@ -26,7 +26,7 @@ permissions:
 jobs:
   finance-android:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - name: Check out source
         uses: actions/checkout@v5
@@ -68,8 +68,23 @@ jobs:
         run: |
           set -euo pipefail
           "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses < <(yes) >/dev/null
-          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install 'emulator' 'platform-tools' 'platforms;android-35' 'platforms;android-36' 'build-tools;36.0.0' 'system-images;android-35;google_apis;x86_64'
 
       - name: Run Finance unit tests and assemble Debug APK
         working-directory: MEELANO-Android
         run: gradle --no-daemon --stacktrace :finance:testDebugUnitTest :finance:assembleDebug
+
+      - name: Install and launch Finance on Android 35 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb install -r "$GITHUB_WORKSPACE/MEELANO-Android/finance/build/outputs/apk/debug/finance-debug.apk"
+            adb shell am start -W -n ir.atiran.finance/.FinanceActivity
+            adb shell pidof ir.atiran.finance
+            adb shell am force-stop ir.atiran.finance

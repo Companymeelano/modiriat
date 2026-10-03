@@ -45,7 +45,7 @@ Menu/Formهای واقعی موجود در backup در `ACCESS-CONTROL-fa.md` ث
 
 ## Inspector داخل Android
 
-`finance/src/main/java/ir/atiran/finance/FinanceSchemaInspector.java` در صورت اجرای دستی فقط `sys.*`، جدول/View، ستون‌ها، PK، FK، Index و نسخهٔ سرور را می‌خواند؛ ردیف عملیاتی نمی‌خواند. این برنامه هنوز روی Android/SQL Server اجرا یا Build نشده است. نبودن FK ثبت‌شده نیز نبودن رابطهٔ منطقی را اثبات نمی‌کند.
+`finance/src/main/java/ir/atiran/finance/FinanceSchemaInspector.java` در صورت اجرای دستی فقط `sys.*`، جدول/View، ستون‌ها، PK، FK، Index و نسخهٔ سرور را می‌خواند؛ ردیف عملیاتی نمی‌خواند. ماژول در GitHub Actions build شده، اما Inspector هنوز روی Android/SQL Server اجرا نشده است. نبودن FK ثبت‌شده نیز نبودن رابطهٔ منطقی را اثبات نمی‌کند.
 
 ## Unknownهای عملیاتی
 
@@ -56,4 +56,5 @@ Menu/Formهای واقعی موجود در backup در `ACCESS-CONTROL-fa.md` ث
 | منبع دقیق مبلغ/مانده و محاسبهٔ آن | `UNKNOWN — هیچ Query تجاری اجرا نشده` |
 | معنی Status، تاریخ، Amount، reversals و cutoff | `UNKNOWN` |
 | دادهٔ POS/صندوق/بانک/چک/مطالبات و audit واقعی | `UNKNOWN — هیچ ردیف تجاری خوانده نشده` |
-| صحت Android Build، نصب، Release signing و end-to-end | `NOT RUN` |
+| `:finance:testDebugUnitTest` و `:finance:assembleDebug` در GitHub Actions | `PASS — run 37149665009` |
+| نصب/اجرای دستگاه، Release signing و end-to-end | `NOT RUN` |
