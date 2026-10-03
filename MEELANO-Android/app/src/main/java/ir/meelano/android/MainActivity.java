@@ -3970,10 +3970,10 @@ public class MainActivity extends Activity {
         JSONObject overdue = firstObject(today == null ? null : today.optJSONArray("overdueInvoices"));
         JSONObject inactive = firstObject(today == null ? null : today.optJSONArray("inactiveCustomers"));
         JSONObject debtor = firstObject(today == null ? null : today.optJSONArray("topDebtors"));
-        addActionItem(c, "۹:۰۰", "مرور سلامت اتصال و گزارش روزانه میلو", INFO);
-        addActionItem(c, "۱۰:۳۰", "تماس وصول: " + labelOf(debtor, "party", "بدهکار مهم") + " • " + moneyValue(debtor, "amount"), DANGER);
-        addActionItem(c, "۱۲:۰۰", "پیگیری فاکتور معوق: " + labelOf(overdue, "party", "موردی ثبت نشده"), WARNING);
-        addActionItem(c, "۱۶:۰۰", "بازفعال‌سازی مشتری خاموش: " + labelOf(inactive, "party", "مشتری پیشنهادی ندارد"), SUCCESS);
+        addActionItem(c, "نیازمند اقدام", "مرور گزارش روزانه میلو و سلامت اتصال", INFO);
+        addActionItem(c, "نیازمند اقدام", "تماس وصول: " + labelOf(debtor, "party", "بدهکار مهم") + " • " + moneyValue(debtor, "amount"), DANGER);
+        addActionItem(c, "نیازمند اقدام", "پیگیری فاکتور معوق: " + labelOf(overdue, "party", "موردی ثبت نشده"), WARNING);
+        addActionItem(c, "نیازمند اقدام", "بازفعال‌سازی مشتری خاموش: " + labelOf(inactive, "party", "مشتری پیشنهادی ندارد"), SUCCESS);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
     }
 
@@ -12147,8 +12147,12 @@ public class MainActivity extends Activity {
         addHero("اتاق فروش", "فروش در برابر خرید و بازهٔ قبل + ترکیب روز و کالا — همه از رکوردهای واقعی sailfact/buyfact.");
         content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.cockpit(c, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerCockpit(safeJson(body)); }
-            @Override public void fail(Exception e) { showPageError("اتاق فروش", e, () -> loadManagerCockpit()); }
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_cockpit", body).apply(); renderManagerCockpit(safeJson(body)); }
+            @Override public void fail(Exception e) {
+                String cached = prefs.getString("cache_mgr_cockpit", "");
+                if (cached != null && !cached.trim().isEmpty()) { renderManagerCockpit(safeJson(cached)); addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
+                showPageError("اتاق فروش", e, () -> loadManagerCockpit());
+            }
         });
     }
 
@@ -12194,8 +12198,12 @@ public class MainActivity extends Activity {
         addHero("مرکز وصول", "سن‌یابی واقعی مطالبات از فاکتورهای تسویه‌نشده (tasvieh='f' + t_date) — بدون برآورد.");
         content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.collection(c).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerCollection(safeArr(body)); }
-            @Override public void fail(Exception e) { showPageError("مرکز وصول", e, () -> loadManagerCollection()); }
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_collection", body).apply(); renderManagerCollection(safeArr(body)); }
+            @Override public void fail(Exception e) {
+                String cached = prefs.getString("cache_mgr_collection", "");
+                if (cached != null && !cached.trim().isEmpty()) { renderManagerCollection(safeArr(cached)); addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
+                showPageError("مرکز وصول", e, () -> loadManagerCollection());
+            }
         });
     }
 
@@ -12226,8 +12234,12 @@ public class MainActivity extends Activity {
         addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
         content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.visitorGoals(c, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerVisits(safeArr(body)); }
-            @Override public void fail(Exception e) { showPageError("عملکرد ویزیتور", e, () -> loadManagerVisits()); }
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_visits", body).apply(); renderManagerVisits(safeArr(body)); }
+            @Override public void fail(Exception e) {
+                String cached = prefs.getString("cache_mgr_visits", "");
+                if (cached != null && !cached.trim().isEmpty()) { renderManagerVisits(safeArr(cached)); addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
+                showPageError("عملکرد ویزیتور", e, () -> loadManagerVisits());
+            }
         });
     }
 
@@ -12266,8 +12278,12 @@ public class MainActivity extends Activity {
         addHero("هوش کالا", "کالای طلا / موجودی صفر / بدون فروش بازه — موجودی از دفتر واقعی ka_act.");
         content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.productRadar(c, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerProducts(safeJson(body)); }
-            @Override public void fail(Exception e) { showPageError("هوش کالا", e, () -> loadManagerProducts()); }
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_products", body).apply(); renderManagerProducts(safeJson(body)); }
+            @Override public void fail(Exception e) {
+                String cached = prefs.getString("cache_mgr_products", "");
+                if (cached != null && !cached.trim().isEmpty()) { renderManagerProducts(safeJson(cached)); addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
+                showPageError("هوش کالا", e, () -> loadManagerProducts());
+            }
         });
     }
 
@@ -12417,6 +12433,11 @@ public class MainActivity extends Activity {
             for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, agingColor(o.optString("label", ""))); }
         }
         addInsightsCard(m);
+        JSONArray errs = m.optJSONArray("errors");
+        if (errs != null && errs.length() > 0) {
+            LinearLayout c = addReportCard("اعتبارسنجی داده — بخش‌های بدون خروجی", "⚠", DANGER);
+            for (int i = 0; i < errs.length(); i++) addReportLine(c, String.valueOf(errs.opt(i)), "بدون داده", tc(DANGER));
+        }
         addActionCenterCard(m);
         addActivityFeedCard(m.optJSONArray("feed"));
         addDeveloperCredit(content);
