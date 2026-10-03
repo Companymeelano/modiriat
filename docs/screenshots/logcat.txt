@@ -1,0 +1,4 @@
+10-03 17:48:00.482   555  1624 D CoreBackPreview: Window{e6bca02 u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@48d7349, mPriority=-1, mIsAnimationCallback=false}
+10-03 17:48:01.575   555   581 I ActivityTaskManager: Displayed ir.meelano.staff.debug/ir.meelano.android.MainActivity for user 0: +2s867ms
+10-03 17:48:08.015   555  1619 D CoreBackPreview: Window{e6bca02 u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback null
+10-03 17:48:08.032   555  1624 W InputManager-JNI: Input channel object 'e6bca02 ir.meelano.staff.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
