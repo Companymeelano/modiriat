@@ -1,13 +1,12 @@
 {
  "errors": [
   "visitor_share_old_key_returns_no_names | (\"Invalid column name 'rdf'.\", None)",
-  "vis_goals_rows_with_amount | (\"Invalid column name 'baze'. Invalid column name 'mab_goal'.\", None)",
-  "baze_top | (\"Invalid column name 'd_date'. Invalid column name 'b_date'.\", None)"
+  "v1_simple_scalar | ('The multi-part identifier \"x.date\" could not be bound. The multi-part identifier \"x.date\" could not be bound. The multi-part identifier \"x.active\" could not be bound.', None)"
  ],
  "sections": {
   "home_dashboard": {
    "statements": 9,
-   "ms": 1929,
+   "ms": 2104,
    "values": {
     "kpi_counts_one_statement": [
      [
@@ -106,7 +105,7 @@
   },
   "manager_reports": {
    "statements": 14,
-   "ms": 2993,
+   "ms": 3413,
    "values": {
     "sales_today": [
      [
@@ -227,7 +226,7 @@
   },
   "management_intelligence": {
    "statements": 9,
-   "ms": 2128,
+   "ms": 2593,
    "values": {
     "cockpit_sales_30d_with_prev": [
      [
@@ -410,7 +409,7 @@
   },
   "sales_supervision": {
    "statements": 6,
-   "ms": 1307,
+   "ms": 1471,
    "values": {
     "visitor_performance": [
      [
@@ -487,9 +486,42 @@
    },
    "notes": []
   },
+  "merged_statement": {
+   "statements": 3,
+   "ms": 758,
+   "values": {
+    "v1_simple_scalar": "ERR ('The multi-part identifier \"x.date\" could not be bound. The multi-part identifier \"x.date\" could not be bound. The multi-part identifier \"x.active\" could not b",
+    "v2_scalar_over_derived": [
+     [
+      "99983787279",
+      "10714776600"
+     ]
+    ],
+    "v3_full_merged": [
+     [
+      "99983787279",
+      "842",
+      "292",
+      "10714776600"
+     ]
+    ],
+    "v5_rangeblock_sailfact_ok": [
+     "99983787279",
+     "842",
+     "292",
+     "10714776600"
+    ],
+    "v6_rangeblock_buyfact_ok": [
+     "103528213817",
+     "62",
+     "35"
+    ]
+   },
+   "notes": []
+  },
   "visit_object": {
-   "statements": 16,
-   "ms": 3673,
+   "statements": 13,
+   "ms": 3541,
    "values": {
     "objects_named_visit": [
      [
@@ -571,13 +603,6 @@
       "rdf:int,baze_rdf:int,vis_rdf:int,CustomerGroupRd"
      ]
     ],
-    "vis_goals_rows_with_amount": "ERR (\"Invalid column name 'baze'. Invalid column name 'mab_goal'.\", None)",
-    "vis_goals_other_amount_columns": [
-     [
-      "mab"
-     ]
-    ],
-    "baze_top": "ERR (\"Invalid column name 'd_date'. Invalid column name 'b_date'.\", None)",
     "visit_information_schema": [
      [
       "Hamrah.Visit (BASE TABLE)"
@@ -588,7 +613,7 @@
   },
   "extra_schema": {
    "statements": 3,
-   "ms": 655,
+   "ms": 705,
    "values": {
     "putchk_rows": [
      [
@@ -664,6 +689,6 @@
   "p1b": "1404/07/11"
  },
  "total_statements": 68,
- "total_ms": 12685,
+ "total_ms": 14585,
  "roundtrip_ms_reference": 192
 }
