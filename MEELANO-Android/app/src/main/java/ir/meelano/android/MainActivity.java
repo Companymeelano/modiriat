@@ -3847,6 +3847,7 @@ public class MainActivity extends Activity {
             case "mgr_visits": loadManagerVisits(); break;
             case "mgr_products": loadManagerProducts(); break;
             case "mgr_field": loadManagerField(); break;
+            case "mgr_credit": loadManagerCredit(); break;
             default: loadDashboard(); break;
         }
     }
@@ -7193,7 +7194,7 @@ public class MainActivity extends Activity {
 
     private String firstAllowedPage() {
         if (MANAGER_EDITION) {
-            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill", "mgr_cockpit", "mgr_collection", "mgr_visits", "mgr_products", "mgr_field"};
+            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill", "mgr_cockpit", "mgr_collection", "mgr_visits", "mgr_products", "mgr_field", "mgr_credit"};
             for (String p : managerPages) if (canOpenPage(p)) return p;
             return "dashboard";
         }
@@ -12047,9 +12048,96 @@ public class MainActivity extends Activity {
             for (int i = 0; i < recent.length(); i++) {
                 JSONObject o = recent.optJSONObject(i); if (o == null) continue;
                 String t = o.optString("time", "");
-                addReportLine(c, faDigits(o.optString("date", "—")) + (t.isEmpty() ? "" : " • " + faDigits(t)) + " • " + o.optString("party", "—"), "مدت " + faDigits(String.format(java.util.Locale.US, "%.0f", o.optDouble("duration", 0))), TEXT);
+                double lat = o.optDouble("lat", 0), lng = o.optDouble("lng", 0);
+                if (lat != 0 && lng != 0) {
+                    LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+                    row.addView(text(faDigits(o.optString("date", "—")) + (t.isEmpty() ? "" : " • " + faDigits(t)) + " • " + o.optString("party", "—"), 10.4f, TEXT, Typeface.NORMAL), new LinearLayout.LayoutParams(0, -2, 1f));
+                    Button mb = secondaryButton("نقشه"); mb.setTextSize(fs(9f));
+                    mb.setOnClickListener(v -> openGeoPoint(lat, lng, o.optString("party", "")));
+                    row.addView(mb, new LinearLayout.LayoutParams(-2, -2));
+                    LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(4), 0, dp(4));
+                    c.addView(row, rp);
+                } else {
+                    addReportLine(c, faDigits(o.optString("date", "—")) + (t.isEmpty() ? "" : " • " + faDigits(t)) + " • " + o.optString("party", "—"), "مدت " + faDigits(String.format(java.util.Locale.US, "%.0f", o.optDouble("duration", 0))), TEXT);
+                }
             }
         }
+        addDeveloperCredit(content);
+    }
+
+    // =============================== Alerts + customer credit (real Sys_Mandeh_Customer) ===============================
+    private void openGeoPoint(double lat, double lng, String label) {
+        try {
+            String q = java.net.URLEncoder.encode((label.isEmpty() ? "ویزیت" : label), "UTF-8");
+            Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("geo:" + lat + "," + lng + "?q=" + lat + "," + lng + "(" + q + ")"));
+            if (intent.resolveActivity(getPackageManager()) != null) startActivity(intent);
+            else showNotice("برنامهٔ نقشه‌ای روی دستگاه نصب نیست.", false);
+        } catch (Exception e) { showNotice("بازکردن نقشه ممکن نشد: " + shortError(e), true); }
+    }
+
+    private void addAlertsCard(JSONObject m) {
+        JSONArray aging = m.optJSONArray("aging");
+        double overdue = 0;
+        if (aging != null) for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null && !o.optString("label", "").startsWith("جاری")) overdue += o.optDouble("value", 0); }
+        JSONObject chk = m.optJSONObject("checkBuckets");
+        JSONObject soon = chk == null ? null : chk.optJSONObject("soon");
+        long soonCount = soon == null ? 0 : soon.optLong("count", 0);
+        JSONArray credit = m.optJSONArray("credit");
+        int overLimit = 0, blocked = 0;
+        if (credit != null) for (int i = 0; i < credit.length(); i++) {
+            JSONObject o = credit.optJSONObject(i); if (o == null) continue;
+            if (o.optBoolean("blocked", false)) blocked++;
+            if (o.optDouble("etebar", 0) > 0 && o.optDouble("mandeh", 0) > o.optDouble("etebar", 0)) overLimit++;
+        }
+        if (overdue <= 0 && soonCount <= 0 && overLimit <= 0 && blocked <= 0) return;
+        LinearLayout c = addReportCard("هشدارها — فقط از دادهٔ واقعی", "⚠", DANGER);
+        if (overdue > 0) addReportLine(c, "مطالبات معوق: " + money(Math.round(overdue)), "اقدام", tc(DANGER));
+        if (soonCount > 0) addReportLine(c, "چک نزدیک سررسید (۷ روز): " + formatNumber(soonCount) + " فقره", "بررسی بانک", tc(WARNING));
+        if (overLimit > 0) addReportLine(c, "مشتری فراتر از حد اعتبار: " + formatNumber(overLimit), "توقف فروش نسیه", tc(DANGER));
+        if (blocked > 0) addReportLine(c, "مشتری دارای سابقهٔ مسدودی: " + formatNumber(blocked), "بازبینی", tc(WARNING));
+    }
+
+    private void loadManagerCredit() {
+        content.removeAllViews();
+        addHero("اعتبار مشتریان", "مانده در برابر حد اعتبار از Sys_Mandeh_Customer — بدون برآورد.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.creditRisk(c).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerCredit(safeArr(body)); }
+            @Override public void fail(Exception e) { showPageError("اعتبار مشتریان", e, () -> loadManagerCredit()); }
+        });
+    }
+
+    private void renderManagerCredit(JSONArray rows) {
+        content.removeAllViews();
+        addHero("اعتبار مشتریان", "مانده در برابر حد اعتبار از Sys_Mandeh_Customer — بدون برآورد.");
+        if (rows.length() == 0) { addEmptyTo(content, "جدول Sys_Mandeh_Customer داده یا ستون تأییدشده ندارد."); addDeveloperCredit(content); return; }
+        int over = 0, blocked = 0;
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject o = rows.optJSONObject(i); if (o == null) continue;
+            if (o.optBoolean("blocked", false)) blocked++;
+            if (o.optDouble("etebar", 0) > 0 && o.optDouble("mandeh", 0) > o.optDouble("etebar", 0)) over++;
+        }
+        LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
+        addKpiCard(grid, "فراتر از حد اعتبار", "♛", over > 0 ? DANGER : SUCCESS, formatNumber(over), null, "مانده > اعتبار", null);
+        addKpiCard(grid, "سابقهٔ مسدودی", "⛔", blocked > 0 ? WARNING : SUCCESS, formatNumber(blocked), null, "BlockResult ثبت‌شده", null);
+        grid.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout c = card(); c.setBackground(themedSectionBg("customers", 24));
+        double max = 1;
+        for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("mandeh", 0)); }
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject o = rows.optJSONObject(i); if (o == null) continue;
+            double mandeh = o.optDouble("mandeh", 0), etebar = o.optDouble("etebar", 0);
+            boolean risk = o.optBoolean("blocked", false) || (etebar > 0 && mandeh > etebar);
+            addBarLine(c, o.optString("party", "—"), money(Math.round(mandeh)), mandeh, max, risk ? DANGER : MUTED);
+            StringBuilder meta = new StringBuilder("حد اعتبار: ").append(etebar > 0 ? money(Math.round(etebar)) : "ثبت نشده");
+            if (o.optBoolean("blocked", false)) meta.append(" • دارای سابقهٔ مسدودی");
+            else if (etebar > 0 && mandeh > etebar) meta.append(" • فراتر از حد اعتبار");
+            TextView mt = text(meta.toString(), 9.4f, risk ? tc(DANGER) : MUTED, Typeface.NORMAL);
+            LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(-1, -2); mp.setMargins(dp(86), 0, 0, dp(6));
+            c.addView(mt, mp);
+        }
+        content.addView(c, new LinearLayout.LayoutParams(-1, -2));
         addDeveloperCredit(content);
     }
 
@@ -12584,6 +12672,7 @@ public class MainActivity extends Activity {
             double mx = 1; for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) mx = Math.max(mx, o.optDouble("value", 0)); }
             for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, agingColor(o.optString("label", ""))); }
         }
+        addAlertsCard(m);
         addInsightsCard(m);
         JSONArray errs = m.optJSONArray("errors");
         if (errs != null && errs.length() > 0) {
@@ -12887,7 +12976,9 @@ public class MainActivity extends Activity {
                 new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("عملکرد ویزیتور", "فروش در برابر هدف vis_goals", "♜", navAccent("personnel"), () -> showApp("mgr_visits"), true),
                 new VisitorToolSpec("هوش کالا", "طلا / موجودی صفر / بدون فروش", "◈", navAccent("products"), () -> showApp("mgr_products"), true),
-                new VisitorToolSpec("ویزیت میدانی", "تعداد/مدت ویزیت از جدول Visit", "♞", INFO, () -> showApp("mgr_field"), true)
+                new VisitorToolSpec("ویزیت میدانی", "تعداد/مدت ویزیت از جدول Visit", "♞", INFO, () -> showApp("mgr_field"), true),
+                new VisitorToolSpec("اعتبار مشتریان", "مانده/حد اعتبار/مسدودی", "♛", DANGER, () -> showApp("mgr_credit"), true),
+                new VisitorToolSpec("دفتر حساب مشتری", "گردش بدهکار/بستانکار cust_act", "≣", navAccent("customers"), () -> { managerDrillKind = "ledger"; showApp("mgr_drill"); }, true)
         });
         addDeveloperCredit(content);
     }

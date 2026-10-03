@@ -429,6 +429,26 @@ final class ManagerAnalytics {
     static JSONArray drill(Connection c, String kind, int range) throws Exception {
         JSONArray arr = new JSONArray();
         if ("debtors".equals(kind)) return debtors(c, 60);
+        if ("ledger".equals(kind)) {
+            if (!tableExists(c, "cust_act")) return arr;
+            Set<String> ca = columns(c, "cust_act");
+            String aShmo = resolve(ca, "shmo");
+            String aDate = resolve(ca, "date");
+            String aBed = resolve(ca, "act_bed");
+            String aBes = resolve(ca, "act_bes");
+            String aDoc = resolve(ca, "DocNumber", "ghno", "AccDocNumber");
+            if (aShmo == null || aDate == null || aBed == null || aBes == null) return arr;
+            Set<String> cust = columns(c, "CUSTOMERS");
+            String cShmo = resolve(cust, "SHMO", "shmo");
+            String cName = resolve(cust, "MONAME", "Name", "CusName");
+            String nameExpr = cShmo != null && cName != null ? "COALESCE(TRY_CONVERT(nvarchar(200),cu.[" + cName + "]),N'بدون نام')" : "N'—'";
+            String joinCust = cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),a.[" + aShmo + "])" : "";
+            String sql = "SELECT TOP (60) TRY_CONVERT(nvarchar(30),a.[" + aDate + "]), " + nameExpr + ", ISNULL(" + sqlNumberExpr("a", aBed, "decimal(19,2)") + ",0) - ISNULL(" + sqlNumberExpr("a", aBes, "decimal(19,2)") + ",0), " + (aDoc == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),a.[" + aDoc + "])") + " FROM dbo.cust_act a" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),a.[" + aDate + "]) DESC";
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("party", r.getString(2) == null ? "—" : r.getString(2)); o.put("amount", r.getDouble(3)); o.put("number", r.getString(4) == null ? "" : r.getString(4)); arr.put(o); } }
+            }
+            return arr;
+        }
         if ("visitors".equals(kind)) return visitorPerformance(c, range);
         if ("products".equals(kind)) return products(c, range).optJSONArray("top") == null ? arr : products(c, range).optJSONArray("top");
         if ("sales".equals(kind)) {
@@ -527,7 +547,8 @@ final class ManagerAnalytics {
         String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
         Map<String, double[]> byName = new HashMap<>();
         if (visKey != null && visName != null) {
-            String sql = "SELECT COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?'), ISNULL(SUM(" + sqlNumberExpr("g", gTarget, "decimal(19,2)") + "),0)" + (gDone == null ? "" : ", ISNULL(SUM(" + sqlNumberExpr("g", gDone, "decimal(19,2)") + "),0)") + " FROM dbo.vis_goals g LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),g.[" + gVis + "]) GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?')";
+            String gActive = activeAnd(g, "g");
+            String sql = "SELECT COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?'), ISNULL(SUM(" + sqlNumberExpr("g", gTarget, "decimal(19,2)") + "),0)" + (gDone == null ? "" : ", ISNULL(SUM(" + sqlNumberExpr("g", gDone, "decimal(19,2)") + "),0)") + " FROM dbo.vis_goals g LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),g.[" + gVis + "]) WHERE 1=1" + gActive + " GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?')";
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 try (ResultSet r = ps.executeQuery()) { while (r.next()) { double[] v = new double[]{ r.getDouble(2), gDone == null ? 0 : r.getDouble(3) }; byName.put(r.getString(1) == null ? "?" : r.getString(1), v); } }
             }
@@ -593,13 +614,46 @@ final class ManagerAnalytics {
         String cName = resolve(cust, "MONAME", "Name", "CusName");
         String custExpr = cShmo != null && cName != null && vShmo != null ? "COALESCE(TRY_CONVERT(nvarchar(200),cu.[" + cName + "]),N'بدون نام')" : "N'—'";
         String joinCust = cShmo != null && vShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),vs.[" + vShmo + "])" : "";
-        String sql2 = "SELECT TOP (30) TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]), " + (vTime == null ? "CAST(NULL AS nvarchar(20))" : "TRY_CONVERT(nvarchar(20),vs.[" + vTime + "])") + ", " + custExpr + ", " + durExpr + " FROM dbo.Visit vs" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]) DESC";
+        String vLat = resolve(v, "SaveLat", "SentLat");
+        String vLng = resolve(v, "SaveLng", "SentLng");
+        String sql2 = "SELECT TOP (30) TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]), " + (vTime == null ? "CAST(NULL AS nvarchar(20))" : "TRY_CONVERT(nvarchar(20),vs.[" + vTime + "])") + ", " + custExpr + ", " + durExpr + ", " + (vLat == null ? "CAST(NULL AS decimal(12,7))" : "TRY_CONVERT(decimal(12,7),vs.[" + vLat + "])") + ", " + (vLng == null ? "CAST(NULL AS decimal(12,7))" : "TRY_CONVERT(decimal(12,7),vs.[" + vLng + "])") + " FROM dbo.Visit vs" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]) DESC";
         try (PreparedStatement ps = c.prepareStatement(sql2)) {
-            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("time", r.getString(2) == null ? "" : r.getString(2)); o.put("party", r.getString(3) == null ? "—" : r.getString(3)); o.put("duration", r.getDouble(4)); recent.put(o); } }
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("time", r.getString(2) == null ? "" : r.getString(2)); o.put("party", r.getString(3) == null ? "—" : r.getString(3)); o.put("duration", r.getDouble(4)); o.put("lat", r.getDouble(5)); o.put("lng", r.getDouble(6)); recent.put(o); } }
         }
         out.put("perVisitor", perVisitor);
         out.put("recent", recent);
         return out;
+    }
+
+    /** Credit risk from the real Sys_Mandeh_Customer table (columns confirmed by CI probe: Shmo, Mandeh, Etebar, BlockResult). */
+    static JSONArray creditRisk(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        if (!tableExists(c, "Sys_Mandeh_Customer")) return arr;
+        Set<String> sm = columns(c, "Sys_Mandeh_Customer");
+        String shmo = resolve(sm, "Shmo", "shmo");
+        String mandeh = resolve(sm, "Mandeh", "mandeh");
+        String etebar = resolve(sm, "Etebar", "etebar", "Credit");
+        String block = resolve(sm, "BlockResult", "blockresult");
+        if (shmo == null || mandeh == null) return arr;
+        Set<String> cust = columns(c, "CUSTOMERS");
+        String cShmo = resolve(cust, "SHMO", "shmo");
+        String cName = resolve(cust, "MONAME", "Name", "CusName");
+        String nameExpr = cShmo != null && cName != null ? "COALESCE(TRY_CONVERT(nvarchar(200),cu.[" + cName + "]),N'بدون نام')" : "N'—'";
+        String joinCust = cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),s.[" + shmo + "])" : "";
+        String sql = "SELECT TOP (40) " + nameExpr + ", ISNULL(TRY_CONVERT(decimal(19,2),s.[" + mandeh + "]),0), " + (etebar == null ? "CAST(NULL AS decimal(19,2))" : "TRY_CONVERT(decimal(19,2),s.[" + etebar + "])") + ", " + (block == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),s.[" + block + "])") + " FROM dbo.Sys_Mandeh_Customer s" + joinCust + " ORDER BY ISNULL(TRY_CONVERT(decimal(19,2),s.[" + mandeh + "]),0) DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) {
+                JSONObject o = new JSONObject();
+                o.put("party", r.getString(1) == null ? "—" : r.getString(1));
+                o.put("mandeh", r.getDouble(2));
+                o.put("etebar", r.getDouble(3));
+                String b = r.getString(4);
+                boolean blocked = b != null && !b.trim().isEmpty() && !"0".equals(b.trim()) && !"f".equalsIgnoreCase(b.trim()) && !"false".equalsIgnoreCase(b.trim());
+                o.put("blocked", blocked);
+                arr.put(o);
+            } }
+        }
+        return arr;
     }
 
     // ============================ orchestrator ============================
@@ -619,6 +673,7 @@ final class ManagerAnalytics {
         try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage())); }
         try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage())); }
         try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage())); }
+        try { out.put("credit", creditRisk(c)); } catch (Exception e) { errors.put("credit: " + String.valueOf(e.getMessage())); }
         try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage())); }
         out.put("errors", errors);
         return out;
