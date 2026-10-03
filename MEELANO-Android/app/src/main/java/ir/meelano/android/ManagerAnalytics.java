@@ -7,7 +7,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+<<<<<<< HEAD
 import java.util.HashSet;
+=======
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+>>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -462,6 +468,110 @@ final class ManagerAnalytics {
         return arr;
     }
 
+<<<<<<< HEAD
+=======
+    // ============================ phase 10-13: cockpit / collection / visitor goals / product radar ============================
+    private static String persianDow(int dw) {
+        switch (dw) { case 1: return "\u06cc\u06a9\u0634\u0646\u0628\u0647"; case 2: return "\u062f\u0648\u0634\u0646\u0628\u0647"; case 3: return "\u0633\u0647\u200c\u0634\u0646\u0628\u0647"; case 4: return "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647"; case 5: return "\u067e\u0646\u062c\u0634\u0646\u0628\u0647"; case 6: return "\u062c\u0645\u0639\u0647"; default: return "\u0634\u0646\u0628\u0647"; }
+    }
+
+    /** Sales Cockpit: totals vs previous period + weekday mix + product mix (validated columns only). */
+    static JSONObject cockpit(Connection c, int range) throws Exception {
+        JSONObject out = new JSONObject();
+        out.put("sales", rangeBlock(c, true, range));
+        out.put("purchases", rangeBlock(c, false, range));
+        out.put("top", products(c, range).optJSONArray("top"));
+        JSONArray byDay = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        String latest = dateCol == null ? "" : latestDate(c, "sailfact", dateCol);
+        if (dateCol != null && amountCol != null && !latest.isEmpty()) {
+            String dExpr = "DATEPART(dw, TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),h.[" + dateCol + "])))";
+            String inner = "WHERE " + rangeCondition(cols, dateCol, latest, range, "x") + activeAnd(cols, "x");
+            String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) inner += " AND " + soft;
+            String source = dedupeFactorSource("sailfact", cols, numberCol, "h", inner);
+            String sql = "SELECT " + dExpr + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + dExpr + " ORDER BY 1";
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", persianDow(r.getInt(1))); o.put("value", r.getDouble(2)); byDay.put(o); } }
+            }
+        }
+        out.put("byDay", byDay);
+        return out;
+    }
+
+    /** Collection center aging: unpaid sailfact bucketed by real t_date via dbo.dif_date_alan (mirrors the proven production aging query). */
+    static JSONArray collection(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        if (resolve(cols, "t_date") == null || resolve(cols, "all") == null || resolve(cols, "tasvieh") == null || !hasFunction(c, "dif_date_alan")) return arr;
+        String remain = "TRY_CONVERT(decimal(19,2),[all])";
+        if (resolve(cols, "MabDaryaftFactor") != null) remain += " - ISNULL(TRY_CONVERT(decimal(19,2),[MabDaryaftFactor]),0)";
+        if (resolve(cols, "tdf") != null) remain += " - ISNULL(TRY_CONVERT(decimal(19,2),[tdf]),0)";
+        String where = "WHERE [tasvieh]='f' AND NULLIF([t_date],'') IS NOT NULL" + activeAnd(cols, "");
+        String soft = softDeleteCondition(cols, ""); if (!soft.isEmpty()) where += " AND " + soft;
+        String bucket = "CASE WHEN dbo.dif_date_alan([t_date]) >= 0 THEN N'\u062c\u0627\u0631\u06cc' WHEN -dbo.dif_date_alan([t_date]) <= 30 THEN N'1-30 \u0631\u0648\u0632' WHEN -dbo.dif_date_alan([t_date]) <= 60 THEN N'31-60 \u0631\u0648\u0632' WHEN -dbo.dif_date_alan([t_date]) <= 90 THEN N'61-90 \u0631\u0648\u0632' WHEN -dbo.dif_date_alan([t_date]) <= 180 THEN N'91-180 \u0631\u0648\u0632' ELSE N'180+ \u0631\u0648\u0632' END";
+        String sql = "WITH x AS (SELECT " + bucket + " bucket, (" + remain + ") amount FROM dbo.sailfact " + where + ") SELECT bucket, ISNULL(SUM(CASE WHEN amount>0 THEN amount ELSE 0 END),0), COUNT_BIG(CASE WHEN amount>0 THEN 1 END) FROM x GROUP BY bucket";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", r.getString(1) == null ? "\u2014" : r.getString(1)); o.put("value", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); } }
+        }
+        return arr;
+    }
+
+    /** Visitor performance + real goals from vis_goals (all columns runtime-resolved; goal=0 means "no goal recorded"). */
+    static JSONArray visitorGoals(Connection c, int range) throws Exception {
+        JSONArray visitors = visitorPerformance(c, range);
+        if (visitors.length() == 0 || !tableExists(c, "vis_goals")) return visitors;
+        Set<String> g = columns(c, "vis_goals");
+        String gVis = resolve(g, "vis_rdf", "visitor", "visitor_rdf", "rdf_visitor", "vis");
+        String gTarget = resolve(g, "target", "goal", "amount", "mablagh", "sale_goal", "forosh");
+        String gDone = resolve(g, "done", "achieved", "sale", "actual");
+        if (gVis == null || gTarget == null) return visitors;
+        Set<String> vis = columns(c, "visitors");
+        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        Map<String, double[]> byName = new HashMap<>();
+        if (visKey != null && visName != null) {
+            String sql = "SELECT COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?'), ISNULL(SUM(" + sqlNumberExpr("g", gTarget, "decimal(19,2)") + "),0)" + (gDone == null ? "" : ", ISNULL(SUM(" + sqlNumberExpr("g", gDone, "decimal(19,2)") + "),0)") + " FROM dbo.vis_goals g LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),g.[" + gVis + "]) GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?')";
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                try (ResultSet r = ps.executeQuery()) { while (r.next()) { double[] v = new double[]{ r.getDouble(2), gDone == null ? 0 : r.getDouble(3) }; byName.put(r.getString(1) == null ? "?" : r.getString(1), v); } }
+            }
+        }
+        for (int i = 0; i < visitors.length(); i++) {
+            JSONObject o = visitors.optJSONObject(i); if (o == null) continue;
+            double[] gv = byName.get(o.optString("name", ""));
+            o.put("goal", gv == null ? 0 : gv[0]);
+            o.put("achieved", gv == null ? 0 : gv[1]);
+        }
+        return visitors;
+    }
+
+    /** Product radar: gold (top of range) + zero-stock risk (real ledger via OUTER APPLY, no guessed stock column) + dead stock (no sales in range). */
+    static JSONObject productRadar(Connection c, int range) throws Exception {
+        JSONObject out = new JSONObject();
+        JSONObject prod = products(c, range);
+        out.put("gold", prod.optJSONArray("top"));
+        out.put("dead", prod.optJSONArray("idle"));
+        JSONArray zero = new JSONArray();
+        if (tableExists(c, "ka_act") && tableExists(c, "inventory")) {
+            Set<String> k = columns(c, "ka_act"), inv = columns(c, "inventory");
+            boolean ledger = resolve(k, "shka") != null && resolve(k, "act_id") != null && resolve(k, "tedvah") != null && resolve(k, "tedjoz") != null && resolve(k, "active") != null
+                    && resolve(inv, "shka") != null && resolve(inv, "mohvah") != null && resolve(inv, "mojkavah") != null && resolve(inv, "mojkajoz") != null;
+            String nameCol = resolve(inv, "naka");
+            if (ledger && nameCol != null) {
+                String sql = "SELECT TOP (12) TRY_CONVERT(nvarchar(150),i.[" + nameCol + "]), ISNULL(stx.stock_qty,0) FROM dbo.inventory i " + MainActivity.atiranStockApply("i", "stx") +
+                        " WHERE ISNULL(stx.stock_rows,0)>0 AND ISNULL(stx.stock_qty,0)<=0 ORDER BY TRY_CONVERT(nvarchar(150),i.[" + nameCol + "])";
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", r.getString(1) == null ? "\u2014" : r.getString(1)); o.put("stock", r.getDouble(2)); zero.put(o); } }
+                }
+            }
+        }
+        out.put("zeroStock", zero);
+        return out;
+    }
+
+>>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
     // ============================ orchestrator ============================
     /** One connection, sequential validated queries, per-section error capture (never crashes the UI). */
     static JSONObject fetch(Connection c, int range) throws Exception {

@@ -3842,6 +3842,13 @@ public class MainActivity extends Activity {
             case "dashboard":
                 if (MANAGER_EDITION) { loadManagerExecutive(); break; }
             case "mgr_drill": loadManagerDrill(); break;
+<<<<<<< HEAD
+=======
+            case "mgr_cockpit": loadManagerCockpit(); break;
+            case "mgr_collection": loadManagerCollection(); break;
+            case "mgr_visits": loadManagerVisits(); break;
+            case "mgr_products": loadManagerProducts(); break;
+>>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
             default: loadDashboard(); break;
         }
     }
@@ -7188,7 +7195,11 @@ public class MainActivity extends Activity {
 
     private String firstAllowedPage() {
         if (MANAGER_EDITION) {
+<<<<<<< HEAD
             String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill"};
+=======
+            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill", "mgr_cockpit", "mgr_collection", "mgr_visits", "mgr_products"};
+>>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
             for (String p : managerPages) if (canOpenPage(p)) return p;
             return "dashboard";
         }
@@ -12008,6 +12019,173 @@ public class MainActivity extends Activity {
         }
     }
 
+<<<<<<< HEAD
+=======
+    // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
+    private LinearLayout managerRangeRow(Runnable reload) {
+        LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
+        String[] labels = {"امروز", "۷ روز", "۳۰ روز"};
+        for (int i = 0; i < 3; i++) { final int rr = i; Button b = i == managerReportRange ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; reload.run(); }); filters.addView(b, weightedButtonLp()); }
+        LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
+        filters.setLayoutParams(fp);
+        return filters;
+    }
+
+    private void loadManagerCockpit() {
+        content.removeAllViews();
+        addHero("اتاق فروش", "فروش در برابر خرید و بازهٔ قبل + ترکیب روز و کالا — همه از رکوردهای واقعی sailfact/buyfact.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.cockpit(c, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerCockpit(safeJson(body)); }
+            @Override public void fail(Exception e) { showPageError("اتاق فروش", e, () -> loadManagerCockpit()); }
+        });
+    }
+
+    private void renderManagerCockpit(JSONObject m) {
+        content.removeAllViews();
+        addHero("اتاق فروش", "فروش در برابر خرید و بازهٔ قبل + ترکیب روز و کالا — همه از رکوردهای واقعی sailfact/buyfact.");
+        content.addView(managerRangeRow(() -> loadManagerCockpit()));
+        JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases");
+        LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
+        double sv = sales == null ? 0 : sales.optDouble("total", 0);
+        double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
+        double dSales = pctDelta(sv, sales == null ? 0 : sales.optDouble("prevTotal", 0));
+        double dPur = pctDelta(pv, purchases == null ? 0 : purchases.optDouble("prevTotal", 0));
+        addKpiCard(grid, "فروش", "↗", GOLD, sv > 0 ? money(Math.round(sv)) : "—", Double.isNaN(dSales) ? null : (dSales >= 0 ? "▲ " : "▼ ") + faDigits(String.format(java.util.Locale.US, "%.1f", Math.abs(dSales))) + "٪", sales == null ? "" : formatNumber(sales.optLong("docs", 0)) + " سند • " + formatNumber(sales.optLong("parties", 0)) + " مشتری", "sales");
+        addKpiCard(grid, "خرید", "↙", INFO, pv > 0 ? money(Math.round(pv)) : "—", Double.isNaN(dPur) ? null : (dPur >= 0 ? "▲ " : "▼ ") + faDigits(String.format(java.util.Locale.US, "%.1f", Math.abs(dPur))) + "٪", purchases == null ? "" : formatNumber(purchases.optLong("docs", 0)) + " سند", null);
+        grid.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
+        JSONArray byDay = m.optJSONArray("byDay");
+        if (byDay != null && byDay.length() > 0) {
+            LinearLayout c = addReportCard("ترکیب فروش بر پایهٔ روز هفته", "◷", GOLD);
+            double max = 1; for (int i = 0; i < byDay.length(); i++) { JSONObject o = byDay.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("value", 0)); }
+            for (int i = 0; i < byDay.length(); i++) { JSONObject o = byDay.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), max, GOLD); }
+        }
+        JSONArray top = m.optJSONArray("top");
+        if (top != null && top.length() > 0) {
+            LinearLayout c = addReportCard("ترکیب کالا — پرفروش‌های بازه", "◈", navAccent("products"));
+            double max = 1; for (int i = 0; i < top.length(); i++) { JSONObject o = top.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("sum", 0)); }
+            for (int i = 0; i < top.length(); i++) { JSONObject o = top.optJSONObject(i); if (o != null) addBarLine(c, o.optString("name", "—"), money(Math.round(o.optDouble("sum", 0))), o.optDouble("sum", 0), max, navAccent("products")); }
+        }
+        addDeveloperCredit(content);
+    }
+
+    private int agingColor(String label) {
+        if (label == null) return MUTED;
+        if (label.startsWith("جاری")) return SUCCESS;
+        if (label.startsWith("1-")) return INFO;
+        if (label.startsWith("31-") || label.startsWith("61-")) return WARNING;
+        return DANGER;
+    }
+
+    private void loadManagerCollection() {
+        content.removeAllViews();
+        addHero("مرکز وصول", "سن‌یابی واقعی مطالبات از فاکتورهای تسویه‌نشده (tasvieh='f' + t_date) — بدون برآورد.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.collection(c).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerCollection(safeArr(body)); }
+            @Override public void fail(Exception e) { showPageError("مرکز وصول", e, () -> loadManagerCollection()); }
+        });
+    }
+
+    private void renderManagerCollection(JSONArray rows) {
+        content.removeAllViews();
+        addHero("مرکز وصول", "سن‌یابی واقعی مطالبات از فاکتورهای تسویه‌نشده — بدون برآورد.");
+        double total = 0, docs = 0, overdue = 0;
+        for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o == null) continue; total += o.optDouble("value", 0); docs += o.optLong("docs", 0); if (!o.optString("label", "").startsWith("جاری")) overdue += o.optDouble("value", 0); }
+        LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
+        addKpiCard(grid, "کل مطالبات سررسیدشده", "♙", WARNING, total > 0 ? money(Math.round(total)) : "—", null, formatNumber((long) docs) + " فاکتور باز", "debtors");
+        addKpiCard(grid, "معوق (گذشته از سررسید)", "!", overdue > 0 ? DANGER : SUCCESS, overdue > 0 ? money(Math.round(overdue)) : "بدون معوقی", null, "بر پایهٔ t_date واقعی", null);
+        grid.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
+        if (rows.length() == 0) { addEmptyTo(content, "دادهٔ سن‌یابی در دسترس نیست (ستون t_date یا تابع dif_date_alan تأیید نشد)."); addDeveloperCredit(content); return; }
+        LinearLayout c = addReportCard("سبد سنی مطالبات", "◔", WARNING);
+        double max = 1; for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("value", 0)); }
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject o = rows.optJSONObject(i); if (o == null) continue;
+            String label = o.optString("label", "—");
+            addBarLine(c, label, money(Math.round(o.optDouble("value", 0))) + " • " + formatNumber(o.optLong("docs", 0)) + " سند", o.optDouble("value", 0), max, agingColor(label));
+        }
+        content.addView(c, new LinearLayout.LayoutParams(-1, -2));
+        addDeveloperCredit(content);
+    }
+
+    private void loadManagerVisits() {
+        content.removeAllViews();
+        addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.visitorGoals(c, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerVisits(safeArr(body)); }
+            @Override public void fail(Exception e) { showPageError("عملکرد ویزیتور", e, () -> loadManagerVisits()); }
+        });
+    }
+
+    private void renderManagerVisits(JSONArray rows) {
+        content.removeAllViews();
+        addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
+        content.addView(managerRangeRow(() -> loadManagerVisits()));
+        if (rows.length() == 0) { addEmptyTo(content, "برای این بازه فروش ویزیتوری ثبت نشده است."); addDeveloperCredit(content); return; }
+        LinearLayout c = card(); c.setBackground(themedSectionBg("personnel", 24));
+        double max = 1; for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("sales", 0)); }
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject o = rows.optJSONObject(i); if (o == null) continue;
+            double sales = o.optDouble("sales", 0), goal = o.optDouble("goal", 0), achieved = o.optDouble("achieved", 0);
+            addBarLine(c, o.optString("name", "—"), money(Math.round(sales)), sales, max, navAccent("personnel"));
+            TextView meta = text(formatNumber(o.optLong("orders", 0)) + " سفارش • " + formatNumber(o.optLong("customers", 0)) + " مشتری فعال", 9.4f, MUTED, Typeface.NORMAL);
+            LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(-1, -2); mp.setMargins(dp(86), 0, 0, dp(2));
+            c.addView(meta, mp);
+            if (goal > 0) {
+                double pct = Math.min(100, achieved / goal * 100.0);
+                TextView g = text("هدف: " + money(Math.round(goal)) + " — تحقق: " + faDigits(String.format(java.util.Locale.US, "%.0f", pct)) + "٪", 9.8f, pct >= 100 ? tc(SUCCESS) : pct >= 60 ? tc(WARNING) : tc(DANGER), Typeface.BOLD);
+                LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(-1, -2); gp.setMargins(dp(86), 0, 0, dp(2));
+                c.addView(g, gp);
+                addBarLine(c, "تحقق هدف", money(Math.round(achieved)), achieved, Math.max(goal, 1), pct >= 100 ? SUCCESS : WARNING);
+            } else {
+                TextView g = text("هدف ثبت نشده — برچسب جعلی نمایش داده نمی‌شود", 9.4f, MUTED, Typeface.NORMAL);
+                LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(-1, -2); gp.setMargins(dp(86), 0, 0, dp(8));
+                c.addView(g, gp);
+            }
+        }
+        content.addView(c, new LinearLayout.LayoutParams(-1, -2));
+        addDeveloperCredit(content);
+    }
+
+    private void loadManagerProducts() {
+        content.removeAllViews();
+        addHero("هوش کالا", "کالای طلا / موجودی صفر / بدون فروش بازه — موجودی از دفتر واقعی ka_act.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.productRadar(c, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerProducts(safeJson(body)); }
+            @Override public void fail(Exception e) { showPageError("هوش کالا", e, () -> loadManagerProducts()); }
+        });
+    }
+
+    private void renderManagerProducts(JSONObject m) {
+        content.removeAllViews();
+        addHero("هوش کالا", "کالای طلا / موجودی صفر / بدون فروش بازه — موجودی از دفتر واقعی ka_act.");
+        content.addView(managerRangeRow(() -> loadManagerProducts()));
+        JSONArray gold = m.optJSONArray("gold");
+        if (gold != null && gold.length() > 0) {
+            LinearLayout c = addReportCard("کالای طلا — پرفروش بازه", "◈", GOLD);
+            double max = 1; for (int i = 0; i < gold.length(); i++) { JSONObject o = gold.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("sum", 0)); }
+            for (int i = 0; i < gold.length(); i++) { JSONObject o = gold.optJSONObject(i); if (o != null) addBarLine(c, o.optString("name", "—"), money(Math.round(o.optDouble("sum", 0))), o.optDouble("sum", 0), max, GOLD); }
+        }
+        JSONArray zero = m.optJSONArray("zeroStock");
+        if (zero != null && zero.length() > 0) {
+            LinearLayout c = addReportCard("ریسک — موجودی صفر (دفتر ka_act)", "!", DANGER);
+            for (int i = 0; i < zero.length(); i++) { JSONObject o = zero.optJSONObject(i); if (o != null) addBarLine(c, o.optString("name", "—"), "صفر", 1, 1, DANGER); }
+        }
+        JSONArray dead = m.optJSONArray("dead");
+        if (dead != null && dead.length() > 0) {
+            LinearLayout c = addReportCard("بدون فروش در بازه — نیازمند بررسی", "◌", WARNING);
+            double max = 1; for (int i = 0; i < dead.length(); i++) { JSONObject o = dead.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("sum", 0)); }
+            for (int i = 0; i < dead.length(); i++) { JSONObject o = dead.optJSONObject(i); if (o != null) addBarLine(c, o.optString("name", "—"), money(Math.round(o.optDouble("sum", 0))), o.optDouble("sum", 0), max, WARNING); }
+        }
+        if ((gold == null || gold.length() == 0) && (zero == null || zero.length() == 0) && (dead == null || dead.length() == 0)) addEmptyTo(content, "دادهٔ کالایی برای این بازه ثبت نشده است.");
+        addDeveloperCredit(content);
+    }
+
+>>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
     // =============================== Phase 6-9: Executive dashboard + Action center + Drill-down ===============================
     private String freshnessText(long syncAt) {
         long min = (System.currentTimeMillis() - syncAt) / 60000;
@@ -12403,11 +12581,19 @@ public class MainActivity extends Activity {
                 new VisitorToolSpec("دستیار میلو", "پرسش از داده‌ها", "✧", navAccent("assistant"), () -> showApp("assistant"), canOpenPage("assistant"))
         });
         addVisitorMoreGroup("هوش مدیریتی", "دریل‌داون واقعی به رکوردهای آتیران", new VisitorToolSpec[]{
+<<<<<<< HEAD
                 new VisitorToolSpec("اتاق فروش", "اسناد فروش بازه", "↗", navAccent("reports"), () -> { managerDrillKind = "sales"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("مرکز وصول", "چک‌های دریافتی", "✓", SUCCESS, () -> { managerDrillKind = "checks"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("عملکرد ویزیتور", "فروش/سفارش/مشتری", "♜", navAccent("personnel"), () -> { managerDrillKind = "visitors"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("هوش کالا", "پرفروش‌های بازه", "◈", navAccent("products"), () -> { managerDrillKind = "products"; showApp("mgr_drill"); }, true)
+=======
+                new VisitorToolSpec("اتاق فروش", "مقایسه بازه + ترکیب کالا و روز", "↗", navAccent("reports"), () -> showApp("mgr_cockpit"), true),
+                new VisitorToolSpec("مرکز وصول", "سن‌یابی واقعی مطالبات", "✓", SUCCESS, () -> showApp("mgr_collection"), true),
+                new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
+                new VisitorToolSpec("عملکرد ویزیتور", "فروش در برابر هدف vis_goals", "♜", navAccent("personnel"), () -> showApp("mgr_visits"), true),
+                new VisitorToolSpec("هوش کالا", "طلا / موجودی صفر / بدون فروش", "◈", navAccent("products"), () -> showApp("mgr_products"), true)
+>>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
         });
         addDeveloperCredit(content);
     }
