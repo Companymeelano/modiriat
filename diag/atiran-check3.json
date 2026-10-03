@@ -1,11 +1,13 @@
 {
  "errors": [
-  "visitor_share_old_key_returns_no_names | (\"Invalid column name 'rdf'.\", None)"
+  "visitor_share_old_key_returns_no_names | (\"Invalid column name 'rdf'.\", None)",
+  "vis_goals_rows_with_amount | (\"Invalid column name 'baze'. Invalid column name 'mab_goal'.\", None)",
+  "baze_top | (\"Invalid column name 'd_date'. Invalid column name 'b_date'.\", None)"
  ],
  "sections": {
   "home_dashboard": {
    "statements": 9,
-   "ms": 2236,
+   "ms": 2342,
    "values": {
     "kpi_counts_one_statement": [
      [
@@ -104,7 +106,7 @@
   },
   "manager_reports": {
    "statements": 14,
-   "ms": 3575,
+   "ms": 3679,
    "values": {
     "sales_today": [
      [
@@ -225,7 +227,7 @@
   },
   "management_intelligence": {
    "statements": 9,
-   "ms": 2470,
+   "ms": 2551,
    "values": {
     "cockpit_sales_30d_with_prev": [
      [
@@ -408,7 +410,7 @@
   },
   "sales_supervision": {
    "statements": 6,
-   "ms": 1484,
+   "ms": 1567,
    "values": {
     "visitor_performance": [
      [
@@ -485,9 +487,58 @@
    },
    "notes": []
   },
+  "visit_object": {
+   "statements": 10,
+   "ms": 2767,
+   "values": {
+    "objects_named_visit": [
+     [
+      "Hamrah.FK_DeviceMessages_visitors (FOREIGN_KEY_C"
+     ]
+    ],
+    "objects_like_visitor": [
+     [
+      "Hamrah.FK_DeviceMessages_visitors | Hamrah.Table"
+     ]
+    ],
+    "dbo_visit_columns": [
+     [
+      "None"
+     ]
+    ],
+    "any_visit_columns": [
+     [
+      "VisitID,VisRdf,Shmo,Duration,Created,Sent,Descri"
+     ]
+    ],
+    "visit_rows": [
+     [
+      "0"
+     ]
+    ],
+    "vis_goals_columns": [
+     [
+      "rdf:int,baze_rdf:int,vis_rdf:int,CustomerGroupRd"
+     ]
+    ],
+    "vis_goals_rows_with_amount": "ERR (\"Invalid column name 'baze'. Invalid column name 'mab_goal'.\", None)",
+    "vis_goals_other_amount_columns": [
+     [
+      "mab"
+     ]
+    ],
+    "baze_top": "ERR (\"Invalid column name 'd_date'. Invalid column name 'b_date'.\", None)",
+    "visit_information_schema": [
+     [
+      "Hamrah.Visit (BASE TABLE)"
+     ]
+    ]
+   },
+   "notes": []
+  },
   "extra_schema": {
    "statements": 3,
-   "ms": 743,
+   "ms": 765,
    "values": {
     "putchk_rows": [
      [
@@ -562,7 +613,7 @@
   "p1a": "1403/07/13",
   "p1b": "1404/07/11"
  },
- "total_statements": 52,
- "total_ms": 10508,
+ "total_statements": 62,
+ "total_ms": 13671,
  "roundtrip_ms_reference": 192
 }
