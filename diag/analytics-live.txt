@@ -1,608 +1,30 @@
 == AnalyticsLive ==
-app build: MeelanoSql + ManagerAnalytics, jTDS driver 1.3.1
+app build: MeelanoSql + ManagerAnalytics + MeelanoJalali, jTDS 1.3.1
 server: 37.143.147.19:1433/Atiran2
+first connection (login + TCP): 1397 ms
+cold fetchParallel(2)  [first dashboard load]    6018 ms   errors=0
+warm fetch(conn,2)      [old sequential path]    8164 ms   errors=0
+warm fetchParallel(2)   [shipped path]           1865 ms   errors=0
 
-================ fetch(range=1)  18427 ms ================
+================ fetchParallel(range=0)  1606 ms ================
 -- no section errors --
 -- section timings (ms) --
-   {"checkBuckets":985,"visitors":3506,"feed":1003,"purchases":1037,"trend":531,"receivables":1027,"debtors":2501,"customers":1504,"aging":972,"credit":1304,"sales":2401,"products":1643}
--- metrics --
-{
-  "purchases": {
-    "date": "1405/07/11",
-    "total": 3.7783327632E10,
-    "docs": 19,
-    "parties": 17,
-    "paid": 0,
-    "prevTotal": 1.0172229633E10
-  },
-  "trend": [
-    {
-      "label": "1405/07/11",
-      "value": 2.454204E9
-    },
-    {
-      "label": "1405/07/09",
-      "value": 3.833557E9
-    },
-    {
-      "label": "1405/07/08",
-      "value": 9.41353E9
-    },
-    {
-      "label": "1405/07/07",
-      "value": 4.852066E9
-    },
-    {
-      "label": "1405/07/06",
-      "value": 4.298465E9
-    },
-    {
-      "label": "1405/07/05",
-      "value": 2.8051202E9
-    },
-    {
-      "label": "1405/07/04",
-      "value": 4.806045E9
-    }
-  ],
-  "range": 1,
-  "sales": {
-    "date": "1405/07/11",
-    "total": 2.76569422E10,
-    "docs": 229,
-    "parties": 144,
-    "paid": 2280000,
-    "prevTotal": 3.4153373399E10
-  },
-  "products": {
-    "top": [
-      {
-        "name": "كدو گوشتي اعلاااااا",
-        "sum": 4.9783325E9
-      },
-      {
-        "name": "تخمه گل افتاب سفارشي  ",
-        "sum": 4.62122E9
-      },
-      {
-        "name": "گردو پوستدار چ درصد پايين",
-        "sum": 2.21659252E9
-      },
-      {
-        "name": "اجيل فندق دار",
-        "sum": 1.475225E9
-      },
-      {
-        "name": "پسته اكبري دستچين براق",
-        "sum": 1.40925E9
-      },
-      {
-        "name": "ذرت كيسه25كيلويي mtc",
-        "sum": 1.05742E9
-      },
-      {
-        "name": "پسته احمداقايي Aبراق",
-        "sum": 9.412E8
-      },
-      {
-        "name": "اجيل تشريفات",
-        "sum": 9.0201462E8
-      }
-    ],
-    "idle": [
-      {
-        "name": "تخمه گل افتاب خام*",
-        "sum": 4.14797E9
-      },
-      {
-        "name": "مغز كازو كپسولي خام*",
-        "sum": 9.462E8
-      },
-      {
-        "name": "شكلات كادويي انيش فلاور6عددي",
-        "sum": 9.147E8
-      },
-      {
-        "name": "متفرقه",
-        "sum": 8.417151E8
-      },
-      {
-        "name": "آجيل لب شور ",
-        "sum": 6.98402E8
-      },
-      {
-        "name": "اجيل تقويتي شيرين",
-        "sum": 6.8198E8
-      },
-      {
-        "name": "مغز تخمه افتابگردان خام",
-        "sum": 5.29025E8
-      },
-      {
-        "name": "تخمه گل افتاب خام ايراني غ",
-        "sum": 4.88E8
-      }
-    ]
-  },
-  "checkBuckets": {
-    "over": {
-      "total": 2.406165E10,
-      "count": 29
-    },
-    "ok": {
-      "total": 2.9040998E10,
-      "count": 85
-    },
-    "soon": {
-      "total": 2.07208E9,
-      "count": 4
-    }
-  },
-  "visitors": [
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "شادي نظري/پرسنل",
-      "achieved": 0,
-      "orders": 70,
-      "customers": 42,
-      "sales": 8.5660002E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "مصطفي خدايار/ويزيتور",
-      "achieved": 0,
-      "orders": 57,
-      "customers": 45,
-      "sales": 7.656455E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "رضا قريشي/ويزيتور",
-      "achieved": 0,
-      "orders": 4,
-      "customers": 2,
-      "sales": 4.37511E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "فاطمه محمودي/پرسنل",
-      "achieved": 0,
-      "orders": 66,
-      "customers": 36,
-      "sales": 3.97954E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "جواد لطيفي/ويزيتور",
-      "achieved": 0,
-      "orders": 18,
-      "customers": 17,
-      "sales": 2.835505E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 1.0E10,
-      "name": "اسما حمداني/پرسنل",
-      "achieved": 2.05625E8,
-      "orders": 6,
-      "customers": 6,
-      "sales": 2.05625E8
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "ويزيتور سيستم",
-      "achieved": 0,
-      "orders": 1,
-      "customers": 1,
-      "sales": 3.547E7
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "الهام حمداني/پرسنل",
-      "achieved": 0,
-      "orders": 2,
-      "customers": 2,
-      "sales": 3237000
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 1.0E10,
-      "name": "فروشگاه",
-      "achieved": 0,
-      "orders": 5,
-      "customers": 1,
-      "sales": 0
-    }
-  ],
-  "feed": [
-    {
-      "date": "1405/07/11",
-      "number": "989",
-      "amount": 1.4641E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "956",
-      "amount": 1.048E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "989",
-      "amount": 1.4483E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "957",
-      "amount": 1.617E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "958",
-      "amount": 7.16E7,
-      "type": "sale"
-    },
-    {
-      "date": "1405/09/12",
-      "amount": 1.5375E8,
-      "type": "check"
-    },
-    {
-      "date": "1405/09/12",
-      "amount": 2.3E8,
-      "type": "check"
-    },
-    {
-      "date": "1405/09/12",
-      "amount": 8.84E8,
-      "type": "check"
-    }
-  ],
-  "syncAt": 1791053725300,
-  "timings": {
-    "checkBuckets": 985,
-    "visitors": 3506,
-    "feed": 1003,
-    "purchases": 1037,
-    "trend": 531,
-    "receivables": 1027,
-    "debtors": 2501,
-    "customers": 1504,
-    "aging": 972,
-    "credit": 1304,
-    "sales": 2401,
-    "products": 1643
-  },
-  "receivables": {
-    "total": 8.930419291E10,
-    "count": 382,
-    "labelExpr": "TRY_CONVERT(nvarchar(250),c.[MONAME])"
-  },
-  "debtors": [
-    {
-      "amount": 4.599361236E9,
-      "code": "35",
-      "party": "شركت صنعتي داداش برادر شونيز"
-    },
-    {
-      "amount": 3.94E9,
-      "code": "2725",
-      "party": "يابر سياح-شوش-معرف اقاي قريشي"
-    },
-    {
-      "amount": 3.813445E9,
-      "code": "380",
-      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
-    },
-    {
-      "amount": 3.079918E9,
-      "code": "383",
-      "party": "زينب حمداني اجيل خشكبار سنجاب"
-    },
-    {
-      "amount": 2.865985455E9,
-      "code": "386",
-      "party": "04امين احمدي- زيتون"
-    },
-    {
-      "amount": 2.445E9,
-      "code": "384",
-      "party": "فرشيد 300ميليوني"
-    },
-    {
-      "amount": 2.349163475E9,
-      "code": "2587",
-      "party": "حسين جعفري.پسته"
-    },
-    {
-      "amount": 1.53947E9,
-      "code": "381",
-      "party": "04ارش موسوي پيكر-بلوار معلم"
-    }
-  ],
-  "customers": {
-    "inactive": 0,
-    "active": 146,
-    "noPurchase": 2409
-  },
-  "aging": [
-    {
-      "docs": 405,
-      "label": "1-30 روز",
-      "value": 5.887624112E10
-    },
-    {
-      "docs": 29,
-      "label": "31-60 روز",
-      "value": 2.3355572E9
-    },
-    {
-      "docs": 26,
-      "label": "جاری",
-      "value": 1.943334E9
-    }
-  ],
-  "credit": [
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 4.599361236E9,
-      "party": "شركت صنعتي داداش برادر شونيز"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 3.94E9,
-      "party": "يابر سياح-شوش-معرف اقاي قريشي"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 3.813445E9,
-      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 3.079918E9,
-      "party": "زينب حمداني اجيل خشكبار سنجاب"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 2.865985455E9,
-      "party": "04امين احمدي- زيتون"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 2.445E9,
-      "party": "فرشيد 300ميليوني"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 2.349163475E9,
-      "party": "حسين جعفري.پسته"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.53947E9,
-      "party": "04ارش موسوي پيكر-بلوار معلم"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.4325159E9,
-      "party": "08محمد حسابي-چك -كيانپارس"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.27807E9,
-      "party": "رضا حيادر-07اميد حيدري.شهرك برق"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.2415E9,
-      "party": "04علي توفيقي نژاد-سربندر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.236332E9,
-      "party": "-چك07 فرزاد استاركي- شهرك برق"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.188765E9,
-      "party": "04رضا قريشوندي.سربندر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.16103E9,
-      "party": "07حامد حويزاوي-ام طمير-"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.154035E9,
-      "party": "فرشيد جمشيدي-امير بابا"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.019643E9,
-      "party": "-اصلا فاكتور نشود07 محمد سعيداوي - اخر اسفالت"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.0E9,
-      "party": "04امين شريفي.اميديه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 9.97625394E8,
-      "party": "جواد گودرزي-پرسنل"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 9.4422E8,
-      "party": "07 صادق دلفي-چك  -پرديس"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.7034E8,
-      "party": "08بديع حميدي -بلوار پاسداران-چك"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.28196738E8,
-      "party": "گروه صنعتي عباس پور ادرين"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.2802E8,
-      "party": "04احسان ملكي.گلستان"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.092E8,
-      "party": "04محمد حسين ساكي.بوعذار هويزه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 7.707E8,
-      "party": "مصطفي ساكي -هويزه-معرف محمد بوسويط"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 7.3318E8,
-      "party": "04كنجد دانه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 7.038E8,
-      "party": "07عباس بحراني-گلستان"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.95829933E8,
-      "party": "پديده ايده پردازان-سرافراز"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.90275E8,
-      "party": "04ياسين نبگان-"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.84716E8,
-      "party": "08محمد دسترنجي.پاداد"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.6635E8,
-      "party": "04ايوب حردان زادگان- گمبوعه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.592E8,
-      "party": "04رضا شاكري-ماهشهر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.40417E8,
-      "party": "ليلا صافي- بهارستان"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.06241E8,
-      "party": "04شهناز كعبي-حصير اباد"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.6617E8,
-      "party": "04 سعيد شهيدي-عبدالمطلب چك -عچرشاوي- لشكراباد"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.6309E8,
-      "party": "محمد سواري-لبنيات-معرف علي سواري"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.3248E8,
-      "party": "000رحيم رزم افرين.سربندر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.2447E8,
-      "party": "08اشكان رادهوش-كوروش*چك"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.0E8,
-      "party": "04محمود شجرات.باهنر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 4.9156E8,
-      "party": "07احسان ستايش فر-چك -شهرك دانشگاه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 4.9155E8,
-      "party": "07احمد عبيداوي- شهرك اهواز-چك"
-    }
-  ],
-  "errors": []
-}
+   {"checkBuckets":223,"visitors":729,"feed":448,"purchases":233,"trend":234,"receivables":465,"debtors":452,"customers":1371,"aging":248,"credit":296,"sales":462,"products":544}
+-- figures --
+  sales: total=9.9983787279E10 docs=842 parties=292 paid=5580000.0 prev=1.07147766E10 date=1405/07/11
+  purchases: total=7.2225693817E10 docs=54 prev=1.33E8
+  receivables: total=8.930419291E10 count=382
+  customers: {"inactive":0,"active":296,"noPurchase":2409}
+  checkBuckets: {"over":{"total":2.406165E10,"count":29},"ok":{"total":2.9040998E10,"count":85},"soon":{"total":2.07208E9,"count":4}}
+  aging: 1-30 روز=5.887624112E10/405  31-60 روز=2.3355572E9/29  جاری=1.943334E9/26  
+  trend: 1405/07/11=2.454204E9  1405/07/09=3.833557E9  1405/07/08=9.41353E9  1405/07/07=4.852066E9  1405/07/06=4.298465E9  1405/07/05=2.8051202E9  1405/07/04=4.806045E9  
+  visitors: {"period":"مهر 1405","goal":0,"name":"شادي نظري/پرسنل","achieved":0,"orders":197,"customers":80,"sales":3.40005487E10}  {"period":"مهر 1405","goal":0,"name":"مصطفي خدايار/ويزيتور","achieved":0,"orders":205,"customers":85,"sales":2.476071E10}  {"period":"مهر 1405","goal":0,"name":"فاطمه محمودي/پرسنل","achieved":0,"orders":271,"customers":101,"sales":1.78440589E10}  {"period":"مهر 1405","goal":0,"name":"جواد لطيفي/ويزيتور","achieved":0,"orders":87,"customers":43,"sales":1.361860528E10}  
+  products top: {"name":"تخمه گل افتاب سفارشي  ","sum":1.315106555E10}  {"name":"كدو گوشتي اعلاااااا","sum":8.4227463E9}  {"name":"پسته كله قوچي براق","sum":7.0951724E9}  
+  feed: 8 rows, first={"date":"1405/07/11","number":"989","amount":1.4641E8,"type":"sale"}
+  credit: 40 rows, first={"blocked":false,"etebar":0,"mandeh":4.599361236E9,"party":"شركت صنعتي داداش برادر شونيز"}
+  debtors: 8 rows, first={"amount":4.599361236E9,"code":"35","party":"شركت صنعتي داداش برادر شونيز"}
 
-================ fetch(range=7)  6586 ms ================
--- no section errors --
--- section timings (ms) --
-   {"checkBuckets":257,"visitors":1087,"feed":493,"purchases":521,"trend":275,"receivables":252,"debtors":525,"customers":1019,"aging":264,"credit":308,"sales":502,"products":1083}
--- metrics --
+-- full payload --
 {
   "purchases": {
     "date": "1405/07/11",
@@ -642,7 +64,7 @@ server: 37.143.147.19:1433/Atiran2
       "value": 4.806045E9
     }
   ],
-  "range": 7,
+  "range": 0,
   "sales": {
     "date": "1405/07/11",
     "total": 9.9983787279E10,
@@ -865,615 +287,19 @@ server: 37.143.147.19:1433/Atiran2
       "type": "check"
     }
   ],
-  "syncAt": 1791053743733,
+  "syncAt": 1791054262385,
   "timings": {
-    "checkBuckets": 257,
-    "visitors": 1087,
-    "feed": 493,
-    "purchases": 521,
-    "trend": 275,
-    "receivables": 252,
-    "debtors": 525,
-    "customers": 1019,
-    "aging": 264,
-    "credit": 308,
-    "sales": 502,
-    "products": 1083
-  },
-  "receivables": {
-    "total": 8.930419291E10,
-    "count": 382,
-    "labelExpr": "TRY_CONVERT(nvarchar(250),c.[MONAME])"
-  },
-  "debtors": [
-    {
-      "amount": 4.599361236E9,
-      "code": "35",
-      "party": "شركت صنعتي داداش برادر شونيز"
-    },
-    {
-      "amount": 3.94E9,
-      "code": "2725",
-      "party": "يابر سياح-شوش-معرف اقاي قريشي"
-    },
-    {
-      "amount": 3.813445E9,
-      "code": "380",
-      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
-    },
-    {
-      "amount": 3.079918E9,
-      "code": "383",
-      "party": "زينب حمداني اجيل خشكبار سنجاب"
-    },
-    {
-      "amount": 2.865985455E9,
-      "code": "386",
-      "party": "04امين احمدي- زيتون"
-    },
-    {
-      "amount": 2.445E9,
-      "code": "384",
-      "party": "فرشيد 300ميليوني"
-    },
-    {
-      "amount": 2.349163475E9,
-      "code": "2587",
-      "party": "حسين جعفري.پسته"
-    },
-    {
-      "amount": 1.53947E9,
-      "code": "381",
-      "party": "04ارش موسوي پيكر-بلوار معلم"
-    }
-  ],
-  "customers": {
-    "inactive": 0,
-    "active": 296,
-    "noPurchase": 2409
-  },
-  "aging": [
-    {
-      "docs": 405,
-      "label": "1-30 روز",
-      "value": 5.887624112E10
-    },
-    {
-      "docs": 29,
-      "label": "31-60 روز",
-      "value": 2.3355572E9
-    },
-    {
-      "docs": 26,
-      "label": "جاری",
-      "value": 1.943334E9
-    }
-  ],
-  "credit": [
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 4.599361236E9,
-      "party": "شركت صنعتي داداش برادر شونيز"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 3.94E9,
-      "party": "يابر سياح-شوش-معرف اقاي قريشي"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 3.813445E9,
-      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 3.079918E9,
-      "party": "زينب حمداني اجيل خشكبار سنجاب"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 2.865985455E9,
-      "party": "04امين احمدي- زيتون"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 2.445E9,
-      "party": "فرشيد 300ميليوني"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 2.349163475E9,
-      "party": "حسين جعفري.پسته"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.53947E9,
-      "party": "04ارش موسوي پيكر-بلوار معلم"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.4325159E9,
-      "party": "08محمد حسابي-چك -كيانپارس"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.27807E9,
-      "party": "رضا حيادر-07اميد حيدري.شهرك برق"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.2415E9,
-      "party": "04علي توفيقي نژاد-سربندر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.236332E9,
-      "party": "-چك07 فرزاد استاركي- شهرك برق"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.188765E9,
-      "party": "04رضا قريشوندي.سربندر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.16103E9,
-      "party": "07حامد حويزاوي-ام طمير-"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.154035E9,
-      "party": "فرشيد جمشيدي-امير بابا"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.019643E9,
-      "party": "-اصلا فاكتور نشود07 محمد سعيداوي - اخر اسفالت"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 1.0E9,
-      "party": "04امين شريفي.اميديه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 9.97625394E8,
-      "party": "جواد گودرزي-پرسنل"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 9.4422E8,
-      "party": "07 صادق دلفي-چك  -پرديس"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.7034E8,
-      "party": "08بديع حميدي -بلوار پاسداران-چك"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.28196738E8,
-      "party": "گروه صنعتي عباس پور ادرين"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.2802E8,
-      "party": "04احسان ملكي.گلستان"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 8.092E8,
-      "party": "04محمد حسين ساكي.بوعذار هويزه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 7.707E8,
-      "party": "مصطفي ساكي -هويزه-معرف محمد بوسويط"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 7.3318E8,
-      "party": "04كنجد دانه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 7.038E8,
-      "party": "07عباس بحراني-گلستان"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.95829933E8,
-      "party": "پديده ايده پردازان-سرافراز"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.90275E8,
-      "party": "04ياسين نبگان-"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.84716E8,
-      "party": "08محمد دسترنجي.پاداد"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.6635E8,
-      "party": "04ايوب حردان زادگان- گمبوعه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.592E8,
-      "party": "04رضا شاكري-ماهشهر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.40417E8,
-      "party": "ليلا صافي- بهارستان"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 6.06241E8,
-      "party": "04شهناز كعبي-حصير اباد"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.6617E8,
-      "party": "04 سعيد شهيدي-عبدالمطلب چك -عچرشاوي- لشكراباد"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.6309E8,
-      "party": "محمد سواري-لبنيات-معرف علي سواري"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.3248E8,
-      "party": "000رحيم رزم افرين.سربندر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.2447E8,
-      "party": "08اشكان رادهوش-كوروش*چك"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 5.0E8,
-      "party": "04محمود شجرات.باهنر"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 4.9156E8,
-      "party": "07احسان ستايش فر-چك -شهرك دانشگاه"
-    },
-    {
-      "blocked": false,
-      "etebar": 0,
-      "mandeh": 4.9155E8,
-      "party": "07احمد عبيداوي- شهرك اهواز-چك"
-    }
-  ],
-  "errors": []
-}
-
-================ fetch(range=30)  5033 ms ================
--- no section errors --
--- section timings (ms) --
-   {"checkBuckets":238,"visitors":776,"feed":538,"purchases":253,"trend":253,"receivables":255,"debtors":530,"customers":788,"aging":264,"credit":323,"sales":271,"products":544}
--- metrics --
-{
-  "purchases": {
-    "date": "1405/07/11",
-    "total": 7.2225693817E10,
-    "docs": 54,
-    "parties": 34,
-    "paid": 0,
-    "prevTotal": 1.33E8
-  },
-  "trend": [
-    {
-      "label": "1405/07/11",
-      "value": 2.454204E9
-    },
-    {
-      "label": "1405/07/09",
-      "value": 3.833557E9
-    },
-    {
-      "label": "1405/07/08",
-      "value": 9.41353E9
-    },
-    {
-      "label": "1405/07/07",
-      "value": 4.852066E9
-    },
-    {
-      "label": "1405/07/06",
-      "value": 4.298465E9
-    },
-    {
-      "label": "1405/07/05",
-      "value": 2.8051202E9
-    },
-    {
-      "label": "1405/07/04",
-      "value": 4.806045E9
-    }
-  ],
-  "range": 30,
-  "sales": {
-    "date": "1405/07/11",
-    "total": 9.9983787279E10,
-    "docs": 842,
-    "parties": 292,
-    "paid": 5580000,
-    "prevTotal": 1.07147766E10
-  },
-  "products": {
-    "top": [
-      {
-        "name": "تخمه گل افتاب سفارشي  ",
-        "sum": 1.315106555E10
-      },
-      {
-        "name": "كدو گوشتي اعلاااااا",
-        "sum": 8.4227463E9
-      },
-      {
-        "name": "پسته كله قوچي براق",
-        "sum": 7.0951724E9
-      },
-      {
-        "name": "اجيل 3مغز اعلا",
-        "sum": 5.874857E9
-      },
-      {
-        "name": "پسته اكبري دستچين براق",
-        "sum": 5.5314E9
-      },
-      {
-        "name": "مغز بادام براق20-18*",
-        "sum": 5.315187E9
-      },
-      {
-        "name": "مغز گردو Aامسالي",
-        "sum": 4.41241675E9
-      },
-      {
-        "name": "تخمه گل افتاب خام*",
-        "sum": 4.14797E9
-      }
-    ],
-    "idle": [
-      {
-        "name": "تخمه بلانچ10ك",
-        "sum": 1.0205E8
-      },
-      {
-        "name": "نبات شاخه سفيد ويژه-5ك",
-        "sum": 6.52E7
-      },
-      {
-        "name": "بادام  استانه زرد",
-        "sum": 3.3305E7
-      },
-      {
-        "name": "ميني كن فله بريموند رنگين كمان1.5كيلويي",
-        "sum": 2.937E7
-      },
-      {
-        "name": "لواشكك استيكي بزرگ 80ف24عددي باغبان",
-        "sum": 2.2032E7
-      },
-      {
-        "name": "گوجه خشك150گرمي",
-        "sum": 2.175E7
-      },
-      {
-        "name": "خرما برررررحي دوكيلويي",
-        "sum": 1.9992E7
-      },
-      {
-        "name": "ژله ورقي نارسودا4ب24عددي15ف",
-        "sum": 1.944E7
-      }
-    ]
-  },
-  "checkBuckets": {
-    "over": {
-      "total": 2.406165E10,
-      "count": 29
-    },
-    "ok": {
-      "total": 2.9040998E10,
-      "count": 85
-    },
-    "soon": {
-      "total": 2.07208E9,
-      "count": 4
-    }
-  },
-  "visitors": [
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "شادي نظري/پرسنل",
-      "achieved": 0,
-      "orders": 197,
-      "customers": 80,
-      "sales": 3.40005487E10
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "مصطفي خدايار/ويزيتور",
-      "achieved": 0,
-      "orders": 205,
-      "customers": 85,
-      "sales": 2.476071E10
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "فاطمه محمودي/پرسنل",
-      "achieved": 0,
-      "orders": 271,
-      "customers": 101,
-      "sales": 1.78440589E10
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "جواد لطيفي/ويزيتور",
-      "achieved": 0,
-      "orders": 87,
-      "customers": 43,
-      "sales": 1.361860528E10
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "رضا قريشي/ويزيتور",
-      "achieved": 0,
-      "orders": 11,
-      "customers": 6,
-      "sales": 6.731347399E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 1.0E10,
-      "name": "اسما حمداني/پرسنل",
-      "achieved": 1.466755E9,
-      "orders": 25,
-      "customers": 14,
-      "sales": 1.466755E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "الهام حمداني/پرسنل",
-      "achieved": 0,
-      "orders": 24,
-      "customers": 11,
-      "sales": 1.463632E9
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 0,
-      "name": "ويزيتور سيستم",
-      "achieved": 0,
-      "orders": 3,
-      "customers": 3,
-      "sales": 9.813E7
-    },
-    {
-      "period": "مهر 1405",
-      "goal": 1.0E10,
-      "name": "فروشگاه",
-      "achieved": 0,
-      "orders": 19,
-      "customers": 1,
-      "sales": 0
-    }
-  ],
-  "feed": [
-    {
-      "date": "1405/07/11",
-      "number": "989",
-      "amount": 1.4641E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "956",
-      "amount": 1.048E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "989",
-      "amount": 1.4483E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "957",
-      "amount": 1.617E8,
-      "type": "sale"
-    },
-    {
-      "date": "1405/07/11",
-      "number": "958",
-      "amount": 7.16E7,
-      "type": "sale"
-    },
-    {
-      "date": "1405/09/12",
-      "amount": 1.5375E8,
-      "type": "check"
-    },
-    {
-      "date": "1405/09/12",
-      "amount": 2.3E8,
-      "type": "check"
-    },
-    {
-      "date": "1405/09/12",
-      "amount": 8.84E8,
-      "type": "check"
-    }
-  ],
-  "syncAt": 1791053750322,
-  "timings": {
-    "checkBuckets": 238,
-    "visitors": 776,
-    "feed": 538,
-    "purchases": 253,
-    "trend": 253,
-    "receivables": 255,
-    "debtors": 530,
-    "customers": 788,
-    "aging": 264,
-    "credit": 323,
-    "sales": 271,
+    "checkBuckets": 223,
+    "visitors": 729,
+    "feed": 448,
+    "purchases": 233,
+    "trend": 234,
+    "receivables": 465,
+    "debtors": 452,
+    "customers": 1371,
+    "aging": 248,
+    "credit": 296,
+    "sales": 462,
     "products": 544
   },
   "receivables": {
@@ -1790,21 +616,1816 @@ server: 37.143.147.19:1433/Atiran2
   "errors": []
 }
 
+================ fetchParallel(range=1)  2484 ms ================
+-- no section errors --
+-- section timings (ms) --
+   {"checkBuckets":459,"visitors":1307,"feed":951,"purchases":520,"trend":288,"receivables":224,"debtors":961,"customers":995,"aging":245,"credit":341,"sales":452,"products":1008}
+-- figures --
+  sales: total=2.76569422E10 docs=229 parties=144 paid=2280000.0 prev=3.4153373399E10 date=1405/07/11
+  purchases: total=3.7783327632E10 docs=19 prev=1.0172229633E10
+  receivables: total=8.930419291E10 count=382
+  customers: {"inactive":0,"active":146,"noPurchase":2409}
+  checkBuckets: {"over":{"total":2.406165E10,"count":29},"ok":{"total":2.9040998E10,"count":85},"soon":{"total":2.07208E9,"count":4}}
+  aging: 1-30 روز=5.887624112E10/405  31-60 روز=2.3355572E9/29  جاری=1.943334E9/26  
+  trend: 1405/07/11=2.454204E9  1405/07/09=3.833557E9  1405/07/08=9.41353E9  1405/07/07=4.852066E9  1405/07/06=4.298465E9  1405/07/05=2.8051202E9  1405/07/04=4.806045E9  
+  visitors: {"period":"مهر 1405","goal":0,"name":"شادي نظري/پرسنل","achieved":0,"orders":70,"customers":42,"sales":8.5660002E9}  {"period":"مهر 1405","goal":0,"name":"مصطفي خدايار/ويزيتور","achieved":0,"orders":57,"customers":45,"sales":7.656455E9}  {"period":"مهر 1405","goal":0,"name":"رضا قريشي/ويزيتور","achieved":0,"orders":4,"customers":2,"sales":4.37511E9}  {"period":"مهر 1405","goal":0,"name":"فاطمه محمودي/پرسنل","achieved":0,"orders":66,"customers":36,"sales":3.97954E9}  
+  products top: {"name":"كدو گوشتي اعلاااااا","sum":4.9783325E9}  {"name":"تخمه گل افتاب سفارشي  ","sum":4.62122E9}  {"name":"گردو پوستدار چ درصد پايين","sum":2.21659252E9}  
+  feed: 8 rows, first={"date":"1405/07/11","number":"989","amount":1.4641E8,"type":"sale"}
+  credit: 40 rows, first={"blocked":false,"etebar":0,"mandeh":4.599361236E9,"party":"شركت صنعتي داداش برادر شونيز"}
+  debtors: 8 rows, first={"amount":4.599361236E9,"code":"35","party":"شركت صنعتي داداش برادر شونيز"}
+
+-- full payload --
+{
+  "purchases": {
+    "date": "1405/07/11",
+    "total": 3.7783327632E10,
+    "docs": 19,
+    "parties": 17,
+    "paid": 0,
+    "prevTotal": 1.0172229633E10
+  },
+  "trend": [
+    {
+      "label": "1405/07/11",
+      "value": 2.454204E9
+    },
+    {
+      "label": "1405/07/09",
+      "value": 3.833557E9
+    },
+    {
+      "label": "1405/07/08",
+      "value": 9.41353E9
+    },
+    {
+      "label": "1405/07/07",
+      "value": 4.852066E9
+    },
+    {
+      "label": "1405/07/06",
+      "value": 4.298465E9
+    },
+    {
+      "label": "1405/07/05",
+      "value": 2.8051202E9
+    },
+    {
+      "label": "1405/07/04",
+      "value": 4.806045E9
+    }
+  ],
+  "range": 1,
+  "sales": {
+    "date": "1405/07/11",
+    "total": 2.76569422E10,
+    "docs": 229,
+    "parties": 144,
+    "paid": 2280000,
+    "prevTotal": 3.4153373399E10
+  },
+  "products": {
+    "top": [
+      {
+        "name": "كدو گوشتي اعلاااااا",
+        "sum": 4.9783325E9
+      },
+      {
+        "name": "تخمه گل افتاب سفارشي  ",
+        "sum": 4.62122E9
+      },
+      {
+        "name": "گردو پوستدار چ درصد پايين",
+        "sum": 2.21659252E9
+      },
+      {
+        "name": "اجيل فندق دار",
+        "sum": 1.475225E9
+      },
+      {
+        "name": "پسته اكبري دستچين براق",
+        "sum": 1.40925E9
+      },
+      {
+        "name": "ذرت كيسه25كيلويي mtc",
+        "sum": 1.05742E9
+      },
+      {
+        "name": "پسته احمداقايي Aبراق",
+        "sum": 9.412E8
+      },
+      {
+        "name": "اجيل تشريفات",
+        "sum": 9.0201462E8
+      }
+    ],
+    "idle": [
+      {
+        "name": "تخمه گل افتاب خام*",
+        "sum": 4.14797E9
+      },
+      {
+        "name": "مغز كازو كپسولي خام*",
+        "sum": 9.462E8
+      },
+      {
+        "name": "شكلات كادويي انيش فلاور6عددي",
+        "sum": 9.147E8
+      },
+      {
+        "name": "متفرقه",
+        "sum": 8.417151E8
+      },
+      {
+        "name": "آجيل لب شور ",
+        "sum": 6.98402E8
+      },
+      {
+        "name": "اجيل تقويتي شيرين",
+        "sum": 6.8198E8
+      },
+      {
+        "name": "مغز تخمه افتابگردان خام",
+        "sum": 5.29025E8
+      },
+      {
+        "name": "تخمه گل افتاب خام ايراني غ",
+        "sum": 4.88E8
+      }
+    ]
+  },
+  "checkBuckets": {
+    "over": {
+      "total": 2.406165E10,
+      "count": 29
+    },
+    "ok": {
+      "total": 2.9040998E10,
+      "count": 85
+    },
+    "soon": {
+      "total": 2.07208E9,
+      "count": 4
+    }
+  },
+  "visitors": [
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "شادي نظري/پرسنل",
+      "achieved": 0,
+      "orders": 70,
+      "customers": 42,
+      "sales": 8.5660002E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "مصطفي خدايار/ويزيتور",
+      "achieved": 0,
+      "orders": 57,
+      "customers": 45,
+      "sales": 7.656455E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "رضا قريشي/ويزيتور",
+      "achieved": 0,
+      "orders": 4,
+      "customers": 2,
+      "sales": 4.37511E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "فاطمه محمودي/پرسنل",
+      "achieved": 0,
+      "orders": 66,
+      "customers": 36,
+      "sales": 3.97954E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "جواد لطيفي/ويزيتور",
+      "achieved": 0,
+      "orders": 18,
+      "customers": 17,
+      "sales": 2.835505E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 1.0E10,
+      "name": "اسما حمداني/پرسنل",
+      "achieved": 2.05625E8,
+      "orders": 6,
+      "customers": 6,
+      "sales": 2.05625E8
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "ويزيتور سيستم",
+      "achieved": 0,
+      "orders": 1,
+      "customers": 1,
+      "sales": 3.547E7
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "الهام حمداني/پرسنل",
+      "achieved": 0,
+      "orders": 2,
+      "customers": 2,
+      "sales": 3237000
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 1.0E10,
+      "name": "فروشگاه",
+      "achieved": 0,
+      "orders": 5,
+      "customers": 1,
+      "sales": 0
+    }
+  ],
+  "feed": [
+    {
+      "date": "1405/07/11",
+      "number": "989",
+      "amount": 1.4641E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "956",
+      "amount": 1.048E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "989",
+      "amount": 1.4483E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "957",
+      "amount": 1.617E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "958",
+      "amount": 7.16E7,
+      "type": "sale"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 1.5375E8,
+      "type": "check"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 2.3E8,
+      "type": "check"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 8.84E8,
+      "type": "check"
+    }
+  ],
+  "syncAt": 1791054263998,
+  "timings": {
+    "checkBuckets": 459,
+    "visitors": 1307,
+    "feed": 951,
+    "purchases": 520,
+    "trend": 288,
+    "receivables": 224,
+    "debtors": 961,
+    "customers": 995,
+    "aging": 245,
+    "credit": 341,
+    "sales": 452,
+    "products": 1008
+  },
+  "receivables": {
+    "total": 8.930419291E10,
+    "count": 382,
+    "labelExpr": "TRY_CONVERT(nvarchar(250),c.[MONAME])"
+  },
+  "debtors": [
+    {
+      "amount": 4.599361236E9,
+      "code": "35",
+      "party": "شركت صنعتي داداش برادر شونيز"
+    },
+    {
+      "amount": 3.94E9,
+      "code": "2725",
+      "party": "يابر سياح-شوش-معرف اقاي قريشي"
+    },
+    {
+      "amount": 3.813445E9,
+      "code": "380",
+      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
+    },
+    {
+      "amount": 3.079918E9,
+      "code": "383",
+      "party": "زينب حمداني اجيل خشكبار سنجاب"
+    },
+    {
+      "amount": 2.865985455E9,
+      "code": "386",
+      "party": "04امين احمدي- زيتون"
+    },
+    {
+      "amount": 2.445E9,
+      "code": "384",
+      "party": "فرشيد 300ميليوني"
+    },
+    {
+      "amount": 2.349163475E9,
+      "code": "2587",
+      "party": "حسين جعفري.پسته"
+    },
+    {
+      "amount": 1.53947E9,
+      "code": "381",
+      "party": "04ارش موسوي پيكر-بلوار معلم"
+    }
+  ],
+  "customers": {
+    "inactive": 0,
+    "active": 146,
+    "noPurchase": 2409
+  },
+  "aging": [
+    {
+      "docs": 405,
+      "label": "1-30 روز",
+      "value": 5.887624112E10
+    },
+    {
+      "docs": 29,
+      "label": "31-60 روز",
+      "value": 2.3355572E9
+    },
+    {
+      "docs": 26,
+      "label": "جاری",
+      "value": 1.943334E9
+    }
+  ],
+  "credit": [
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.599361236E9,
+      "party": "شركت صنعتي داداش برادر شونيز"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.94E9,
+      "party": "يابر سياح-شوش-معرف اقاي قريشي"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.813445E9,
+      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.079918E9,
+      "party": "زينب حمداني اجيل خشكبار سنجاب"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.865985455E9,
+      "party": "04امين احمدي- زيتون"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.445E9,
+      "party": "فرشيد 300ميليوني"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.349163475E9,
+      "party": "حسين جعفري.پسته"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.53947E9,
+      "party": "04ارش موسوي پيكر-بلوار معلم"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.4325159E9,
+      "party": "08محمد حسابي-چك -كيانپارس"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.27807E9,
+      "party": "رضا حيادر-07اميد حيدري.شهرك برق"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.2415E9,
+      "party": "04علي توفيقي نژاد-سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.236332E9,
+      "party": "-چك07 فرزاد استاركي- شهرك برق"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.188765E9,
+      "party": "04رضا قريشوندي.سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.16103E9,
+      "party": "07حامد حويزاوي-ام طمير-"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.154035E9,
+      "party": "فرشيد جمشيدي-امير بابا"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.019643E9,
+      "party": "-اصلا فاكتور نشود07 محمد سعيداوي - اخر اسفالت"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.0E9,
+      "party": "04امين شريفي.اميديه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 9.97625394E8,
+      "party": "جواد گودرزي-پرسنل"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 9.4422E8,
+      "party": "07 صادق دلفي-چك  -پرديس"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.7034E8,
+      "party": "08بديع حميدي -بلوار پاسداران-چك"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.28196738E8,
+      "party": "گروه صنعتي عباس پور ادرين"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.2802E8,
+      "party": "04احسان ملكي.گلستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.092E8,
+      "party": "04محمد حسين ساكي.بوعذار هويزه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.707E8,
+      "party": "مصطفي ساكي -هويزه-معرف محمد بوسويط"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.3318E8,
+      "party": "04كنجد دانه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.038E8,
+      "party": "07عباس بحراني-گلستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.95829933E8,
+      "party": "پديده ايده پردازان-سرافراز"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.90275E8,
+      "party": "04ياسين نبگان-"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.84716E8,
+      "party": "08محمد دسترنجي.پاداد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.6635E8,
+      "party": "04ايوب حردان زادگان- گمبوعه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.592E8,
+      "party": "04رضا شاكري-ماهشهر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.40417E8,
+      "party": "ليلا صافي- بهارستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.06241E8,
+      "party": "04شهناز كعبي-حصير اباد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.6617E8,
+      "party": "04 سعيد شهيدي-عبدالمطلب چك -عچرشاوي- لشكراباد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.6309E8,
+      "party": "محمد سواري-لبنيات-معرف علي سواري"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.3248E8,
+      "party": "000رحيم رزم افرين.سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.2447E8,
+      "party": "08اشكان رادهوش-كوروش*چك"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.0E8,
+      "party": "04محمود شجرات.باهنر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.9156E8,
+      "party": "07احسان ستايش فر-چك -شهرك دانشگاه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.9155E8,
+      "party": "07احمد عبيداوي- شهرك اهواز-چك"
+    }
+  ],
+  "errors": []
+}
+
+================ fetchParallel(range=2)  1629 ms ================
+-- no section errors --
+-- section timings (ms) --
+   {"checkBuckets":249,"visitors":909,"feed":460,"purchases":224,"trend":229,"receivables":226,"debtors":463,"customers":1401,"aging":470,"credit":276,"sales":233,"products":510}
+-- figures --
+  sales: total=9.9983787279E10 docs=842 parties=292 paid=5580000.0 prev=1.07147766E10 date=1405/07/11
+  purchases: total=7.2225693817E10 docs=54 prev=1.33E8
+  receivables: total=8.930419291E10 count=382
+  customers: {"inactive":0,"active":296,"noPurchase":2409}
+  checkBuckets: {"over":{"total":2.406165E10,"count":29},"ok":{"total":2.9040998E10,"count":85},"soon":{"total":2.07208E9,"count":4}}
+  aging: 1-30 روز=5.887624112E10/405  31-60 روز=2.3355572E9/29  جاری=1.943334E9/26  
+  trend: 1405/07/11=2.454204E9  1405/07/09=3.833557E9  1405/07/08=9.41353E9  1405/07/07=4.852066E9  1405/07/06=4.298465E9  1405/07/05=2.8051202E9  1405/07/04=4.806045E9  
+  visitors: {"period":"مهر 1405","goal":0,"name":"شادي نظري/پرسنل","achieved":0,"orders":197,"customers":80,"sales":3.40005487E10}  {"period":"مهر 1405","goal":0,"name":"مصطفي خدايار/ويزيتور","achieved":0,"orders":205,"customers":85,"sales":2.476071E10}  {"period":"مهر 1405","goal":0,"name":"فاطمه محمودي/پرسنل","achieved":0,"orders":271,"customers":101,"sales":1.78440589E10}  {"period":"مهر 1405","goal":0,"name":"جواد لطيفي/ويزيتور","achieved":0,"orders":87,"customers":43,"sales":1.361860528E10}  
+  products top: {"name":"تخمه گل افتاب سفارشي  ","sum":1.315106555E10}  {"name":"كدو گوشتي اعلاااااا","sum":8.4227463E9}  {"name":"پسته كله قوچي براق","sum":7.0951724E9}  
+  feed: 8 rows, first={"date":"1405/07/11","number":"989","amount":1.4641E8,"type":"sale"}
+  credit: 40 rows, first={"blocked":false,"etebar":0,"mandeh":4.599361236E9,"party":"شركت صنعتي داداش برادر شونيز"}
+  debtors: 8 rows, first={"amount":4.599361236E9,"code":"35","party":"شركت صنعتي داداش برادر شونيز"}
+
+-- full payload --
+{
+  "purchases": {
+    "date": "1405/07/11",
+    "total": 7.2225693817E10,
+    "docs": 54,
+    "parties": 34,
+    "paid": 0,
+    "prevTotal": 1.33E8
+  },
+  "trend": [
+    {
+      "label": "1405/07/11",
+      "value": 2.454204E9
+    },
+    {
+      "label": "1405/07/09",
+      "value": 3.833557E9
+    },
+    {
+      "label": "1405/07/08",
+      "value": 9.41353E9
+    },
+    {
+      "label": "1405/07/07",
+      "value": 4.852066E9
+    },
+    {
+      "label": "1405/07/06",
+      "value": 4.298465E9
+    },
+    {
+      "label": "1405/07/05",
+      "value": 2.8051202E9
+    },
+    {
+      "label": "1405/07/04",
+      "value": 4.806045E9
+    }
+  ],
+  "range": 2,
+  "sales": {
+    "date": "1405/07/11",
+    "total": 9.9983787279E10,
+    "docs": 842,
+    "parties": 292,
+    "paid": 5580000,
+    "prevTotal": 1.07147766E10
+  },
+  "products": {
+    "top": [
+      {
+        "name": "تخمه گل افتاب سفارشي  ",
+        "sum": 1.315106555E10
+      },
+      {
+        "name": "كدو گوشتي اعلاااااا",
+        "sum": 8.4227463E9
+      },
+      {
+        "name": "پسته كله قوچي براق",
+        "sum": 7.0951724E9
+      },
+      {
+        "name": "اجيل 3مغز اعلا",
+        "sum": 5.874857E9
+      },
+      {
+        "name": "پسته اكبري دستچين براق",
+        "sum": 5.5314E9
+      },
+      {
+        "name": "مغز بادام براق20-18*",
+        "sum": 5.315187E9
+      },
+      {
+        "name": "مغز گردو Aامسالي",
+        "sum": 4.41241675E9
+      },
+      {
+        "name": "تخمه گل افتاب خام*",
+        "sum": 4.14797E9
+      }
+    ],
+    "idle": [
+      {
+        "name": "تخمه بلانچ10ك",
+        "sum": 1.0205E8
+      },
+      {
+        "name": "نبات شاخه سفيد ويژه-5ك",
+        "sum": 6.52E7
+      },
+      {
+        "name": "بادام  استانه زرد",
+        "sum": 3.3305E7
+      },
+      {
+        "name": "ميني كن فله بريموند رنگين كمان1.5كيلويي",
+        "sum": 2.937E7
+      },
+      {
+        "name": "لواشكك استيكي بزرگ 80ف24عددي باغبان",
+        "sum": 2.2032E7
+      },
+      {
+        "name": "گوجه خشك150گرمي",
+        "sum": 2.175E7
+      },
+      {
+        "name": "خرما برررررحي دوكيلويي",
+        "sum": 1.9992E7
+      },
+      {
+        "name": "ژله ورقي نارسودا4ب24عددي15ف",
+        "sum": 1.944E7
+      }
+    ]
+  },
+  "checkBuckets": {
+    "over": {
+      "total": 2.406165E10,
+      "count": 29
+    },
+    "ok": {
+      "total": 2.9040998E10,
+      "count": 85
+    },
+    "soon": {
+      "total": 2.07208E9,
+      "count": 4
+    }
+  },
+  "visitors": [
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "شادي نظري/پرسنل",
+      "achieved": 0,
+      "orders": 197,
+      "customers": 80,
+      "sales": 3.40005487E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "مصطفي خدايار/ويزيتور",
+      "achieved": 0,
+      "orders": 205,
+      "customers": 85,
+      "sales": 2.476071E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "فاطمه محمودي/پرسنل",
+      "achieved": 0,
+      "orders": 271,
+      "customers": 101,
+      "sales": 1.78440589E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "جواد لطيفي/ويزيتور",
+      "achieved": 0,
+      "orders": 87,
+      "customers": 43,
+      "sales": 1.361860528E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "رضا قريشي/ويزيتور",
+      "achieved": 0,
+      "orders": 11,
+      "customers": 6,
+      "sales": 6.731347399E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 1.0E10,
+      "name": "اسما حمداني/پرسنل",
+      "achieved": 1.466755E9,
+      "orders": 25,
+      "customers": 14,
+      "sales": 1.466755E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "الهام حمداني/پرسنل",
+      "achieved": 0,
+      "orders": 24,
+      "customers": 11,
+      "sales": 1.463632E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "ويزيتور سيستم",
+      "achieved": 0,
+      "orders": 3,
+      "customers": 3,
+      "sales": 9.813E7
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 1.0E10,
+      "name": "فروشگاه",
+      "achieved": 0,
+      "orders": 19,
+      "customers": 1,
+      "sales": 0
+    }
+  ],
+  "feed": [
+    {
+      "date": "1405/07/11",
+      "number": "989",
+      "amount": 1.4641E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "956",
+      "amount": 1.048E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "989",
+      "amount": 1.4483E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "957",
+      "amount": 1.617E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "958",
+      "amount": 7.16E7,
+      "type": "sale"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 1.5375E8,
+      "type": "check"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 2.3E8,
+      "type": "check"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 8.84E8,
+      "type": "check"
+    }
+  ],
+  "syncAt": 1791054266485,
+  "timings": {
+    "checkBuckets": 249,
+    "visitors": 909,
+    "feed": 460,
+    "purchases": 224,
+    "trend": 229,
+    "receivables": 226,
+    "debtors": 463,
+    "customers": 1401,
+    "aging": 470,
+    "credit": 276,
+    "sales": 233,
+    "products": 510
+  },
+  "receivables": {
+    "total": 8.930419291E10,
+    "count": 382,
+    "labelExpr": "TRY_CONVERT(nvarchar(250),c.[MONAME])"
+  },
+  "debtors": [
+    {
+      "amount": 4.599361236E9,
+      "code": "35",
+      "party": "شركت صنعتي داداش برادر شونيز"
+    },
+    {
+      "amount": 3.94E9,
+      "code": "2725",
+      "party": "يابر سياح-شوش-معرف اقاي قريشي"
+    },
+    {
+      "amount": 3.813445E9,
+      "code": "380",
+      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
+    },
+    {
+      "amount": 3.079918E9,
+      "code": "383",
+      "party": "زينب حمداني اجيل خشكبار سنجاب"
+    },
+    {
+      "amount": 2.865985455E9,
+      "code": "386",
+      "party": "04امين احمدي- زيتون"
+    },
+    {
+      "amount": 2.445E9,
+      "code": "384",
+      "party": "فرشيد 300ميليوني"
+    },
+    {
+      "amount": 2.349163475E9,
+      "code": "2587",
+      "party": "حسين جعفري.پسته"
+    },
+    {
+      "amount": 1.53947E9,
+      "code": "381",
+      "party": "04ارش موسوي پيكر-بلوار معلم"
+    }
+  ],
+  "customers": {
+    "inactive": 0,
+    "active": 296,
+    "noPurchase": 2409
+  },
+  "aging": [
+    {
+      "docs": 405,
+      "label": "1-30 روز",
+      "value": 5.887624112E10
+    },
+    {
+      "docs": 29,
+      "label": "31-60 روز",
+      "value": 2.3355572E9
+    },
+    {
+      "docs": 26,
+      "label": "جاری",
+      "value": 1.943334E9
+    }
+  ],
+  "credit": [
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.599361236E9,
+      "party": "شركت صنعتي داداش برادر شونيز"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.94E9,
+      "party": "يابر سياح-شوش-معرف اقاي قريشي"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.813445E9,
+      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.079918E9,
+      "party": "زينب حمداني اجيل خشكبار سنجاب"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.865985455E9,
+      "party": "04امين احمدي- زيتون"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.445E9,
+      "party": "فرشيد 300ميليوني"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.349163475E9,
+      "party": "حسين جعفري.پسته"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.53947E9,
+      "party": "04ارش موسوي پيكر-بلوار معلم"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.4325159E9,
+      "party": "08محمد حسابي-چك -كيانپارس"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.27807E9,
+      "party": "رضا حيادر-07اميد حيدري.شهرك برق"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.2415E9,
+      "party": "04علي توفيقي نژاد-سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.236332E9,
+      "party": "-چك07 فرزاد استاركي- شهرك برق"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.188765E9,
+      "party": "04رضا قريشوندي.سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.16103E9,
+      "party": "07حامد حويزاوي-ام طمير-"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.154035E9,
+      "party": "فرشيد جمشيدي-امير بابا"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.019643E9,
+      "party": "-اصلا فاكتور نشود07 محمد سعيداوي - اخر اسفالت"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.0E9,
+      "party": "04امين شريفي.اميديه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 9.97625394E8,
+      "party": "جواد گودرزي-پرسنل"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 9.4422E8,
+      "party": "07 صادق دلفي-چك  -پرديس"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.7034E8,
+      "party": "08بديع حميدي -بلوار پاسداران-چك"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.28196738E8,
+      "party": "گروه صنعتي عباس پور ادرين"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.2802E8,
+      "party": "04احسان ملكي.گلستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.092E8,
+      "party": "04محمد حسين ساكي.بوعذار هويزه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.707E8,
+      "party": "مصطفي ساكي -هويزه-معرف محمد بوسويط"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.3318E8,
+      "party": "04كنجد دانه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.038E8,
+      "party": "07عباس بحراني-گلستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.95829933E8,
+      "party": "پديده ايده پردازان-سرافراز"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.90275E8,
+      "party": "04ياسين نبگان-"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.84716E8,
+      "party": "08محمد دسترنجي.پاداد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.6635E8,
+      "party": "04ايوب حردان زادگان- گمبوعه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.592E8,
+      "party": "04رضا شاكري-ماهشهر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.40417E8,
+      "party": "ليلا صافي- بهارستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.06241E8,
+      "party": "04شهناز كعبي-حصير اباد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.6617E8,
+      "party": "04 سعيد شهيدي-عبدالمطلب چك -عچرشاوي- لشكراباد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.6309E8,
+      "party": "محمد سواري-لبنيات-معرف علي سواري"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.3248E8,
+      "party": "000رحيم رزم افرين.سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.2447E8,
+      "party": "08اشكان رادهوش-كوروش*چك"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.0E8,
+      "party": "04محمود شجرات.باهنر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.9156E8,
+      "party": "07احسان ستايش فر-چك -شهرك دانشگاه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.9155E8,
+      "party": "07احمد عبيداوي- شهرك اهواز-چك"
+    }
+  ],
+  "errors": []
+}
+
+================ fetchParallel(range=3)  2056 ms ================
+-- no section errors --
+-- section timings (ms) --
+   {"checkBuckets":271,"visitors":1550,"feed":471,"purchases":483,"trend":505,"receivables":255,"debtors":451,"customers":945,"aging":285,"credit":269,"sales":506,"products":1046}
+-- figures --
+  sales: total=1.10698563879E11 docs=970 parties=310 paid=1.201E7 prev=0.0 date=1405/07/11
+  purchases: total=7.2358693817E10 docs=56 prev=0.0
+  receivables: total=8.930419291E10 count=382
+  customers: {"inactive":0,"active":315,"noPurchase":2409}
+  checkBuckets: {"over":{"total":2.406165E10,"count":29},"ok":{"total":2.9040998E10,"count":85},"soon":{"total":2.07208E9,"count":4}}
+  aging: 1-30 روز=5.887624112E10/405  31-60 روز=2.3355572E9/29  جاری=1.943334E9/26  
+  trend: 1405/07/11=2.454204E9  1405/07/09=3.833557E9  1405/07/08=9.41353E9  1405/07/07=4.852066E9  1405/07/06=4.298465E9  1405/07/05=2.8051202E9  1405/07/04=4.806045E9  
+  visitors: {"period":"مهر 1405","goal":0,"name":"شادي نظري/پرسنل","achieved":0,"orders":226,"customers":84,"sales":3.62868879E10}  {"period":"مهر 1405","goal":0,"name":"مصطفي خدايار/ويزيتور","achieved":0,"orders":241,"customers":86,"sales":2.87765199E10}  {"period":"مهر 1405","goal":0,"name":"فاطمه محمودي/پرسنل","achieved":0,"orders":316,"customers":115,"sales":2.06200849E10}  {"period":"مهر 1405","goal":0,"name":"جواد لطيفي/ويزيتور","achieved":0,"orders":101,"customers":45,"sales":1.512507128E10}  
+  products top: {"name":"تخمه گل افتاب سفارشي  ","sum":1.522549055E10}  {"name":"كدو گوشتي اعلاااااا","sum":8.7874053E9}  {"name":"پسته كله قوچي براق","sum":7.0951724E9}  
+  feed: 8 rows, first={"date":"1405/07/11","number":"989","amount":1.4641E8,"type":"sale"}
+  credit: 40 rows, first={"blocked":false,"etebar":0,"mandeh":4.599361236E9,"party":"شركت صنعتي داداش برادر شونيز"}
+  debtors: 8 rows, first={"amount":4.599361236E9,"code":"35","party":"شركت صنعتي داداش برادر شونيز"}
+
+-- full payload --
+{
+  "purchases": {
+    "date": "1405/07/11",
+    "total": 7.2358693817E10,
+    "docs": 56,
+    "parties": 35,
+    "paid": 0,
+    "prevTotal": 0
+  },
+  "trend": [
+    {
+      "label": "1405/07/11",
+      "value": 2.454204E9
+    },
+    {
+      "label": "1405/07/09",
+      "value": 3.833557E9
+    },
+    {
+      "label": "1405/07/08",
+      "value": 9.41353E9
+    },
+    {
+      "label": "1405/07/07",
+      "value": 4.852066E9
+    },
+    {
+      "label": "1405/07/06",
+      "value": 4.298465E9
+    },
+    {
+      "label": "1405/07/05",
+      "value": 2.8051202E9
+    },
+    {
+      "label": "1405/07/04",
+      "value": 4.806045E9
+    }
+  ],
+  "range": 3,
+  "sales": {
+    "date": "1405/07/11",
+    "total": 1.10698563879E11,
+    "docs": 970,
+    "parties": 310,
+    "paid": 1.201E7,
+    "prevTotal": 0
+  },
+  "products": {
+    "top": [
+      {
+        "name": "تخمه گل افتاب سفارشي  ",
+        "sum": 1.522549055E10
+      },
+      {
+        "name": "كدو گوشتي اعلاااااا",
+        "sum": 8.7874053E9
+      },
+      {
+        "name": "پسته كله قوچي براق",
+        "sum": 7.0951724E9
+      },
+      {
+        "name": "اجيل 3مغز اعلا",
+        "sum": 6.316187E9
+      },
+      {
+        "name": "مغز بادام براق20-18*",
+        "sum": 5.708587E9
+      },
+      {
+        "name": "پسته اكبري دستچين براق",
+        "sum": 5.6029E9
+      },
+      {
+        "name": "مغز گردو Aامسالي",
+        "sum": 4.88364175E9
+      },
+      {
+        "name": "تخمه گل افتاب زوج اعلا",
+        "sum": 4.715943E9
+      }
+    ],
+    "idle": []
+  },
+  "checkBuckets": {
+    "over": {
+      "total": 2.406165E10,
+      "count": 29
+    },
+    "ok": {
+      "total": 2.9040998E10,
+      "count": 85
+    },
+    "soon": {
+      "total": 2.07208E9,
+      "count": 4
+    }
+  },
+  "visitors": [
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "شادي نظري/پرسنل",
+      "achieved": 0,
+      "orders": 226,
+      "customers": 84,
+      "sales": 3.62868879E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "مصطفي خدايار/ويزيتور",
+      "achieved": 0,
+      "orders": 241,
+      "customers": 86,
+      "sales": 2.87765199E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "فاطمه محمودي/پرسنل",
+      "achieved": 0,
+      "orders": 316,
+      "customers": 115,
+      "sales": 2.06200849E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "جواد لطيفي/ويزيتور",
+      "achieved": 0,
+      "orders": 101,
+      "customers": 45,
+      "sales": 1.512507128E10
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "رضا قريشي/ويزيتور",
+      "achieved": 0,
+      "orders": 11,
+      "customers": 6,
+      "sales": 6.731347399E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 1.0E10,
+      "name": "اسما حمداني/پرسنل",
+      "achieved": 1.466755E9,
+      "orders": 25,
+      "customers": 14,
+      "sales": 1.466755E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "الهام حمداني/پرسنل",
+      "achieved": 0,
+      "orders": 24,
+      "customers": 11,
+      "sales": 1.463632E9
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 0,
+      "name": "ويزيتور سيستم",
+      "achieved": 0,
+      "orders": 7,
+      "customers": 6,
+      "sales": 2.282655E8
+    },
+    {
+      "period": "مهر 1405",
+      "goal": 1.0E10,
+      "name": "فروشگاه",
+      "achieved": 0,
+      "orders": 19,
+      "customers": 1,
+      "sales": 0
+    }
+  ],
+  "feed": [
+    {
+      "date": "1405/07/11",
+      "number": "989",
+      "amount": 1.4641E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "956",
+      "amount": 1.048E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "989",
+      "amount": 1.4483E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "957",
+      "amount": 1.617E8,
+      "type": "sale"
+    },
+    {
+      "date": "1405/07/11",
+      "number": "958",
+      "amount": 7.16E7,
+      "type": "sale"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 1.5375E8,
+      "type": "check"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 2.3E8,
+      "type": "check"
+    },
+    {
+      "date": "1405/09/12",
+      "amount": 8.84E8,
+      "type": "check"
+    }
+  ],
+  "syncAt": 1791054268117,
+  "timings": {
+    "checkBuckets": 271,
+    "visitors": 1550,
+    "feed": 471,
+    "purchases": 483,
+    "trend": 505,
+    "receivables": 255,
+    "debtors": 451,
+    "customers": 945,
+    "aging": 285,
+    "credit": 269,
+    "sales": 506,
+    "products": 1046
+  },
+  "receivables": {
+    "total": 8.930419291E10,
+    "count": 382,
+    "labelExpr": "TRY_CONVERT(nvarchar(250),c.[MONAME])"
+  },
+  "debtors": [
+    {
+      "amount": 4.599361236E9,
+      "code": "35",
+      "party": "شركت صنعتي داداش برادر شونيز"
+    },
+    {
+      "amount": 3.94E9,
+      "code": "2725",
+      "party": "يابر سياح-شوش-معرف اقاي قريشي"
+    },
+    {
+      "amount": 3.813445E9,
+      "code": "380",
+      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
+    },
+    {
+      "amount": 3.079918E9,
+      "code": "383",
+      "party": "زينب حمداني اجيل خشكبار سنجاب"
+    },
+    {
+      "amount": 2.865985455E9,
+      "code": "386",
+      "party": "04امين احمدي- زيتون"
+    },
+    {
+      "amount": 2.445E9,
+      "code": "384",
+      "party": "فرشيد 300ميليوني"
+    },
+    {
+      "amount": 2.349163475E9,
+      "code": "2587",
+      "party": "حسين جعفري.پسته"
+    },
+    {
+      "amount": 1.53947E9,
+      "code": "381",
+      "party": "04ارش موسوي پيكر-بلوار معلم"
+    }
+  ],
+  "customers": {
+    "inactive": 0,
+    "active": 315,
+    "noPurchase": 2409
+  },
+  "aging": [
+    {
+      "docs": 405,
+      "label": "1-30 روز",
+      "value": 5.887624112E10
+    },
+    {
+      "docs": 29,
+      "label": "31-60 روز",
+      "value": 2.3355572E9
+    },
+    {
+      "docs": 26,
+      "label": "جاری",
+      "value": 1.943334E9
+    }
+  ],
+  "credit": [
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.599361236E9,
+      "party": "شركت صنعتي داداش برادر شونيز"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.94E9,
+      "party": "يابر سياح-شوش-معرف اقاي قريشي"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.813445E9,
+      "party": " 04مهدي سلحشور شوسي كشته-منبع اب"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 3.079918E9,
+      "party": "زينب حمداني اجيل خشكبار سنجاب"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.865985455E9,
+      "party": "04امين احمدي- زيتون"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.445E9,
+      "party": "فرشيد 300ميليوني"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 2.349163475E9,
+      "party": "حسين جعفري.پسته"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.53947E9,
+      "party": "04ارش موسوي پيكر-بلوار معلم"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.4325159E9,
+      "party": "08محمد حسابي-چك -كيانپارس"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.27807E9,
+      "party": "رضا حيادر-07اميد حيدري.شهرك برق"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.2415E9,
+      "party": "04علي توفيقي نژاد-سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.236332E9,
+      "party": "-چك07 فرزاد استاركي- شهرك برق"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.188765E9,
+      "party": "04رضا قريشوندي.سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.16103E9,
+      "party": "07حامد حويزاوي-ام طمير-"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.154035E9,
+      "party": "فرشيد جمشيدي-امير بابا"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.019643E9,
+      "party": "-اصلا فاكتور نشود07 محمد سعيداوي - اخر اسفالت"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 1.0E9,
+      "party": "04امين شريفي.اميديه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 9.97625394E8,
+      "party": "جواد گودرزي-پرسنل"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 9.4422E8,
+      "party": "07 صادق دلفي-چك  -پرديس"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.7034E8,
+      "party": "08بديع حميدي -بلوار پاسداران-چك"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.28196738E8,
+      "party": "گروه صنعتي عباس پور ادرين"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.2802E8,
+      "party": "04احسان ملكي.گلستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 8.092E8,
+      "party": "04محمد حسين ساكي.بوعذار هويزه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.707E8,
+      "party": "مصطفي ساكي -هويزه-معرف محمد بوسويط"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.3318E8,
+      "party": "04كنجد دانه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 7.038E8,
+      "party": "07عباس بحراني-گلستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.95829933E8,
+      "party": "پديده ايده پردازان-سرافراز"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.90275E8,
+      "party": "04ياسين نبگان-"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.84716E8,
+      "party": "08محمد دسترنجي.پاداد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.6635E8,
+      "party": "04ايوب حردان زادگان- گمبوعه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.592E8,
+      "party": "04رضا شاكري-ماهشهر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.40417E8,
+      "party": "ليلا صافي- بهارستان"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 6.06241E8,
+      "party": "04شهناز كعبي-حصير اباد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.6617E8,
+      "party": "04 سعيد شهيدي-عبدالمطلب چك -عچرشاوي- لشكراباد"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.6309E8,
+      "party": "محمد سواري-لبنيات-معرف علي سواري"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.3248E8,
+      "party": "000رحيم رزم افرين.سربندر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.2447E8,
+      "party": "08اشكان رادهوش-كوروش*چك"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 5.0E8,
+      "party": "04محمود شجرات.باهنر"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.9156E8,
+      "party": "07احسان ستايش فر-چك -شهرك دانشگاه"
+    },
+    {
+      "blocked": false,
+      "etebar": 0,
+      "mandeh": 4.9155E8,
+      "party": "07احمد عبيداوي- شهرك اهواز-چك"
+    }
+  ],
+  "errors": []
+}
+
 ================ jTDS statement-length probe ================
-  len=2500 chars (5000 utf16 bytes)  524 ms  -> ERR SQLException: Incorrect syntax near '@P0'.
-  len=3500 chars (7000 utf16 bytes)  487 ms  -> ERR SQLException: Incorrect syntax near '@P0'.
-  len=3900 chars (7800 utf16 bytes)  529 ms  -> ERR SQLException: Incorrect syntax near '@P0'.
-  len=3990 chars (7980 utf16 bytes)  490 ms  -> ERR SQLException: Incorrect syntax near '@P0'.
-  len=4000 chars (8000 utf16 bytes)  30261 ms  -> ERR SQLException: I/O Error: Read timed out
-  len=4010 chars (8020 utf16 bytes)  0 ms  -> ERR SQLException: Invalid state, the Connection object is closed.
-  len=4050 chars (8100 utf16 bytes)  1 ms  -> ERR SQLException: Invalid state, the Connection object is closed.
-  len=4100 chars (8200 utf16 bytes)  0 ms  -> ERR SQLException: Invalid state, the Connection object is closed.
-  len=4200 chars (8400 utf16 bytes)  0 ms  -> ERR SQLException: Invalid state, the Connection object is closed.
-  len=4300 chars (8600 utf16 bytes)  0 ms  -> ERR SQLException: Invalid state, the Connection object is closed.
-  len=4500 chars (9000 utf16 bytes)  0 ms  -> ERR SQLException: Invalid state, the Connection object is closed.
+  base statement: 1385 chars / 2770 utf16 bytes
+  len=4000 chars (8000 bytes)  plain: 487ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 473ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=6000 chars (12000 bytes)  plain: 611ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 496ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=8000 chars (16000 bytes)  plain: 533ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 488ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=12000 chars (24000 bytes)  plain: 509ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 545ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=16000 chars (32000 bytes)  plain: 523ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 794ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=20000 chars (40000 bytes)  plain: 495ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 502ms ERR The multi-part identifier "x.Deleted" could not be bound.
 
 ================ parenthesis guard ================
-guard probe failed: java.sql.SQLException: Login timed out.
+  SELECT COUNT_BIG(1) FROM dbo.[sailfact] h WHERE (1=1) AND (2=2)  ->  OK 1168
+  SELECT COUNT_BIG(1) FROM dbo.[sailfact] h WHERE (1=1 AND (2=2)  ->  ERR MeelanoSql: دستور SQL تولیدشده پرانتز نامتوازن دارد (1 پرانتز بسته‌نشده) :: SELECT COUNT_BIG(1) FROM dbo.[sailfact] h WHERE (1=1 AND (2=2)
+  SELECT N')' , N'(' FROM dbo.[sailfact] h  ->  OK )
 
-MeelanoSql.stats = اتصال‌های ساخته‌شده: 1 • بازاستفاده: 3 • اتصال مجدد: 0 • خطا: 1 • آخرین اتصال: 1441ms • آخرین خطا: Login timed out.
+MeelanoSql.stats = اتصال‌های ساخته‌شده: 4 • بازاستفاده: 72 • اتصال مجدد: 0 • خطا: 0 • آخرین اتصال: 1165ms
 ANYERR=0
