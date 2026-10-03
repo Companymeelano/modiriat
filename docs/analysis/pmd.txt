@@ -3049,18 +3049,9 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:801:	
 MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:810:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
 MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:821:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:827:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:837:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:838:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:839:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:840:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:841:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:842:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:843:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:844:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:845:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:846:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:847:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
-MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:848:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:835:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:837:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:849:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoA11y.java:93:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoAtiranImages.java:45:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoAtiranImages.java:46:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
@@ -3356,33 +3347,33 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:231:	AvoidL
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:232:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:233:	AvoidCatchingThrowable:	A catch statement should never catch throwable since it includes errors.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:235:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:243:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:244:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:244:	CompareObjectsWithEquals:	Use equals() to compare object references.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:250:	AvoidSynchronizedStatement:	Use ReentrantLock rather than synchronization
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:269:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:293:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:310:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:319:	CheckResultSet:	Always check the return of one of the navigation method (next,previous,first,last) of a ResultSet.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:334:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:342:	CheckResultSet:	Always check the return of one of the navigation method (next,previous,first,last) of a ResultSet.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:397:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'anchor'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:412:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'anchor'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:435:	UseVarargs:	Consider using varargs for methods or constructors which take an array the last parameter.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:472:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:475:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:476:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:477:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:477:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:477:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:478:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:479:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:481:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:483:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:484:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:485:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:245:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:245:	CompareObjectsWithEquals:	Use equals() to compare object references.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:251:	AvoidSynchronizedStatement:	Use ReentrantLock rather than synchronization
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:270:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:294:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:311:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:320:	CheckResultSet:	Always check the return of one of the navigation method (next,previous,first,last) of a ResultSet.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:335:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:343:	CheckResultSet:	Always check the return of one of the navigation method (next,previous,first,last) of a ResultSet.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:398:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'anchor'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:413:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'anchor'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:436:	UseVarargs:	Consider using varargs for methods or constructors which take an array the last parameter.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:481:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:484:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:485:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:486:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:486:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:486:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:487:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:541:	UseArraysAsList:	Use asList instead of tight loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:488:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:490:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:492:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:493:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:494:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:496:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSql.java:550:	UseArraysAsList:	Use asList instead of tight loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:80:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:92:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:96:	UseConcurrentHashMap:	If you run in Java5 or newer and have concurrent access, you should use the ConcurrentHashMap implementation
