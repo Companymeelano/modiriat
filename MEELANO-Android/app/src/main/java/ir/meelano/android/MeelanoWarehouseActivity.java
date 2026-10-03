@@ -82,7 +82,9 @@ public class MeelanoWarehouseActivity extends Activity {
                 JSONObject dash = MeelanoWarehouse.dashboard(c);
                 JSONArray sales = MeelanoWarehouse.salesList(c, 20);
                 JSONArray inv = MeelanoWarehouse.inventoryList(c, 20);
-                main.post(() -> render(dash, sales, inv));
+                JSONArray workers = MeelanoWarehouse.workers(c);
+                JSONObject report = MeelanoWarehouse.dailyReport(c, "");
+                main.post(() -> render(dash, sales, inv, workers, report));
             } catch (Exception e) {
                 main.post(() -> {
                     status.setText("دریافت اطلاعات با مشکل مواجه شد.");
@@ -92,7 +94,7 @@ public class MeelanoWarehouseActivity extends Activity {
         }).start();
     }
 
-    private void render(JSONObject dash, JSONArray sales, JSONArray inv) {
+    private void render(JSONObject dash, JSONArray sales, JSONArray inv, JSONArray workers, JSONObject report) {
         status.setText("آخرین بروزرسانی: هم‌اکنون");
         section("امروز — " + dash.optString("today", ""));
         kpiRow("فاکتور فروش امروز", dash.optLong("sales_today"));
@@ -116,6 +118,18 @@ public class MeelanoWarehouseActivity extends Activity {
             if (o == null) continue;
             body.addView(label(o.optString("name") + "  •  کد " + o.optLong("shka")
                     + "  •  موجودی " + fmt(o.optDouble("stock")), INK));
+        }
+
+        section("گزارش عملکرد امروز");
+        body.addView(label("فروش " + report.optLong("sales") + "  •  تحویل‌شده " + report.optLong("delivered")
+                + "  •  دریافت خرید " + report.optLong("received") + "  •  مغایرت دریافت " + report.optLong("receive_diff"), INK));
+
+        section("کارگران انبار (از کنترل دسترسی)");
+        if (workers.length() == 0) body.addView(label("موردی برای نمایش وجود ندارد.", SUB));
+        for (int i = 0; i < workers.length(); i++) {
+            JSONObject o = workers.optJSONObject(i);
+            if (o == null) continue;
+            body.addView(label(o.optString("name") + "  •  نقش " + o.optString("role"), INK));
         }
     }
 

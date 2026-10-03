@@ -32,6 +32,8 @@ VERIFIED = {
  'meelano_wh_receive': {'id','buy_shmo','shka','expected','received','diff','state','note','review_state'},
  'meelano_wh_count': {'id','shka','system_qty','actual_qty','diff','blind','state'},
  'meelano_wh_audit': {'id','actor','actor_name','action','ref_table','ref_id','before_val','after_val','note','created_at'},
+ 'meelano_wh_transfer': {'id','shka','qty','src_anbar','dst_anbar','state','requested_by','confirmed_by','confirmed_at','note','created_at'},
+ 'meelano_access_users': {'username','display_name','source','source_id','role_key','permissions','enabled','updated_at'},
 }
 ALLOWED_TABLES = set(VERIFIED) | {'meelano_access_users','meelano_access_roles','meelano_chat_settings','sys_users','visitors'}
 # Verified scalar functions / stored procedures (not tables).

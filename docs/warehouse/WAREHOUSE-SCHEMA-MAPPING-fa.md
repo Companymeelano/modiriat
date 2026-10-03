@@ -84,6 +84,9 @@
 | `meelano_wh_receive` | دریافت خرید + مغایرت (بدون اصلاح خودکار موجودی) | id, buy_shmo, shka, expected, received, diff(PERSISTED), state, note, review_state, reviewed_by, reviewed_at |
 | `meelano_wh_count` | شمارش/انبارگردانی (کورها اختیاری) | id, shka, system_qty, actual_qty, diff(PERSISTED), blind, state, counted_by, approved_by |
 | `meelano_wh_audit` | ممیزی who/what/when/before/after | id, actor, actor_name, action, ref_table, ref_id, before_val, after_val, note, created_at |
+| `meelano_wh_transfer` | درخواست/تأیید انتقال بین انبار (عملیاتی، بدون جابه‌جایی سند حسابداری) | id, shka, qty, src_anbar, dst_anbar, state, requested_by, confirmed_by, confirmed_at, note, created_at |
+
+**کارگران:** از لایهٔ کنترل دسترسی موجود `meelano_access_users` (username, display_name, role_key, enabled) خوانده می‌شود؛ نقش hard-code نیست.
 
 **موجودی:** ماژول انبار موجودی را بازپیاده‌سازی نمی‌کند؛ دقیقاً از `MainActivity.atiranStockApply(inv, alias)`
 (دفتر `ka_act` با همان علامت‌های `dbo.UpdateMojodiInventory`، لیست خروج `20,22,5,19,18,48,26,85,133`) استفاده می‌کند

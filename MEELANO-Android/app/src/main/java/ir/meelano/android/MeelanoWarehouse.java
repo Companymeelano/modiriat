@@ -58,6 +58,11 @@ final class MeelanoWarehouse {
                     + "action nvarchar(40) NOT NULL, ref_table nvarchar(60) NULL, ref_id bigint NULL, "
                     + "before_val nvarchar(400) NULL, after_val nvarchar(400) NULL, note nvarchar(500) NULL, "
                     + "created_at datetime2 NOT NULL DEFAULT SYSDATETIME())");
+            st.executeUpdate("IF OBJECT_ID(N'dbo.meelano_wh_transfer') IS NULL CREATE TABLE dbo.meelano_wh_transfer ("
+                    + "id bigint IDENTITY(1,1) NOT NULL PRIMARY KEY, shka bigint NOT NULL, qty decimal(19,3) NOT NULL DEFAULT 0, "
+                    + "src_anbar int NULL, dst_anbar int NULL, state nvarchar(20) NOT NULL DEFAULT N'requested', "
+                    + "requested_by nvarchar(120) NULL, confirmed_by nvarchar(120) NULL, confirmed_at datetime2 NULL, "
+                    + "note nvarchar(300) NULL, created_at datetime2 NOT NULL DEFAULT SYSDATETIME())");
         }
     }
 
@@ -273,5 +278,135 @@ final class MeelanoWarehouse {
             c.commit();
         } catch (SQLException e) { c.rollback(); throw e; }
         finally { c.setAutoCommit(true); }
+    }
+
+    // ------------------------------------------------------ purchase receiving --
+    static long openReceive(Connection c, long buyShmo, long shka, double expected, String actor, String actorName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO " + WH_RECEIVE + "(buy_shmo, shka, expected, state, received_by) VALUES(?,?,?,'open',?)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, buyShmo); ps.setLong(2, shka); ps.setDouble(3, expected); ps.setString(4, actor);
+            ps.executeUpdate();
+            long id = -1; try (ResultSet k = ps.getGeneratedKeys()) { if (k.next()) id = k.getLong(1); }
+            audit(c, actor, actorName, "receive.open", "meelano_wh_receive", id, null, String.valueOf(expected), "buy=" + buyShmo);
+            return id;
+        }
+    }
+
+    /** Record received qty; diff is a PERSISTED computed column. Does NOT touch stock (review first). */
+    static void confirmReceive(Connection c, long id, double received, String note, String actor, String actorName) throws SQLException {
+        c.setAutoCommit(false);
+        try (PreparedStatement ps = c.prepareStatement(
+                "UPDATE " + WH_RECEIVE + " SET received=?, note=?, state=CASE WHEN ?<>expected THEN N'diff' ELSE N'done' END, "
+                        + "received_by=?, received_at=SYSDATETIME() WHERE id=?")) {
+            ps.setDouble(1, received); ps.setString(2, note); ps.setDouble(3, received); ps.setString(4, actor); ps.setLong(5, id);
+            ps.executeUpdate();
+            audit(c, actor, actorName, "receive.confirm", "meelano_wh_receive", id, null, String.valueOf(received), note);
+            c.commit();
+        } catch (SQLException e) { c.rollback(); throw e; }
+        finally { c.setAutoCommit(true); }
+    }
+
+    /** Supervisor review of a receiving difference. Approval is required before any stock effect (enforced by workflow). */
+    static void reviewReceive(Connection c, long id, boolean approve, String actor, String actorName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "UPDATE " + WH_RECEIVE + " SET review_state=?, reviewed_by=?, reviewed_at=SYSDATETIME() WHERE id=?")) {
+            ps.setString(1, approve ? "approved" : "rejected"); ps.setString(2, actor); ps.setLong(3, id);
+            ps.executeUpdate();
+            audit(c, actor, actorName, approve ? "receive.approve" : "receive.reject", "meelano_wh_receive", id, null, null, null);
+        }
+    }
+
+    // ------------------------------------------------------------ stock counting --
+    static long submitCount(Connection c, long shka, Double systemQty, double actual, boolean blind, String actor, String actorName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO " + WH_COUNT + "(shka, system_qty, actual_qty, blind, state, counted_by, counted_at) VALUES(?,?,?,?, 'counted', ?,SYSDATETIME())",
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, shka);
+            if (systemQty == null) ps.setNull(2, java.sql.Types.DECIMAL); else ps.setDouble(2, systemQty);
+            ps.setDouble(3, actual); ps.setBoolean(4, blind); ps.setString(5, actor);
+            ps.executeUpdate();
+            long id = -1; try (ResultSet k = ps.getGeneratedKeys()) { if (k.next()) id = k.getLong(1); }
+            audit(c, actor, actorName, "count.submit", "meelano_wh_count", id, systemQty == null ? null : String.valueOf(systemQty), String.valueOf(actual), blind ? "blind" : "open");
+            return id;
+        }
+    }
+
+    static void approveCount(Connection c, long id, String actor, String actorName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "UPDATE " + WH_COUNT + " SET state=N'approved', approved_by=?, approved_at=SYSDATETIME() WHERE id=?")) {
+            ps.setString(1, actor); ps.setLong(2, id);
+            ps.executeUpdate();
+            audit(c, actor, actorName, "count.approve", "meelano_wh_count", id, null, null, null);
+        }
+    }
+
+    // ---------------------------------------------------------------- transfers --
+    static long requestTransfer(Connection c, long shka, double qty, Integer src, Integer dst, String actor, String actorName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO " + "dbo.meelano_wh_transfer" + "(shka, qty, src_anbar, dst_anbar, state, requested_by) VALUES(?,?,?,?,'requested',?)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setLong(1, shka); ps.setDouble(2, qty);
+            if (src == null) ps.setNull(3, java.sql.Types.INTEGER); else ps.setInt(3, src);
+            if (dst == null) ps.setNull(4, java.sql.Types.INTEGER); else ps.setInt(4, dst);
+            ps.setString(5, actor);
+            ps.executeUpdate();
+            long id = -1; try (ResultSet k = ps.getGeneratedKeys()) { if (k.next()) id = k.getLong(1); }
+            audit(c, actor, actorName, "transfer.request", "meelano_wh_transfer", id, null, String.valueOf(qty), src + "->" + dst);
+            return id;
+        }
+    }
+
+    static void confirmTransfer(Connection c, long id, String actor, String actorName) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "UPDATE dbo.meelano_wh_transfer SET state=N'confirmed', confirmed_by=?, confirmed_at=SYSDATETIME() WHERE id=?")) {
+            ps.setString(1, actor); ps.setLong(2, id);
+            ps.executeUpdate();
+            audit(c, actor, actorName, "transfer.confirm", "meelano_wh_transfer", id, null, null, null);
+        }
+    }
+
+    // ------------------------------------------------------------------ workers --
+    /** Warehouse workers from the existing access-control layer (real roles, not hardcoded). */
+    static JSONArray workers(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT username, ISNULL(display_name,N'') dn, role_key, enabled FROM dbo.meelano_access_users WHERE enabled=1 ORDER BY display_name")) {
+            try (ResultSet r = ps.executeQuery()) {
+                while (r.next()) {
+                    arr.put(new JSONObject().put("username", str(r, "username")).put("name", str(r, "dn"))
+                            .put("role", str(r, "role_key")).put("enabled", r.getInt("enabled")));
+                }
+            }
+        }
+        return arr;
+    }
+
+    // ------------------------------------------------------------- daily report --
+    static JSONObject dailyReport(Connection c, String actor) throws Exception {
+        JSONObject o = new JSONObject();
+        String today = today(c);
+        o.put("today", today);
+        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.sailfact WHERE active='t' AND [date]=?")) {
+            ps.setString(1, today); try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("sales", r.getLong(1)); }
+        }
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT COUNT_BIG(1) FROM dbo.meelano_delivery WHERE status=N'delivered' AND dbo.UDF_Gregorian_To_Persian(delivered_at)=?")) {
+            ps.setString(1, today); try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("delivered", r.getLong(1)); }
+        }
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT COUNT_BIG(1) FROM dbo.meelano_wh_receive WHERE dbo.UDF_Gregorian_To_Persian(received_at)=?")) {
+            ps.setString(1, today); try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("received", r.getLong(1)); }
+        }
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT COUNT_BIG(1) FROM dbo.meelano_wh_receive WHERE state=N'diff' AND dbo.UDF_Gregorian_To_Persian(received_at)=?")) {
+            ps.setString(1, today); try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("receive_diff", r.getLong(1)); }
+        }
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT COUNT_BIG(1) FROM dbo.meelano_wh_audit WHERE actor=? AND dbo.UDF_Gregorian_To_Persian(created_at)=?")) {
+            ps.setString(1, actor); ps.setString(2, today);
+            try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("my_ops", r.getLong(1)); }
+        }
+        return o;
     }
 }
