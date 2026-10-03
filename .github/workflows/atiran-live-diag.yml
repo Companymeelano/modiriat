@@ -1,0 +1,86 @@
+name: Atiran live read-only diagnostic
+
+# STRICTLY READ-ONLY diagnostic against the live Atiran2 database.
+# It only runs SELECT statements (session set to READ UNCOMMITTED so it takes no
+# shared locks) to capture the real schema and reproduce the dashboard SQL errors.
+# It never inserts, updates, deletes or changes schema. Credentials come from
+# encrypted repository secrets and are never written into the repository.
+#
+# Required secrets:
+#   ATIRAN_LIVE_HOST, ATIRAN_LIVE_PORT, ATIRAN_LIVE_DB,
+#   ATIRAN_LIVE_USER, ATIRAN_LIVE_PASS  (ATIRAN_LIVE_USER_ALT optional fallback login)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mssql-tools18 (sqlcmd, TDS 8.0 / TLS capable)
+        run: |
+          set -e
+          export DEBIAN_FRONTEND=noninteractive
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/keyrings/microsoft.asc >/dev/null
+          curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
+          sudo apt-get update -y
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+          /opt/mssql-tools18/bin/sqlcmd -? | head -1
+
+      - name: Run read-only diagnostic
+        env:
+          LH: ${{ secrets.ATIRAN_LIVE_HOST }}
+          LP: ${{ secrets.ATIRAN_LIVE_PORT }}
+          LDB: ${{ secrets.ATIRAN_LIVE_DB }}
+          LU: ${{ secrets.ATIRAN_LIVE_USER }}
+          LU2: ${{ secrets.ATIRAN_LIVE_USER_ALT }}
+          LPASS: ${{ secrets.ATIRAN_LIVE_PASS }}
+        run: |
+          set -e
+          SQLCMD=/opt/mssql-tools18/bin/sqlcmd
+          OUT=tools/atiran-e2e/live-diag.txt
+          mkdir -p tools/atiran-e2e
+          run_q () { # $1 = login user, rest = query
+            local u="$1"; shift
+            "$SQLCMD" -S "${LH},${LP}" -U "$u" -P "$LPASS" -d "$LDB" -C -l 30 -W -s '|' \
+              -Q "SET NOCOUNT ON; SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED; $*" 2>&1
+          }
+          LOGIN=""
+          for cand in "$LU" "$LU2"; do
+            [ -z "$cand" ] && continue
+            if run_q "$cand" "SELECT 1 AS ok" | grep -q "1"; then LOGIN="$cand"; echo "login_ok_user_present" ; break; fi
+          done
+          {
+            echo "# Atiran live read-only diagnostic"
+            if [ -z "$LOGIN" ]; then
+              echo "LOGIN_FAILED: neither provided login could run 'SELECT 1'."
+              echo "--- attempt with ATIRAN_LIVE_USER ---"; run_q "$LU" "SELECT 1 AS ok" || true
+              echo "--- attempt with ATIRAN_LIVE_USER_ALT ---"; run_q "$LU2" "SELECT 1 AS ok" || true
+            else
+              echo "connected_as_present: yes"
+              echo "## identity"; run_q "$LOGIN" "SELECT DB_NAME() AS db, SUSER_SNAME() AS login_name, SERVERPROPERTY('ProductVersion') AS ver" || true
+              echo "## visitors"; run_q "$LOGIN" "SELECT COUNT(*) AS visitors_count FROM dbo.visitors" || true
+              run_q "$LOGIN" "SELECT TOP 30 LTRIM(RTRIM(CAST(Username AS nvarchar(120)))) AS username FROM dbo.visitors WHERE Username IS NOT NULL ORDER BY 1" || true
+              echo "## sailfact columns"; run_q "$LOGIN" "SELECT c.column_id, c.name, t.name AS type, c.max_length, c.is_nullable FROM sys.columns c JOIN sys.types t ON t.user_type_id=c.user_type_id WHERE c.object_id=OBJECT_ID('dbo.sailfact') ORDER BY c.column_id" || true
+              echo "## mx-pattern probe (dedupe derived table)"; run_q "$LOGIN" "SELECT TOP 1 shfacfo FROM (SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY x.shfacfo ORDER BY (SELECT 0)) AS _meelano_rn FROM dbo.sailfact x) mx WHERE mx._meelano_rn=1) s" || true
+              echo "## tables present"; run_q "$LOGIN" "SELECT TOP 60 name FROM sys.tables ORDER BY name" || true
+            fi
+          } > "$OUT"
+          # never leak the password into the artifact
+          sed -i "s/${LPASS}/[redacted]/g" "$OUT" 2>/dev/null || true
+          echo "----- live-diag.txt -----"; cat "$OUT"
+
+      - name: Commit diagnostic output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add tools/atiran-e2e/live-diag.txt
+          git commit -m "Atiran live read-only diagnostic output [skip ci]" || echo "No changes"
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 6; done
