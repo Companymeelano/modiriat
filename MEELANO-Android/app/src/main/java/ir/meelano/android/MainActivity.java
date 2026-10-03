@@ -12499,7 +12499,8 @@ public class MainActivity extends Activity {
             c.addView(meta, mp);
             if (goal > 0) {
                 double pct = Math.min(100, achieved / goal * 100.0);
-                TextView g = text("هدف: " + money(Math.round(goal)) + " — تحقق: " + faDigits(String.format(java.util.Locale.US, "%.0f", pct)) + "٪", 9.8f, pct >= 100 ? tc(SUCCESS) : pct >= 60 ? tc(WARNING) : tc(DANGER), Typeface.BOLD);
+                String per = o.optString("period", "");
+                TextView g = text((per.isEmpty() ? "هدف: " : "هدف دورهٔ «" + per + "»: ") + money(Math.round(goal)) + " — تحقق: " + faDigits(String.format(java.util.Locale.US, "%.0f", pct)) + "٪", 9.8f, pct >= 100 ? tc(SUCCESS) : pct >= 60 ? tc(WARNING) : tc(DANGER), Typeface.BOLD);
                 LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(-1, -2); gp.setMargins(dp(86), 0, 0, dp(2));
                 c.addView(g, gp);
                 addBarLine(c, "تحقق هدف", money(Math.round(achieved)), achieved, Math.max(goal, 1), pct >= 100 ? SUCCESS : WARNING);

@@ -545,10 +545,34 @@ final class ManagerAnalytics {
         Set<String> vis = columns(c, "visitors");
         String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
         String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        // period filter: prefer the active baze row covering the latest sale date (columns confirmed by probe: rdf,name,sta,end_)
+        String bazeCond = "";
+        String periodName = "";
+        String gBaze = resolve(g, "baze_rdf");
+        if (gBaze != null && tableExists(c, "baze")) {
+            Set<String> bz = columns(c, "baze");
+            String bRdf = resolve(bz, "rdf");
+            String bName = resolve(bz, "name");
+            String bSta = resolve(bz, "sta");
+            String bEnd = resolve(bz, "end_");
+            Set<String> sailCols = columns(c, "sailfact");
+            String sDate = resolve(sailCols, "date");
+            String latest = sDate == null ? "" : latestDate(c, "sailfact", sDate);
+            if (bRdf != null && bSta != null && bEnd != null && !latest.isEmpty()) {
+                String bAct = resolve(bz, "Active");
+                String actCond = "";
+                if (bAct != null) actCond = " AND (UPPER(LTRIM(RTRIM(TRY_CONVERT(nvarchar(20),[" + bAct + "])))) IN (N'T',N'TRUE',N'Y',N'YES',N'1') OR TRY_CONVERT(int,[" + bAct + "])=1)";
+                String q = quote(latest);
+                String sql = "SELECT TOP (1) " + (bName == null ? "CAST(NULL AS nvarchar(150))" : "TRY_CONVERT(nvarchar(150),[" + bName + "])") + ", TRY_CONVERT(nvarchar(100),[" + bRdf + "]) FROM dbo.baze WHERE TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + bSta + "]))<=TRY_CONVERT(date," + q + ") AND TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + bEnd + "]))>=TRY_CONVERT(date," + q + ")" + actCond + " ORDER BY TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + bEnd + "])) DESC";
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    try (ResultSet r = ps.executeQuery()) { if (r.next()) { periodName = r.getString(1) == null ? "" : r.getString(1); String bId = r.getString(2); if (bId != null) bazeCond = " AND TRY_CONVERT(nvarchar(100),g.[" + gBaze + "])=" + quote(bId); } }
+                }
+            }
+        }
         Map<String, double[]> byName = new HashMap<>();
         if (visKey != null && visName != null) {
             String gActive = activeAnd(g, "g");
-            String sql = "SELECT COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?'), ISNULL(SUM(" + sqlNumberExpr("g", gTarget, "decimal(19,2)") + "),0)" + (gDone == null ? "" : ", ISNULL(SUM(" + sqlNumberExpr("g", gDone, "decimal(19,2)") + "),0)") + " FROM dbo.vis_goals g LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),g.[" + gVis + "]) WHERE 1=1" + gActive + " GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?')";
+            String sql = "SELECT COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?'), ISNULL(SUM(" + sqlNumberExpr("g", gTarget, "decimal(19,2)") + "),0)" + (gDone == null ? "" : ", ISNULL(SUM(" + sqlNumberExpr("g", gDone, "decimal(19,2)") + "),0)") + " FROM dbo.vis_goals g LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),g.[" + gVis + "]) WHERE 1=1" + gActive + bazeCond + " GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'?')";
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 try (ResultSet r = ps.executeQuery()) { while (r.next()) { double[] v = new double[]{ r.getDouble(2), gDone == null ? 0 : r.getDouble(3) }; byName.put(r.getString(1) == null ? "?" : r.getString(1), v); } }
             }
@@ -556,6 +580,7 @@ final class ManagerAnalytics {
         for (int i = 0; i < visitors.length(); i++) {
             JSONObject o = visitors.optJSONObject(i); if (o == null) continue;
             double[] gv = byName.get(o.optString("name", ""));
+            o.put("period", periodName);
             o.put("goal", gv == null ? 0 : gv[0]);
             o.put("achieved", gv == null ? 0 : (gDone == null ? o.optDouble("sales", 0) : gv[1]));
         }
