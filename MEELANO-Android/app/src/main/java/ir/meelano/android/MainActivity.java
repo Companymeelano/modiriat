@@ -12796,6 +12796,54 @@ public class MainActivity extends Activity {
 
     private JSONObject safeJson(String body) { try { return new JSONObject(body); } catch (Exception e) { return new JSONObject(); } }
 
+    /**
+     * The analytics payload carries one entry per failed section (ManagerAnalytics.fetch swallows each
+     * section error and keeps going). Without this card a failed sales query silently rendered «—» and the
+     * manager had no way to tell «no data» from «query failed».
+     */
+    private void addManagerSectionErrors(JSONArray errors) {
+        if (errors == null || errors.length() == 0) return;
+        LinearLayout c = card();
+        c.setBackground(gradient(new int[]{alpha(DANGER, 26), alpha(SURFACE, 246)}, GradientDrawable.Orientation.RIGHT_LEFT, 20));
+        c.addView(text("دریافت برخی بخش‌ها کامل نشد", 14.5f, tc(DANGER), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < errors.length(); i++) {
+            String raw = errors.optString(i, "").trim();
+            if (raw.isEmpty()) continue;
+            if (b.length() > 0) b.append("\n");
+            b.append(sectionErrorLabel(raw));
+        }
+        TextView tv = text(b.toString(), 10.6f, TEXT, Typeface.NORMAL);
+        tv.setLineSpacing(dp(2), 1.05f);
+        c.addView(tv, new LinearLayout.LayoutParams(-1, -2));
+        TextView hint = text("این بخش‌ها با «تلاش مجدد» دوباره خوانده می‌شوند؛ بقیهٔ اعداد از آتیران و معتبرند.", 10.0f, MUTED, Typeface.BOLD);
+        hint.setLineSpacing(dp(2), 1.05f);
+        c.addView(hint, new LinearLayout.LayoutParams(-1, -2));
+        Button retry = secondaryButton("تلاش مجدد");
+        retry.setOnClickListener(v -> loadManagerExecutive());
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, dp(44)); rp.setMargins(0, dp(8), 0, 0);
+        c.addView(retry, rp);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12));
+        content.addView(c, lp);
+    }
+
+    /** «sales: Invalid column name 'x'» → «فروش/خرید — نام ستون در سرور یافت نشد»، با متن فنی محفوظ. */
+    private String sectionErrorLabel(String raw) {
+        int idx = raw.indexOf(':');
+        String key = idx < 0 ? raw : raw.substring(0, idx).trim();
+        String detail = idx < 0 ? "" : raw.substring(idx + 1).trim();
+        String[] names = {"sales", "purchases", "trend", "receivables", "debtors", "customers", "visitors", "products", "checkBuckets", "aging", "credit", "feed"};
+        String[] fa = {"فروش", "خرید", "روند فروش", "مطالبات", "بدهکاران", "مشتریان", "ویزیتورها", "کالا", "چک‌ها", "سن‌یابی وصول", "ریسک اعتبار", "فعالیت‌های اخیر"};
+        String label = key;
+        for (int i = 0; i < names.length; i++) if (names[i].equals(key)) { label = fa[i]; break; }
+        String friendly = detail;
+        if (detail.toLowerCase(Locale.US).contains("invalid column name")) friendly = "نام ستون در سرور پیدا نشد";
+        else if (detail.toLowerCase(Locale.US).contains("timeout") || detail.toLowerCase(Locale.US).contains("socket")) friendly = "زمان پاسخ سرور تمام شد";
+        else if (detail.toLowerCase(Locale.US).contains("permission")) friendly = "دسترسی خواندن داده کافی نیست";
+        else if (detail.isEmpty()) friendly = "خطای نامشخص";
+        return "• " + label + " — " + friendly + (friendly.equals(detail) ? "" : " (" + detail + ")");
+    }
+
     private double pctDelta(double now, double prev) { return prev > 0 ? (now - prev) / prev * 100.0 : Double.NaN; }
 
     private void addKpiCard(LinearLayout parent, String title, String glyph, int accent, String value, String delta, String sub, String drillKind) {
@@ -12838,6 +12886,7 @@ public class MainActivity extends Activity {
     private void renderManagerExecutive(JSONObject m) {
         content.removeAllViews();
         addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است. آخرین بروزرسانی: " + freshnessText(m.optLong("syncAt", System.currentTimeMillis())));
+        addManagerSectionErrors(m.optJSONArray("errors"));
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
         String[] labels = {"امروز", "۷ روز", "۳۰ روز"};
         for (int i = 0; i < 3; i++) { final int rr = i; Button b = i == m.optInt("range", 0) ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; loadManagerExecutive(); }); filters.addView(b, weightedButtonLp()); }

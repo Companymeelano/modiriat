@@ -232,6 +232,44 @@ def main():
     run(box, "routes",
         """SELECT COUNT_BIG(1) FROM dbo.masir WITH (NOLOCK)""")
 
+    # The executive dashboard showed «فروش —» on the live run while purchases worked, and fetch() swallows
+    # per-section errors. These four statements isolate whether the merged «current + previous period in one
+    # statement» shape is accepted by this SQL Server version for sailfact.
+    box = section("merged_statement")
+    order = ("CASE WHEN UPPER(LTRIM(RTRIM(TRY_CONVERT(nvarchar(20),x.[active])))) IN (N'T',N'TRUE',N'Y',N'YES',N'1') THEN 1 ELSE 0 END DESC,"
+             "LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30),x.[date]))),10) DESC, TRY_CONVERT(bigint,x.[rdf__]) DESC")
+    part = "COALESCE(NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),x.[shfacfo]))),N''),N'__row__' + COALESCE(TRY_CONVERT(nvarchar(120),x.[rdf__]),CONVERT(nvarchar(36),NEWID())))"
+    where_cur = "WHERE LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30),x.[date]))),10) BETWEEN '1405/06/13' AND '1405/07/11' AND x.[active]='t'"
+    where_prev = "WHERE LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30),x.[date]))),10) BETWEEN '1405/05/14' AND '1405/06/12' AND x.[active]='t'"
+    src = ("(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY " + part + " ORDER BY " + order + ") AS _meelano_rn "
+           "FROM dbo.[sailfact] x " + where_cur + ") mx WHERE mx._meelano_rn=1) h")
+    src2 = ("(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY " + part + " ORDER BY " + order + ") AS _meelano_rn "
+            "FROM dbo.[sailfact] x " + where_prev + ") mx WHERE mx._meelano_rn=1) h")
+    run(box, "v1_simple_scalar",
+        "SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), (SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),x.[all])),0) FROM dbo.[sailfact] x " + where_prev + ") FROM dbo.[sailfact] h " + where_cur)
+    run(box, "v2_scalar_over_derived",
+        "SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), (SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM " + src2 + ") FROM " + src)
+    run(box, "v3_full_merged",
+        "SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1), COUNT(DISTINCT h.[shmo]), "
+        "(SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM " + src2 + ") FROM " + src)
+    # The real signature of ManagerAnalytics.rangeBlock: sailfact first, then buyfact — if sailfact throws,
+    # fetch() records it and the KPI renders «—» while purchases still work (what the live screenshot showed).
+    try:
+        cur = cn.cursor(); cur.execute(
+            "SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1), COUNT(DISTINCT h.[shmo]), "
+            "(SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM " + src2 + ") FROM " + src)
+        r = cur.fetchone()
+        box["values"]["v5_rangeblock_sailfact_ok"] = [str(v)[:40] for v in r]
+    except Exception as ex:
+        box["values"]["v5_rangeblock_sailfact_ok"] = "ERR " + str(ex)[:220]
+    try:
+        cur = cn.cursor(); cur.execute(
+            "SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1), COUNT(DISTINCT h.[shmo]) FROM dbo.[buyfact] h WHERE 1=1")
+        r = cur.fetchone()
+        box["values"]["v6_rangeblock_buyfact_ok"] = [str(v)[:40] for v in r]
+    except Exception as ex:
+        box["values"]["v6_rangeblock_buyfact_ok"] = "ERR " + str(ex)[:220]
+
     # The app reports «جدول Visit وجود ندارد» for managers; sys.tables says a table named Visit exists.
     # Resolve the exact schema/columns/rows so the page can either show real numbers or a precise reason.
     box = section("visit_object")
