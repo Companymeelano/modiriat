@@ -6,7 +6,7 @@ on:
       - arena/01a102c5-modiriat
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: atiran-finance-schema-${{ github.ref }}
@@ -90,12 +90,27 @@ jobs:
             '71d23aba0547ff69310d046e5f447529edf0d661165f185b2da3845e3487d925' > "$OUT/README.txt"
           rm -f "$KEY" "$RUNNER_TEMP/schema.json"
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: atiran-finance-schema-encrypted-${{ github.run_id }}
-          path: ${{ runner.temp }}/finance-schema-encrypted/
-          if-no-files-found: error
-          retention-days: 1
+      - name: Commit encrypted metadata snapshot to this session branch
+        run: |
+          set -euo pipefail
+          DEST="tools/finance-schema/snapshots"
+          mkdir -p "$DEST"
+          cp "$RUNNER_TEMP/finance-schema-encrypted/schema.json.enc" "$DEST/schema-${GITHUB_RUN_ID}.json.enc"
+          cp "$RUNNER_TEMP/finance-schema-encrypted/schema.key.enc" "$DEST/schema-${GITHUB_RUN_ID}.key.enc"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add "$DEST/schema-${GITHUB_RUN_ID}.json.enc" "$DEST/schema-${GITHUB_RUN_ID}.key.enc"
+          git commit -m "Atiran SQL metadata snapshot encrypted (run ${GITHUB_RUN_ID}) [skip ci]"
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              exit 0
+            fi
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
+            sleep 3
+          done
+          echo "Unable to push encrypted metadata snapshot to the session branch" >&2
+          exit 1
 
       - name: Stop and remove the temporary database
         if: always()
