@@ -5,3 +5,4 @@ MEELANO-Android/local.properties
 *.jks
 *.keystore
 __pycache__/
+Modirat.zip
