@@ -87,31 +87,31 @@
   "rows": 20
  },
  "batched_dashboard_kpis": {
-  "ms": 202,
+  "ms": 183,
   "rows": 1
  },
  "batched_manager_reports": {
-  "ms": 204,
+  "ms": 200,
   "rows": 1
  },
  "batched_daily_items": {
-  "ms": 243,
+  "ms": 195,
   "rows": 8
  },
  "batched_trend_7": {
-  "ms": 209,
+  "ms": 220,
   "rows": 6
  },
  "batched_top_debtors": {
-  "ms": 236,
+  "ms": 201,
   "rows": 8
  },
  "batched_checks_breakdown": {
-  "ms": 195,
+  "ms": 181,
   "rows": 4
  },
  "batched_visitor_share": {
-  "ms": 215,
+  "ms": 191,
   "rows": 6
  }
 }
