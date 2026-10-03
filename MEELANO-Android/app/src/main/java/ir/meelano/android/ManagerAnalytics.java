@@ -829,23 +829,32 @@ final class ManagerAnalytics {
 
     // ============================ orchestrator ============================
     /** One connection, sequential validated queries, per-section error capture (never crashes the UI). */
+    /** « | sql=…» tail of a failed section so the exact generated statement is visible in the app. */
+    private static String sqlHint() {
+        String sql = MeelanoSql.lastSql();
+        if (sql == null || sql.trim().isEmpty()) return "";
+        String one = sql.replace("\n", " ").replace("\r", " ").trim();
+        if (one.length() > 700) one = one.substring(0, 700) + "…";
+        return " | sql=" + one;
+    }
+
     static JSONObject fetch(Connection c, int range) throws Exception {
         JSONObject out = new JSONObject();
         JSONArray errors = new JSONArray();
         out.put("range", range);
         out.put("syncAt", System.currentTimeMillis());
-        try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception e) { errors.put("sales: " + String.valueOf(e.getMessage())); }
-        try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception e) { errors.put("purchases: " + String.valueOf(e.getMessage())); }
-        try { out.put("trend", trend(c, 7)); } catch (Exception e) { errors.put("trend: " + String.valueOf(e.getMessage())); }
-        try { out.put("receivables", receivables(c)); } catch (Exception e) { errors.put("receivables: " + String.valueOf(e.getMessage())); }
-        try { out.put("debtors", debtors(c, 8)); } catch (Exception e) { errors.put("debtors: " + String.valueOf(e.getMessage())); }
-        try { out.put("customers", customerCategories(c, range)); } catch (Exception e) { errors.put("customers: " + String.valueOf(e.getMessage())); }
-        try { out.put("visitors", visitorGoals(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage())); }
-        try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage())); }
-        try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage())); }
-        try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage())); }
-        try { out.put("credit", creditRisk(c)); } catch (Exception e) { errors.put("credit: " + String.valueOf(e.getMessage())); }
-        try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage())); }
+        try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception e) { errors.put("sales: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception e) { errors.put("purchases: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("trend", trend(c, 7)); } catch (Exception e) { errors.put("trend: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("receivables", receivables(c)); } catch (Exception e) { errors.put("receivables: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("debtors", debtors(c, 8)); } catch (Exception e) { errors.put("debtors: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("customers", customerCategories(c, range)); } catch (Exception e) { errors.put("customers: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("visitors", visitorGoals(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("credit", creditRisk(c)); } catch (Exception e) { errors.put("credit: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage()) + sqlHint()); }
         out.put("errors", errors);
         return out;
     }

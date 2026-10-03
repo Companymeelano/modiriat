@@ -238,6 +238,7 @@ final class MeelanoSql {
                         // whole dashboard section. Validate locally so the exact statement is reported.
                         if (("prepareStatement".equals(name) || "createStatement".equals(name) || "prepareCall".equals(name))
                                 && args != null && args.length > 0 && args[0] instanceof String) {
+                            LAST_SQL.set((String) args[0]);
                             checkSqlParentheses((String) args[0]);
                         }
                         if ("hashCode".equals(name)) return System.identityHashCode(p);
@@ -462,6 +463,14 @@ final class MeelanoSql {
         if (s == null) return "";
         return s.replace("'", "''").replace("\u0000", "");
     }
+
+    /**
+     * The statement this thread sent last. Analytics sections report it next to a failure so a server
+     * syntax error can be traced to the exact generated SQL instead of a page that silently shows «—».
+     */
+    static String lastSql() { String v = LAST_SQL.get(); return v == null ? "" : v; }
+
+    private static final ThreadLocal<String> LAST_SQL = new ThreadLocal<>();
 
     /**
      * Throws when the generated statement has unbalanced parentheses. String literals (''), quoted
