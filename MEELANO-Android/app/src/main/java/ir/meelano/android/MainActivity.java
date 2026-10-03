@@ -11785,6 +11785,7 @@ public class MainActivity extends Activity {
         TextView l = text(label, 10.8f, MUTED, Typeface.NORMAL);
         l.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
         TextView v = text(value, 11.4f, valueColor, Typeface.BOLD);
+        v.setSingleLine(true); v.setEllipsize(TextUtils.TruncateAt.START);
         row.addView(l); row.addView(v);
         parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
     }
@@ -12413,6 +12414,12 @@ public class MainActivity extends Activity {
             double max = 1; for (int i = 0; i < byDay.length(); i++) { JSONObject o = byDay.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("value", 0)); }
             for (int i = 0; i < byDay.length(); i++) { JSONObject o = byDay.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), max, GOLD); }
         }
+        JSONArray periods = m.optJSONArray("periods");
+        if (periods != null && periods.length() > 0) {
+            LinearLayout c = addReportCard("فروش در بازه‌های زمانی", "◫", INFO);
+            double mx = 1; for (int i = 0; i < periods.length(); i++) { JSONObject o = periods.optJSONObject(i); if (o != null) mx = Math.max(mx, o.optDouble("value", 0)); }
+            for (int i = 0; i < periods.length(); i++) { JSONObject o = periods.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, INFO); }
+        }
         JSONArray top = m.optJSONArray("top");
         if (top != null && top.length() > 0) {
             LinearLayout c = addReportCard("ترکیب کالا — پرفروش‌های بازه", "◈", navAccent("products"));
@@ -12473,20 +12480,28 @@ public class MainActivity extends Activity {
         content.removeAllViews();
         addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
         content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
-        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.visitorGoals(c, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_visits", body).apply(); renderManagerVisits(safeArr(body)); }
+        runDb(() -> { try (Connection c = openConnection()) { JSONObject o = new JSONObject(); o.put("visitors", ManagerAnalytics.visitorGoals(c, managerReportRange)); try { o.put("routes", ManagerAnalytics.routeGoals(c)); } catch (Exception ignored) { } return o.toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_visits", body).apply(); renderManagerVisits(safeJson(body)); }
             @Override public void fail(Exception e) {
                 String cached = prefs.getString("cache_mgr_visits", "");
-                if (cached != null && !cached.trim().isEmpty()) { renderManagerVisits(safeArr(cached)); addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
+                if (cached != null && !cached.trim().isEmpty()) { renderManagerVisits(safeJson(cached)); addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
                 showPageError("عملکرد ویزیتور", e, () -> loadManagerVisits());
             }
         });
     }
 
-    private void renderManagerVisits(JSONArray rows) {
+    private void renderManagerVisits(JSONObject m) {
         content.removeAllViews();
         addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
         content.addView(managerRangeRow(() -> loadManagerVisits()));
+        JSONArray rows = m.optJSONArray("visitors");
+        if (rows == null) rows = new JSONArray();
+        JSONArray routes = m.optJSONArray("routes");
+        if (routes != null && routes.length() > 0) {
+            LinearLayout rc = addReportCard("اهداف مسیرها (MasirGoals)", "♜", navAccent("personnel"));
+            double rmax = 1; for (int i = 0; i < routes.length(); i++) { JSONObject o = routes.optJSONObject(i); if (o != null) rmax = Math.max(rmax, o.optDouble("target", 0)); }
+            for (int i = 0; i < routes.length(); i++) { JSONObject o = routes.optJSONObject(i); if (o != null) addBarLine(rc, o.optString("route", "—"), money(Math.round(o.optDouble("target", 0))), o.optDouble("target", 0), rmax, navAccent("personnel")); }
+        }
         if (rows.length() == 0) { addEmptyTo(content, "برای این بازه فروش ویزیتوری ثبت نشده است."); addDeveloperCredit(content); return; }
         LinearLayout c = card(); c.setBackground(themedSectionBg("personnel", 24));
         double max = 1; for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("sales", 0)); }
@@ -12589,24 +12604,29 @@ public class MainActivity extends Activity {
         head.addView(tt, tp);
         c.addView(head, new LinearLayout.LayoutParams(-1, -2));
         c.addView(fitText(value, 17, 12, TEXT), new LinearLayout.LayoutParams(-1, dp(30)));
-        if (delta != null && !delta.isEmpty()) c.addView(text(delta, 10.2f, delta.contains("▼") ? tc(DANGER) : tc(SUCCESS), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        if (sub != null && !sub.isEmpty()) c.addView(text(sub, 9.6f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        if (delta != null && !delta.isEmpty()) { TextView dv = text(delta, 10.2f, delta.contains("▼") ? tc(DANGER) : tc(SUCCESS), Typeface.BOLD); dv.setSingleLine(true); dv.setEllipsize(TextUtils.TruncateAt.END); c.addView(dv, new LinearLayout.LayoutParams(-1, -2)); }
+        if (sub != null && !sub.isEmpty()) { TextView sv2 = text(sub, 9.6f, MUTED, Typeface.NORMAL); sv2.setSingleLine(true); sv2.setEllipsize(TextUtils.TruncateAt.END); c.addView(sv2, new LinearLayout.LayoutParams(-1, -2)); }
         if (drillKind != null) { c.setClickable(true); applyTouchFeedback(c); c.setOnClickListener(v -> { managerDrillKind = drillKind; showApp("mgr_drill"); }); c.setContentDescription(title + " — نمایش جزئیات"); }
         parent.addView(c, new LinearLayout.LayoutParams(0, -2, 1f));
     }
 
     private void addBarLine(LinearLayout parent, String label, String valueText, double value, double max, int color) {
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(text(label, 10.2f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(dp(86), -2));
+        TextView lt = text(label, 10.2f, MUTED, Typeface.NORMAL);
+        lt.setSingleLine(true); lt.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(0, -2, 1.25f); llp.setMargins(0, 0, dp(5), 0);
+        row.addView(lt, llp);
         LinearLayout barWrap = new LinearLayout(this); barWrap.setOrientation(LinearLayout.HORIZONTAL);
         barWrap.setBackground(rounded(alpha(MUTED, 26), 999));
         View bar = new View(this); bar.setBackground(rounded(color, 999));
         double safeMax = max > 0 ? max : 1;
         barWrap.addView(bar, new LinearLayout.LayoutParams(0, dp(10), (float) Math.max(0.06, Math.min(1, value / safeMax))));
         barWrap.addView(new View(this), new LinearLayout.LayoutParams(0, dp(10), 1f));
-        LinearLayout.LayoutParams wp = new LinearLayout.LayoutParams(0, -2, 1f); wp.setMargins(dp(6), 0, dp(6), 0);
+        LinearLayout.LayoutParams wp = new LinearLayout.LayoutParams(0, -2, 1f); wp.setMargins(dp(2), 0, dp(5), 0);
         row.addView(barWrap, wp);
-        row.addView(text(valueText, 10.2f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        TextView vt = text(valueText, 10.2f, TEXT, Typeface.BOLD);
+        vt.setSingleLine(true); vt.setEllipsize(TextUtils.TruncateAt.START);
+        row.addView(vt, new LinearLayout.LayoutParams(-2, -2));
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(5), 0, dp(5));
         parent.addView(row, rp);
     }
@@ -12758,9 +12778,17 @@ public class MainActivity extends Activity {
             right += o.optString("number", "").isEmpty() ? "" : "#" + faDigits(o.optString("number", "")) + " • ";
             if (o.optLong("orders", 0) > 0) right += formatNumber(o.optLong("orders", 0)) + " سفارش • ";
             addBarLine(c, left.isEmpty() ? "—" : left, money(Math.round(val)), val, max, GOLD);
+            LinearLayout detailRow = new LinearLayout(this); detailRow.setOrientation(LinearLayout.HORIZONTAL); detailRow.setGravity(Gravity.CENTER_VERTICAL);
             TextView detail = text(right, 9.4f, MUTED, Typeface.NORMAL);
-            LinearLayout.LayoutParams dp2 = new LinearLayout.LayoutParams(-1, -2); dp2.setMargins(dp(86), 0, 0, dp(4));
-            c.addView(detail, dp2);
+            detailRow.addView(detail, new LinearLayout.LayoutParams(0, -2, 1f));
+            double dLat = o.optDouble("lat", 0), dLng = o.optDouble("lng", 0);
+            if (dLat != 0 && dLng != 0) {
+                Button mb = secondaryButton("نقشه"); mb.setTextSize(fs(8.6f));
+                mb.setOnClickListener(v2 -> openGeoPoint(dLat, dLng, o.optString("party", "")));
+                detailRow.addView(mb, new LinearLayout.LayoutParams(-2, -2));
+            }
+            LinearLayout.LayoutParams dp2 = new LinearLayout.LayoutParams(-1, -2); dp2.setMargins(dp(4), 0, 0, dp(4));
+            c.addView(detailRow, dp2);
         }
         content.addView(c, new LinearLayout.LayoutParams(-1, -2));
         addDeveloperCredit(content);

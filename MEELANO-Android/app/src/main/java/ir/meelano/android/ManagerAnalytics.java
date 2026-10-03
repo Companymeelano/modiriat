@@ -290,6 +290,25 @@ final class ManagerAnalytics {
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("code", r.getString(1) == null ? "" : r.getString(1)); o.put("party", r.getString(2) == null ? "—" : r.getString(2)); o.put("amount", r.getDouble(3)); arr.put(o); } }
         }
+        if (arr.length() > 0 && tableExists(c, "vw_customer")) {
+            try {
+                Set<String> vw = columns(c, "vw_customer");
+                String vShmo = resolve(vw, "SHMO", "shmo");
+                String vLat = resolve(vw, "Lat", "lat");
+                String vLng = resolve(vw, "Lng", "lng");
+                if (vShmo != null && vLat != null && vLng != null) {
+                    Map<String, double[]> coords = new HashMap<>();
+                    try (PreparedStatement ps = c.prepareStatement("SELECT TRY_CONVERT(nvarchar(100),[" + vShmo + "]), TRY_CONVERT(decimal(12,7),[" + vLat + "]), TRY_CONVERT(decimal(12,7),[" + vLng + "]) FROM dbo.vw_customer")) {
+                        try (ResultSet r = ps.executeQuery()) { while (r.next()) { if (r.getString(1) != null) coords.put(r.getString(1), new double[]{ r.getDouble(2), r.getDouble(3) }); } }
+                    }
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject o = arr.optJSONObject(i); if (o == null) continue;
+                        double[] cl = coords.get(o.optString("code", ""));
+                        if (cl != null) { o.put("lat", cl[0]); o.put("lng", cl[1]); }
+                    }
+                }
+            } catch (Exception ignored) { }
+        }
         return arr;
     }
 
@@ -512,6 +531,7 @@ final class ManagerAnalytics {
             }
         }
         out.put("byDay", byDay);
+        try { out.put("periods", periodSales(c)); } catch (Exception ignored) { }
         return out;
     }
 
@@ -677,6 +697,41 @@ final class ManagerAnalytics {
                 o.put("blocked", blocked);
                 arr.put(o);
             } }
+        }
+        return arr;
+    }
+
+    /** Route goals from the real MasirGoals table (columns confirmed by CI probe: MasirRdf, Mablagh, Tedadvahed). */
+    static JSONArray routeGoals(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        if (!tableExists(c, "MasirGoals") || !tableExists(c, "masir")) return arr;
+        Set<String> mg = columns(c, "MasirGoals");
+        String gMasir = resolve(mg, "MasirRdf", "masir_rdf");
+        String gMab = resolve(mg, "Mablagh", "mablagh");
+        if (gMasir == null || gMab == null) return arr;
+        Set<String> ms = columns(c, "masir");
+        String mKey = resolve(ms, "rdf_masir", "RDF", "rdf");
+        String mName = resolve(ms, "name", "Name");
+        String nameExpr = mKey != null && mName != null ? "COALESCE(TRY_CONVERT(nvarchar(150),m.[" + mName + "]),N'مسیر بدون نام')" : "N'مسیر بدون نام'";
+        String joinM = mKey != null ? " LEFT JOIN dbo.masir m ON TRY_CONVERT(nvarchar(100),m.[" + mKey + "])=TRY_CONVERT(nvarchar(100),g.[" + gMasir + "])" : "";
+        String sql = "SELECT TOP (12) " + nameExpr + ", ISNULL(SUM(" + sqlNumberExpr("g", gMab, "decimal(19,2)") + "),0), COUNT_BIG(1) FROM dbo.MasirGoals g" + joinM + " GROUP BY " + nameExpr + " ORDER BY 2 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("route", r.getString(1) == null ? "—" : r.getString(1)); o.put("target", r.getDouble(2)); o.put("goals", r.getLong(3)); arr.put(o); } }
+        }
+        return arr;
+    }
+
+    /** Period sales from VW_Forush_DarBazeZamani — every column runtime-resolved; empty state when the shape is not confirmable. */
+    static JSONArray periodSales(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        if (!tableExists(c, "VW_Forush_DarBazeZamani")) return arr;
+        Set<String> cols = columns(c, "VW_Forush_DarBazeZamani");
+        String label = resolveFlexible(cols, "baze", "name", "darbaze", "title");
+        String value = resolveFlexible(cols, "forosh", "jam", "mablagh", "sum", "all", "kol", "value");
+        if (label == null || value == null) return arr;
+        String sql = "SELECT TOP (12) TRY_CONVERT(nvarchar(150),[" + label + "]), ISNULL(" + sqlNumberExpr(null, value, "decimal(19,2)") + ",0) FROM dbo.VW_Forush_DarBazeZamani ORDER BY 2 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", r.getString(1) == null ? "—" : r.getString(1)); o.put("value", r.getDouble(2)); arr.put(o); } }
         }
         return arr;
     }
