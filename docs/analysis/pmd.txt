@@ -2837,6 +2837,55 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27749:	Av
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27759:	NullAssignment:	Assigning an Object to null is a code smell.  Consider refactoring.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27778:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27779:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:67:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:68:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:72:	AvoidDuplicateLiterals:	The String literal "N\'\'" appears 7 times in this file; the first occurrence is on line 72
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:79:	UseStringBufferForStringAppends:	Prefer StringBuilder (non-synchronized) or StringBuffer (synchronized) over += for concatenating strings
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:89:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:100:	AvoidDuplicateLiterals:	The String literal " AND " appears 6 times in this file; the first occurrence is on line 100
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:106:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:123:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:132:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:139:	AvoidDuplicateLiterals:	The String literal "date" appears 17 times in this file; the first occurrence is on line 139
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:151:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:152:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:153:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:166:	UnusedPrivateMethod:	Avoid unused private methods such as 'hasFunction(Connection, String)'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:188:	UnusedFormalParameter:	Avoid unused method parameters such as 'cols'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:194:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:195:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:196:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:204:	AvoidDuplicateLiterals:	The String literal "sailfact" appears 11 times in this file; the first occurrence is on line 204
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:207:	AvoidDuplicateLiterals:	The String literal "all" appears 4 times in this file; the first occurrence is on line 207
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:208:	AvoidDuplicateLiterals:	The String literal "shfacfo" appears 6 times in this file; the first occurrence is on line 208
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:209:	AvoidDuplicateLiterals:	The String literal "shmo" appears 7 times in this file; the first occurrence is on line 209
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:213:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:213:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:218:	AvoidDuplicateLiterals:	The String literal "decimal(19,2)" appears 8 times in this file; the first occurrence is on line 218
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:228:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:255:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:265:	AvoidDuplicateLiterals:	The String literal "Name" appears 4 times in this file; the first occurrence is on line 265
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:289:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:289:	AvoidDuplicateLiterals:	The String literal "amount" appears 6 times in this file; the first occurrence is on line 289
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:302:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:307:	AvoidDuplicateLiterals:	The String literal "])=TRY_CONVERT(nvarchar(100),c.[" appears 4 times in this file; the first occurrence is on line 307
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:333:	AvoidDuplicateLiterals:	The String literal "name" appears 5 times in this file; the first occurrence is on line 333
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:344:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:368:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:372:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:393:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:412:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:420:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:433:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:434:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:435:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:436:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:437:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:438:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:439:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:440:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:441:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
+MEELANO-Android/app/src/main/java/ir/meelano/android/ManagerAnalytics.java:442:	UselessStringValueOf:	No need to call String.valueOf to append to a string.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoA11y.java:93:	AvoidReassigningLoopVariables:	Avoid reassigning the loop control variable 'i'
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoAtiranImages.java:45:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoAtiranImages.java:46:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
