@@ -263,12 +263,6 @@ def main():
     # Visitor goals: the manager page shows «هدف» next to real sales, so confirm the goal column is populated.
     run(box, "vis_goals_columns",
         """SELECT STUFF((SELECT N',' + c.name + N':' + t.name FROM sys.columns c JOIN sys.types t ON t.user_type_id=c.user_type_id WHERE c.object_id=OBJECT_ID(N'dbo.vis_goals') ORDER BY c.column_id FOR XML PATH('')),1,1,N'')""")
-    run(box, "vis_goals_rows_with_amount",
-        """SELECT TOP (6) CAST(vis_rdf AS nvarchar(20)), CAST(baze AS nvarchar(20)), CAST(mab_goal AS nvarchar(30)) FROM dbo.vis_goals WITH (NOLOCK) ORDER BY vis_rdf""")
-    run(box, "vis_goals_other_amount_columns",
-        """SELECT STUFF((SELECT N',' + c.name FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'dbo.vis_goals') AND c.name IN (N'mab_goal',N'goal',N'mablagh',N'mab',N'target',N'hadf',N'mab_hadaf') FOR XML PATH('')),1,1,N'')""")
-    run(box, "baze_top",
-        """SELECT TOP (4) CAST(rdf AS nvarchar(20)) + N'=' + ISNULL(CAST(d_date AS nvarchar(30)),N'') + N'..' + ISNULL(CAST(b_date AS nvarchar(30)),N'') FROM dbo.baze WITH (NOLOCK) ORDER BY rdf""")
     run(box, "visit_information_schema",
         """SELECT ISNULL((SELECT TOP (1) TABLE_SCHEMA + N'.' + TABLE_NAME + N' (' + TABLE_TYPE + N')' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME=N'Visit'), N'none')""")
 
