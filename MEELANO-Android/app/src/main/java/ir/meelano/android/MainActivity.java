@@ -3201,6 +3201,10 @@ public class MainActivity extends Activity {
             }
             return false;
         });
+        // Small phones: the soft keyboard covers the «ورود» button as soon as a field is focused, and
+        // nothing tells the user the card scrolls. Bring the button into view when typing starts.
+        password.setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) scroll.postDelayed(() -> { try { scroll.smoothScrollTo(0, Math.max(0, login.getTop() - dp(10))); } catch (Exception ignored) { } }, 350); });
+        username.setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) scroll.postDelayed(() -> { try { scroll.smoothScrollTo(0, Math.max(0, login.getTop() - dp(10))); } catch (Exception ignored) { } }, 350); });
 
         backdrop.addView(scroll, new FrameLayout.LayoutParams(-1, -1));
         stage.addView(backdrop, new FrameLayout.LayoutParams(-1, -1));

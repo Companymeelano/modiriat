@@ -70,9 +70,11 @@ def main():
 
     findings = {}
     totals = {"pages": 0, "clipped": 0, "unlabelled": 0, "overflow": 0, "tiny": 0, "errors": 0, "empty": 0}
-    lines = ["# Manager UI audit — %d dumps, screen %dx%d @%ddpi" % (len(glob.glob(xml_dir + "/*.xml")), sw, screen[1], density), ""]
+    lines = ["# Manager UI audit — %d page dumps, screen %dx%d @%ddpi" % (len(all_dumps), sw, screen[1], density), ""]
 
-    for path in sorted(glob.glob(os.path.join(xml_dir, "*.xml"))):
+    all_dumps = [q for q in sorted(glob.glob(os.path.join(xml_dir, "*.xml")))
+                 if not os.path.basename(q).startswith("_")]
+    for path in all_dumps:
         name = os.path.basename(path)[:-4]
         nodes, err = parse(path)
         if nodes is None:

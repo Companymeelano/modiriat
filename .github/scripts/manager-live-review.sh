@@ -60,6 +60,24 @@ PY
   echo "NOT FOUND '$1'" >> "$OUT/env.txt"; return 1
 }
 
+tap_text_exact () {  # text [min-y] -> taps the first clickable node with EXACTLY this text below min-y
+  dump _tape
+  local xy
+  xy=$(python3 - "$OUT/xml/_tape.xml" "$1" "${2:-0}" <<'PYEOF'
+import sys, re, xml.etree.ElementTree as ET
+root = ET.parse(sys.argv[1]).getroot()
+mins = int(sys.argv[3])
+for n in root.iter('node'):
+    if (n.get('text') or '').strip() == sys.argv[2] and n.get('clickable') == 'true':
+        x1, y1, x2, y2 = map(int, re.findall(r'\d+', n.get('bounds')))
+        if y1 >= mins and (y2 - y1) > 40:
+            print((x1 + x2) // 2, (y1 + y2) // 2); break
+PYEOF
+)
+  if [ -n "$xy" ]; then adb shell input tap $xy; sleep 3; echo "tapped exact '$1' at $xy" >> "$OUT/env.txt"; return 0; fi
+  echo "NOT FOUND exact '$1'" >> "$OUT/env.txt"; return 1
+}
+
 type_into () {  # text -> focuses the first EditText, clears and types
   dump _edit
   local xy
@@ -98,12 +116,21 @@ PY
 )
 if [ -n "$PXY" ]; then adb shell input tap $PXY; sleep 1; adb shell input text "123"; sleep 1; fi
 cap 01-credentials-filled
-tap_text "ورود" || true
+# The password field triggers the login on IME_ACTION_DONE; a raw tap on the word «ورود» is unreliable
+# because the header badge carries the same word (the first audit run tapped that badge instead).
+adb shell input keyevent KEYCODE_ENTER
+sleep 3
+tap_text_exact "ورود" 700 || true
+adb shell input keyevent 111 >/dev/null 2>&1 || true   # hide the soft keyboard
 LOGIN_OK=0
-for i in $(seq 1 12); do
+for i in $(seq 1 18); do
   sleep 5
   dump _after
-  if grep -q "بیشتر" "$OUT/xml/_after.xml" 2>/dev/null && grep -q "خانه" "$OUT/xml/_after.xml" 2>/dev/null; then LOGIN_OK=1; break; fi
+  if grep -q "تأییدها" "$OUT/xml/_after.xml" 2>/dev/null && grep -q "خانه" "$OUT/xml/_after.xml" 2>/dev/null; then LOGIN_OK=1; break; fi
+  if grep -q "رمز عبور" "$OUT/xml/_after.xml" 2>/dev/null && [ "$i" = "6" ]; then
+    tap_text_exact "ورود" 700 || true
+    adb shell input keyevent 111 >/dev/null 2>&1 || true
+  fi
 done
 echo "login_ok=$LOGIN_OK" >> "$OUT/env.txt"
 cap 02-manager-home
