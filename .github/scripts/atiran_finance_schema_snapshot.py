@@ -341,8 +341,9 @@ def restore_and_collect(output_path: Path) -> None:
         "JOIN sys.objects AS o ON o.object_id = m.object_id "
         "JOIN sys.schemas AS s ON s.schema_id = o.schema_id "
         "WHERE (s.name = N'EMS' AND o.name = N'GetUser') "
-        "OR (s.name = N'dbo' AND o.name IN (N'get_role_id', N'ProcMenuPermission', N'vw_MenuInfo')) "
-        "OR (s.name = N'security' AND o.name = N'FormAndFieldPermissions') "
+        "OR (s.name = N'dbo' AND o.name IN (N'get_role_id', N'ProcMenuPermission', N'ProcGroupPermission', "
+        "N'vw_MenuInfo', N'Create_Login', N'ChangePassword')) "
+        "OR (s.name = N'security' AND o.name IN (N'FormAndFieldPermissions', N'LoginDetailsTR')) "
         "ORDER BY s.name, o.name",
     )
 
