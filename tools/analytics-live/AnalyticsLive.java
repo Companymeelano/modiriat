@@ -74,6 +74,7 @@ public final class AnalyticsLive {
             }
         }
 
+        try { everyEntryPoint(); } catch (Throwable t) { System.out.println("entry point sweep failed: " + t); }
         try { sqlLengthProbe(); } catch (Throwable t) { System.out.println("probe failed: " + t); }
         try { guardProbe(); } catch (Throwable t) { System.out.println("guard probe failed: " + t); }
 
@@ -147,6 +148,89 @@ public final class AnalyticsLive {
         JSONArray db = j.optJSONArray("debtors");
         if (db != null) b.append("  debtors: ").append(db.length()).append(" rows, first=").append(db.length() > 0 ? JSONObject.valueToString(db.optJSONObject(0)) : "-").append("\n");
         return b.toString();
+    }
+
+    /**
+     * Every manager-facing entry point the screens call, one line each: the executive dashboard, the
+     * cockpit, the collection centre, the visitor/goal pages, the product radar, the field-visit page,
+     * the drill-downs and the reports. A page that «does not fetch» is one of these lines failing.
+     */
+    private static void everyEntryPoint() {
+        System.out.println("\n================ every manager analytics entry point ================");
+        String[][] calls = {
+                {"cockpit(2)", "COCKPIT"},
+                {"collection()", "COLLECTION"},
+                {"visitorGoals(2)", "VISITORS"},
+                {"productRadar(2)", "PRODUCTS"},
+                {"fieldVisits(2)", "FIELD_VISITS"},
+                {"routeGoals()", "ROUTE_GOALS"},
+                {"periodSales()", "PERIOD_SALES"},
+                {"productProfit(2)", "PROFIT"},
+                {"warehouses()", "WAREHOUSES"},
+                {"debtors(8)", "DEBTORS"},
+                {"receivables()", "RECEIVABLES"},
+                {"creditRisk()", "CREDIT"},
+                {"activityFeed()", "FEED"},
+                {"trend(7)", "TREND"},
+                {"customerCategories(2)", "CUSTOMERS"},
+                {"drill(debtors)", "DRILL_DEBTORS"},
+                {"drill(ledger)", "DRILL_LEDGER"},
+                {"drill(sales)", "DRILL_SALES"},
+                {"drill(checks)", "DRILL_CHECKS"},
+                {"drill(products)", "DRILL_PRODUCTS"},
+                {"drill(visitors)", "DRILL_VISITORS"},
+        };
+        Connection c = null;
+        try {
+            c = MeelanoSql.lease();
+            for (String[] call : calls) {
+                String label = call[0];
+                long t0 = System.currentTimeMillis();
+                String verdict;
+                try {
+                    Object out = run(c, label);
+                    int size = out instanceof JSONArray ? ((JSONArray) out).length() : 1;
+                    verdict = "OK rows/keys=" + size + "  " + shorten(JSONObject.valueToString(out));
+                } catch (Throwable t) {
+                    verdict = "ERR " + t.getClass().getSimpleName() + ": " + t.getMessage()
+                            + " | sql=" + shorten(MeelanoSql.lastSql());
+                }
+                System.out.printf("  %-24s %6d ms  %s%n", label, System.currentTimeMillis() - t0, verdict);
+            }
+        } catch (Throwable t) {
+            System.out.println("  sweep could not connect: " + t);
+        } finally {
+            if (c != null) try { c.close(); } catch (Exception ignored) { }
+        }
+    }
+
+    private static Object run(Connection c, String label) throws Exception {
+        switch (label) {
+            case "cockpit(2)": return ManagerAnalytics.cockpit(c, 2);
+            case "collection()": return ManagerAnalytics.collection(c);
+            case "visitorGoals(2)": return ManagerAnalytics.visitorGoals(c, 2);
+            case "productRadar(2)": return ManagerAnalytics.productRadar(c, 2);
+            case "fieldVisits(2)": return ManagerAnalytics.fieldVisits(c, 2);
+            case "routeGoals()": return ManagerAnalytics.routeGoals(c);
+            case "periodSales()": return ManagerAnalytics.periodSales(c);
+            case "productProfit(2)": return ManagerAnalytics.productProfit(c, 2);
+            case "warehouses()": return ManagerAnalytics.warehouses(c);
+            case "debtors(8)": return ManagerAnalytics.debtors(c, 8);
+            case "receivables()": return ManagerAnalytics.receivables(c);
+            case "creditRisk()": return ManagerAnalytics.creditRisk(c);
+            case "activityFeed()": return ManagerAnalytics.activityFeed(c);
+            case "trend(7)": return ManagerAnalytics.trend(c, 7);
+            case "customerCategories(2)": return ManagerAnalytics.customerCategories(c, 2);
+            default:
+                break;
+        }
+        return ManagerAnalytics.drill(c, label.substring(label.indexOf('(') + 1, label.length() - 1), 2);
+    }
+
+    private static String shorten(String s) {
+        if (s == null) return "null";
+        s = s.replace("\n", " ").trim();
+        return s.length() > 220 ? s.substring(0, 220) + "…" : s;
     }
 
     /**
