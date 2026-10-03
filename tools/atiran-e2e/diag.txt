@@ -1,0 +1,13 @@
+# Atiran e2e SQL diagnostics — DIAGSQL + failing STEP lines only
+
+## e2e/selftest.txt
+STEP login FAIL نام کاربری یا رمز عبور پخش درخشان معتبر نیست.
+DONE
+
+## e2e/store-selftest.txt
+STEP login FAIL نام کاربری یا رمز عبور پخش درخشان معتبر نیست.
+DONE
+
+## e2e/staff-selftest.txt
+STEP login FAIL نام کاربری یا رمز عبور پخش درخشان معتبر نیست.
+DONE
