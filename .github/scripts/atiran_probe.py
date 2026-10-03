@@ -105,10 +105,12 @@ def main():
             per = {}
             for row in r["rows"]:
                 per.setdefault(str(row[0]), []).append(str(row[1]))
-            for t in sorted(per):
-                cols = ",".join(per[t])
-                for i in range(0, len(cols), 3500):
-                    print("::notice title=meta-%s::%s" % (t, cols[i:i + 3500]))
+            # GitHub caps notice annotations per step (~10); pack everything into few chunked notices
+            stream = "|".join("%s=%s" % (t, ",".join(per[t])) for t in sorted(per))
+            part = 0
+            for i in range(0, len(stream), 3000):
+                part += 1
+                print("::notice title=meta-part%d::%s" % (part, stream[i:i + 3000]))
             n = q("""SELECT o.name FROM sys.objects o WHERE o.type IN ('U','V') AND (
                         o.name LIKE '%baze%' OR o.name LIKE '%plan%' OR o.name LIKE '%barname%' OR o.name LIKE '%gharar%'
                         OR o.name LIKE '%meet%' OR o.name LIKE '%taghvim%' OR o.name LIKE '%calendar%' OR o.name LIKE '%route%'
