@@ -1,0 +1,61 @@
+name: Atiran live diagnostic
+
+# Runs ONLY when the commit message contains [atiran-diag]. Connects to the real Atiran2
+# database (read-only SELECT statements) and commits a sanitised JSON sidecar - types, column
+# names, row counts, timings and error strings only; never a customer name or an amount -
+# so the four empty sections of the manager app can be diagnosed against real data.
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    if: contains(github.event.head_commit.message, '[atiran-diag')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Network check
+        run: |
+          python3 - <<'PY'
+          import re, socket
+          s = open("MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java", encoding="utf-8").read()
+          m = re.search(r"int\[\] S_HOST = \{([^}]*)\}", s)
+          h = "".join(chr(int(x) ^ 73) for x in m.group(1).replace("\n", "").split(",") if x.strip())
+          try:
+              socket.create_connection((h, 1433), timeout=15).close(); print("tcp 1433 reachable")
+          except Exception as e:
+              print("tcp 1433 NOT reachable:", type(e).__name__)
+          PY
+      - name: Read-only diagnostic
+        run: |
+          pip install --quiet python-tds
+          mkdir -p diag
+          python3 .github/scripts/atiran_diag.py "diag/atiran-diag.json" 2>&1 | tail -30
+          test -s diag/atiran-diag.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-diag.json
+          python3 - <<'PY'
+          import json
+          d = json.load(open("diag/atiran-diag.json", encoding="utf-8"))
+          print("== sections:", sorted(d.get("sections", {}).keys()))
+          print("== tables:", {k: (v.get("rows"), v.get("exists")) for k, v in sorted(d.get("tables", {}).items())})
+          print("== dates:", json.dumps(d.get("date_probe", {}), ensure_ascii=False)[:1500])
+          print("== timings:", json.dumps(d.get("sections", {}).get("timings", {}), ensure_ascii=False)[:2500])
+          print("== optional:", d.get("optional_tables"))
+          print("== errors:", json.dumps(d.get("errors", []), ensure_ascii=False)[:2000])
+          PY
+      - name: Commit the result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -f diag/atiran-diag.json
+          git commit -q -m "Atiran live diagnostic [skip ci]" || echo "no changes"
+          for i in 1 2 3; do
+            git pull -q --rebase origin "${GITHUB_REF_NAME}" || true
+            git push -q origin HEAD:${GITHUB_REF_NAME} && break || sleep 5
+          done || true
