@@ -1,26 +1,17 @@
-detail json: docs/finance/AtiranFinanceDetail.json (24463 bytes)
-errors: 42
-  cols_dar: not all arguments converted during string formatting
-  cols_darDescriptionType: not all arguments converted during string formatting
-  cols_ban_act: not all arguments converted during string formatting
-  cols_COW: not all arguments converted during string formatting
-  cols_cust_act: not all arguments converted during string formatting
-  cols_sailfact: not all arguments converted during string formatting
-  cols_subsailfact: not all arguments converted during string formatting
-  cols_SalefactTasvieh: not all arguments converted during string formatting
-  cols_DirectTasvieh: not all arguments converted during string formatting
-  cols_getchk: not all arguments converted during string formatting
-  cols_putchk: not all arguments converted during string formatting
-  cols_CheckTypes: not all arguments converted during string formatting
-  cols_getcheckhistorystatus: not all arguments converted during string formatting
-  cols_chkbatch: not all arguments converted during string formatting
-  cols_checks: not all arguments converted during string formatting
-  cols_PosDetails: not all arguments converted during string formatting
-  cols_TerminalPos: not all arguments converted during string formatting
-  cols_TerminalCompanyPos: not all arguments converted during string formatting
-  cols_BankPos: not all arguments converted during string formatting
-  cols_UserPos: not all arguments converted during string formatting
-resolved tables: {}
+detail json: docs/finance/AtiranFinanceDetail.json (141091 bytes)
+errors: 11
+  dom_ban_act.p: ("Invalid column name 'p'. Invalid column name 'p'.", None)
+  dom_ban_act.Active: ("Invalid column name 'Active'. Invalid column name 'Active'.", None)
+  dom_COW.p: ("Invalid column name 'p'. Invalid column name 'p'.", None)
+  dom_salefacttasvieh.type: ("Invalid column name 'type'. Invalid column name 'type'.", None)
+  dom_checks.type: ("Invalid column name 'type'. Invalid column name 'type'.", None)
+  dom_checks.status: ("Invalid column name 'status'. Invalid column name 'status'.", None)
+  code_act_kind: ("Invalid object name 'dbo.act_kind'.", None)
+  code_daftar: ("Invalid object name 'dbo.daftar'.", None)
+  pos: ("Invalid object name 'dbo.TerminalCompanyPos'.", None)
+  treasury: ("Conversion failed when converting the varchar value 't' to data type int.", None)
+  checks: ("Conversion failed when converting the varchar value '1405/07/15' to data type int.", None)
+resolved tables: {"dar": 35, "darDescriptionType": 5, "ban_act": 16, "COW": 16, "cust_act": 21, "sailfact": 76, "subsailfact": 40, "SalefactTasvieh": 3, "DirectTasvieh": 6, "getchk": 54, "putchk": 29, "CheckTypes": 2, "getcheckhistorystatus": 2, "chkbatch": 9, "checks": 3, "PosDetails": 15, "TerminalPos": 12, "TerminalCompanyPos": 2, "BankPos": 7, "UserPos": 8, "BANK": 24, "CUSTOMERS": 57, "Sys_Mandeh_Customer": 12, "visitors": 36, "sys_users": 22, "overal_setting": 6, "ka_act": 41, "anbars": 11, "inventory": 51}
 pos counts: []
 server dates: []
-definitions: []
+definitions: ['vw_customer', 'Daryaft', 'AddInvoice', 'FixManCustomer', 'FixManBank', 'FixTasvie', 'ReturnDateServer', 'EditInvoice', 'PutBan_act', 'PutGetcheck', 'InvoiceTrigger']
