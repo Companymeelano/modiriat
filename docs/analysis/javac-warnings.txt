@@ -35,25 +35,25 @@ app/src/main/java/ir/meelano/android/MainActivity.java:1614: warning: [deprecati
 app/src/main/java/ir/meelano/android/MainActivity.java:1615: warning: [deprecation] getSystemWindowInsetLeft() in WindowInsets has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:1615: warning: [deprecation] getSystemWindowInsetRight() in WindowInsets has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:2663: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:4588: warning: [deprecation] getAllNetworks() in ConnectivityManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:5224: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8832: warning: [deprecation] getConnectionInfo() in WifiManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8832: warning: [deprecation] getDhcpInfo() in WifiManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8832: warning: [deprecation] getDhcpInfo() in WifiManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8899: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:10962: warning: [deprecation] setCalendarViewShown(boolean) in DatePicker has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:10963: warning: [deprecation] setSpinnersShown(boolean) in DatePicker has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:16359: warning: [deprecation] canAuthenticate() in BiometricManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:16444: warning: [deprecation] versionCode in PackageInfo has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:20878: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:20878: warning: [deprecation] Locale(String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:20878: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:20904: warning: [deprecation] EXTRA_CHECK_VOICE_DATA_FOR in TextToSpeech.Engine has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:22019: warning: [deprecation] speak(String,int,HashMap<String,String>) in TextToSpeech has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:22117: warning: [deprecation] Builder(Context) in Builder has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:28123: warning: [serial] serializable class DbException has no definition of serialVersionUID
-app/src/main/java/ir/meelano/android/MainActivity.java:28403: warning: [deprecation] onBackPressed() in Activity has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:28411: warning: [deprecation] onBackPressed() in Activity has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:4590: warning: [deprecation] getAllNetworks() in ConnectivityManager has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:5226: warning: [deprecation] Locale(String,String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:8834: warning: [deprecation] getConnectionInfo() in WifiManager has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:8834: warning: [deprecation] getDhcpInfo() in WifiManager has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:8834: warning: [deprecation] getDhcpInfo() in WifiManager has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:8901: warning: [deprecation] Locale(String,String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:10964: warning: [deprecation] setCalendarViewShown(boolean) in DatePicker has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:10965: warning: [deprecation] setSpinnersShown(boolean) in DatePicker has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:16492: warning: [deprecation] canAuthenticate() in BiometricManager has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:16577: warning: [deprecation] versionCode in PackageInfo has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21011: warning: [deprecation] Locale(String,String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21011: warning: [deprecation] Locale(String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21011: warning: [deprecation] Locale(String,String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21037: warning: [deprecation] EXTRA_CHECK_VOICE_DATA_FOR in TextToSpeech.Engine has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:22152: warning: [deprecation] speak(String,int,HashMap<String,String>) in TextToSpeech has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:22250: warning: [deprecation] Builder(Context) in Builder has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:28256: warning: [serial] serializable class DbException has no definition of serialVersionUID
+app/src/main/java/ir/meelano/android/MainActivity.java:28536: warning: [deprecation] onBackPressed() in Activity has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:28544: warning: [deprecation] onBackPressed() in Activity has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:3844: warning: [fallthrough] possible fall-through into case
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:212: warning: [try] explicit call to close() on an auto-closeable resource
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:715: warning: [deprecation] Builder(Context) in Builder has been deprecated
