@@ -63,6 +63,13 @@ jobs:
             > docs/finance/probe-detail-log.txt 2>&1 || true
           grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-detail-log.txt | tail -50 | sed 's/[0-9]\{6,\}/<num>/g'
 
+      - name: Validate finance semantics (read-only)
+        continue-on-error: true
+        run: |
+          python3 .github/scripts/atiran_finance_validate.py docs/finance/AtiranFinanceValidation.json \
+            > docs/finance/probe-validate-log.txt 2>&1 || true
+          grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-validate-log.txt | tail -40 | sed 's/[0-9]\{6,\}/<num>/g'
+
       - name: Commit the schema mapping
         run: |
           test -s docs/finance/AtiranFinancialSchema.json || echo '{"ok":false}' > docs/finance/AtiranFinancialSchema.json
