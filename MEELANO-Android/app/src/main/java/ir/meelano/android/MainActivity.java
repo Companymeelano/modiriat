@@ -12012,6 +12012,129 @@ public class MainActivity extends Activity {
         }
     }
 
+<<<<<<< HEAD
+=======
+    // =============================== Phase 14-17: Reports 2.0 (PDF/CSV) + Milo insights ===============================
+    private java.util.List<String> managerInsights(JSONObject m) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        JSONObject sales = m.optJSONObject("sales");
+        double sv = sales == null ? 0 : sales.optDouble("total", 0);
+        double prev = sales == null ? 0 : sales.optDouble("prevTotal", 0);
+        if (prev > 0 && sv > 0) {
+            double pct = (sv - prev) / prev * 100.0;
+            out.add("فروش بازه " + faDigits(String.format(java.util.Locale.US, "%.1f", Math.abs(pct))) + "٪ نسبت به بازهٔ قبل " + (pct >= 0 ? "رشد داشته است." : "افت کرده است."));
+        }
+        JSONArray aging = m.optJSONArray("aging");
+        double overdue = 0;
+        if (aging != null) for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null && !o.optString("label", "").startsWith("جاری")) overdue += o.optDouble("value", 0); }
+        if (sv > 0 && overdue > 0) out.add("مطالبات معوق " + faDigits(String.format(java.util.Locale.US, "%.0f", overdue / sv * 100.0)) + "٪ فروش بازه است — وصول، اولویت اول نقدینگی است.");
+        JSONArray debtors = m.optJSONArray("debtors");
+        if (debtors != null && debtors.length() > 0) {
+            JSONObject d0 = debtors.optJSONObject(0);
+            if (d0 != null && d0.optDouble("amount", 0) > 0) out.add("بزرگ‌ترین بدهکار: " + d0.optString("party", "—") + " با " + money(Math.round(d0.optDouble("amount", 0))) + ".");
+        }
+        JSONArray visitors = m.optJSONArray("visitors");
+        String bestName = null; double bestPct = -1; boolean anyGoal = false;
+        if (visitors != null) for (int i = 0; i < visitors.length(); i++) {
+            JSONObject o = visitors.optJSONObject(i); if (o == null) continue;
+            double goal = o.optDouble("goal", 0);
+            if (goal > 0) { anyGoal = true; double pct = o.optDouble("achieved", 0) / goal * 100.0; if (pct > bestPct) { bestPct = pct; bestName = o.optString("name", "—"); } }
+        }
+        if (bestName != null) out.add("بیشترین تحقق هدف ویزیتور: " + bestName + " با " + faDigits(String.format(java.util.Locale.US, "%.0f", Math.min(bestPct, 999))) + "٪ از هدف vis_goals.");
+        else if (!anyGoal) out.add("برای ویزیتورها هدفی در vis_goals ثبت نشده — درصد تحقق نمایش داده نمی‌شود.");
+        JSONArray idle = m.optJSONObject("products") == null ? null : m.optJSONObject("products").optJSONArray("idle");
+        if (idle != null && idle.length() > 0) out.add(formatNumber(idle.length()) + " کالا در این بازه فروش نداشته‌اند — قیمت و چیدمان را بازبینی کنید.");
+        return out;
+    }
+
+    private void addInsightsCard(JSONObject m) {
+        java.util.List<String> ins = managerInsights(m);
+        if (ins.isEmpty()) return;
+        LinearLayout c = addReportCard("تحلیل میلو — از اعداد واقعی", "✦", INFO);
+        for (String line : ins) addReportLine(c, line, "", TEXT);
+    }
+
+    private String managerIntelJson() throws Exception {
+        try (Connection c = openConnection()) { return ManagerAnalytics.fetch(c, managerReportRange).toString(); }
+    }
+
+    private void exportManagerIntelPdf() {
+        showNotice("در حال ساخت گزارش PDF مدیریت…", false);
+        runDb(this::managerIntelJson, new DbCallback() {
+            @Override public void ok(String body) { try { buildAndShareManagerIntelPdf(safeJson(body)); } catch (Exception e) { showNotice("ساخت PDF ممکن نشد: " + shortError(e), true); } }
+            @Override public void fail(Exception e) { showNotice("اتصال برقرار نشد؛ PDF ساخته نشد: " + shortError(e), true); }
+        });
+    }
+
+    private void buildAndShareManagerIntelPdf(JSONObject m) throws Exception {
+        MeelanoDailyReportPdf.Data d = new MeelanoDailyReportPdf.Data();
+        d.title = "گزارش هوش مدیریتی";
+        d.visitor = session == null ? "" : session.userName;
+        d.date = faDigits(todayDateText());
+        d.developer = DEVELOPER_NAME;
+        d.appVersion = appVersionName();
+        d.managerBrand = true;
+        JSONObject sales = m.optJSONObject("sales"), recv = m.optJSONObject("receivables");
+        JSONArray aging = m.optJSONArray("aging");
+        double overdue = 0;
+        if (aging != null) for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null && !o.optString("label", "").startsWith("جاری")) overdue += o.optDouble("value", 0); }
+        if (sales != null && sales.optDouble("total", 0) > 0) d.summary.add(new String[]{ "فروش بازه", money(Math.round(sales.optDouble("total", 0))) });
+        if (sales != null && sales.optDouble("paid", 0) > 0) d.summary.add(new String[]{ "دریافتی بازه", money(Math.round(sales.optDouble("paid", 0))) });
+        if (recv != null && recv.optDouble("total", 0) > 0) d.summary.add(new String[]{ "کل مطالبات", money(Math.round(recv.optDouble("total", 0))) });
+        if (overdue > 0) d.summary.add(new String[]{ "معوق", money(Math.round(overdue)) });
+        d.preTitle = "سبد سنی مطالبات";
+        d.preHead = new String[]{ "بازه", "شرح", "مبلغ", "اسناد" };
+        d.preEmpty = "فاکتور تسویه‌نشده‌ای یافت نشد.";
+        if (aging != null) for (int i = 0; i < aging.length(); i++) {
+            JSONObject o = aging.optJSONObject(i); if (o == null) continue;
+            d.prefactors.add(new String[]{ o.optString("label", "—"), "فاکتور تسویه‌نشده", money(Math.round(o.optDouble("value", 0))), formatNumber(o.optLong("docs", 0)) });
+        }
+        d.visTitle = "عملکرد ویزیتورها (فروش بازه در برابر هدف)";
+        d.visHead = new String[]{ "ویزیتور", "سفارش/مشتری", "فروش • هدف" };
+        d.visEmpty = "فروش ویزیتوری در این بازه ثبت نشده است.";
+        JSONArray visitors = m.optJSONArray("visitors");
+        if (visitors != null) for (int i = 0; i < visitors.length(); i++) {
+            JSONObject o = visitors.optJSONObject(i); if (o == null) continue;
+            String goalTxt = o.optDouble("goal", 0) > 0 ? money(Math.round(o.optDouble("sales", 0))) + " • هدف " + money(Math.round(o.optDouble("goal", 0))) : money(Math.round(o.optDouble("sales", 0)));
+            d.visits.add(new String[]{ o.optString("name", "—"), formatNumber(o.optLong("orders", 0)) + " / " + formatNumber(o.optLong("customers", 0)), goalTxt });
+        }
+        java.util.List<String> ins = managerInsights(m);
+        StringBuilder note = new StringBuilder("خروجی نسخهٔ مدیریت پخش درخشان — همهٔ ارقام از پایگاه آتیران.");
+        if (!ins.isEmpty()) note.append(" ").append(ins.get(0));
+        d.note = note.toString();
+        String fileName = "Darakhshan-Manager-Intel-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(new java.util.Date()) + ".pdf";
+        File out = new File(MeelanoShareProvider.shareDir(this), fileName);
+        MeelanoDailyReportPdf.write(this, d, MEELANO_REGULAR, MEELANO_BOLD, out);
+        MeelanoShareProvider.share(this, out, "application/pdf", "گزارش هوش مدیریتی " + d.visitor);
+    }
+
+    private void exportManagerIntelCsv() {
+        runDb(this::managerIntelJson, new DbCallback() {
+            @Override public void ok(String body) {
+                try {
+                    JSONObject m = safeJson(body);
+                    File dir = getExternalFilesDir(null); if (dir == null) dir = getFilesDir();
+                    File file = new File(dir, "Darakhshan-Manager-Intel.csv");
+                    StringBuilder b = new StringBuilder("section,label,value,extra\n");
+                    JSONObject sales = m.optJSONObject("sales");
+                    if (sales != null) { b.append("sales,total,").append(csvSafe(String.valueOf(sales.optDouble("total", 0)))).append(',').append(csvSafe(sales.optString("date", ""))).append('\n'); b.append("sales,paid,").append(csvSafe(String.valueOf(sales.optDouble("paid", 0)))).append(",\n"); b.append("sales,prevTotal,").append(csvSafe(String.valueOf(sales.optDouble("prevTotal", 0)))).append(",\n"); }
+                    JSONObject recv = m.optJSONObject("receivables");
+                    if (recv != null) b.append("receivables,total,").append(csvSafe(String.valueOf(recv.optDouble("total", 0)))).append(',').append(csvSafe(String.valueOf(recv.optLong("count", 0)))).append('\n');
+                    JSONArray aging = m.optJSONArray("aging");
+                    if (aging != null) for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) b.append("aging,").append(csvSafe(o.optString("label", ""))).append(',').append(csvSafe(String.valueOf(o.optDouble("value", 0)))).append(',').append(csvSafe(String.valueOf(o.optLong("docs", 0)))).append('\n'); }
+                    JSONArray visitors = m.optJSONArray("visitors");
+                    if (visitors != null) for (int i = 0; i < visitors.length(); i++) { JSONObject o = visitors.optJSONObject(i); if (o != null) b.append("visitors,").append(csvSafe(o.optString("name", ""))).append(',').append(csvSafe(String.valueOf(o.optDouble("sales", 0)))).append(',').append(csvSafe("goal=" + o.optDouble("goal", 0))).append('\n'); }
+                    JSONArray debtors = m.optJSONArray("debtors");
+                    if (debtors != null) for (int i = 0; i < debtors.length(); i++) { JSONObject o = debtors.optJSONObject(i); if (o != null) b.append("debtors,").append(csvSafe(o.optString("party", ""))).append(',').append(csvSafe(String.valueOf(o.optDouble("amount", 0)))).append(',').append(csvSafe(o.optString("code", ""))).append('\n'); }
+                    try (FileOutputStream fos = new FileOutputStream(file)) { fos.write(b.toString().getBytes(StandardCharsets.UTF_8)); }
+                    sharePlainText("CSV هوش مدیریتی", "خروجی CSV ساخته شد:\n" + file.getAbsolutePath() + "\n\n" + b.toString(), null);
+                } catch (Exception ex) { showNotice("ساخت CSV ممکن نشد: " + shortError(ex), true); }
+            }
+            @Override public void fail(Exception e) { showNotice("اتصال برقرار نشد؛ CSV ساخته نشد: " + shortError(e), true); }
+        });
+    }
+
+>>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
     // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
     private LinearLayout managerRangeRow(Runnable reload) {
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
@@ -12244,6 +12367,20 @@ public class MainActivity extends Activity {
         content.addView(filters, fp);
         JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases"), recv = m.optJSONObject("receivables"), cust = m.optJSONObject("customers"), chk = m.optJSONObject("checkBuckets");
         JSONArray visitors = m.optJSONArray("visitors");
+<<<<<<< HEAD
+=======
+        LinearLayout quick = new LinearLayout(this); quick.setOrientation(LinearLayout.HORIZONTAL);
+        Button q1 = secondaryButton("اتاق فروش"); q1.setTextSize(fs(9.6f)); q1.setOnClickListener(v -> showApp("mgr_cockpit")); quick.addView(q1, weightedButtonLp());
+        Button q2 = secondaryButton("وصول"); q2.setTextSize(fs(9.6f)); q2.setOnClickListener(v -> showApp("mgr_collection")); quick.addView(q2, weightedButtonLp());
+        Button q3 = secondaryButton("ویزیتورها"); q3.setTextSize(fs(9.6f)); q3.setOnClickListener(v -> showApp("mgr_visits")); quick.addView(q3, weightedButtonLp());
+        Button q4 = secondaryButton("کالا"); q4.setTextSize(fs(9.6f)); q4.setOnClickListener(v -> showApp("mgr_products")); quick.addView(q4, weightedButtonLp());
+        content.addView(quick, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout export = new LinearLayout(this); export.setOrientation(LinearLayout.HORIZONTAL);
+        Button pdf = primaryButton("گزارش PDF مدیریت"); pdf.setTextSize(fs(10.2f)); pdf.setOnClickListener(v -> exportManagerIntelPdf()); export.addView(pdf, weightedButtonLp());
+        Button csv = secondaryButton("CSV"); csv.setTextSize(fs(10.2f)); csv.setOnClickListener(v -> exportManagerIntelCsv()); export.addView(csv, weightedButtonLp());
+        LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-1, -2); ep.setMargins(0, dp(8), 0, dp(12));
+        content.addView(export, ep);
+>>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
         LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
         double sv = sales == null ? 0 : sales.optDouble("total", 0);
         double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
@@ -12279,6 +12416,16 @@ public class MainActivity extends Activity {
             if (soon != null) addBarLine(c, "≤ ۷ روز", money(Math.round(soon.optDouble("total", 0))), soon.optDouble("total", 0), mx, WARNING);
             if (chk.optJSONObject("ok") != null) addBarLine(c, "سررسید نشده", money(Math.round(chk.optJSONObject("ok").optDouble("total", 0))), chk.optJSONObject("ok").optDouble("total", 0), mx, SUCCESS);
         }
+<<<<<<< HEAD
+=======
+        JSONArray aging = m.optJSONArray("aging");
+        if (aging != null && aging.length() > 0) {
+            LinearLayout c = addReportCard("سبد سنی مطالبات", "◔", WARNING);
+            double mx = 1; for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) mx = Math.max(mx, o.optDouble("value", 0)); }
+            for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, agingColor(o.optString("label", ""))); }
+        }
+        addInsightsCard(m);
+>>>>>>> cf7d491 (فاز ۱۴-۱۷: گزارش PDF هوش مدیریتی (aging+ویزیتور+هدف) + CSV + تحلیل میلو از اعداد واقعی + ناوبری سریع صفحات هوش)
         addActionCenterCard(m);
         addActivityFeedCard(m.optJSONArray("feed"));
         addDeveloperCredit(content);
