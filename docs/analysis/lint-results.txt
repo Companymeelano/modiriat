@@ -648,8 +648,8 @@ final class MeelanoFitText extends TextView {
 final class MeelanoLoadingView extends View {
             ~~~~~~~~~~~~~~~~~~
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoSignatureView.java:16: Warning: Custom view MeelanoSignatureView is missing constructor used by tools: (Context) or (Context,AttributeSet) or (Context,AttributeSet,int) [ViewConstructor]
-final class MeelanoSignatureView extends View {
-            ~~~~~~~~~~~~~~~~~~~~
+public final class MeelanoSignatureView extends View {
+                   ~~~~~~~~~~~~~~~~~~~~
 
    Explanation for issues of type "ViewConstructor":
    Some layout tools (such as the Android layout editor) need to find a
