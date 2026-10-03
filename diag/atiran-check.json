@@ -1,8 +1,8 @@
 {
  "blocks": {
   "sales_today": {
-   "old_ms": 411,
-   "new_ms": 411,
+   "old_ms": 368,
+   "new_ms": 387,
    "old_rows": 37,
    "new_rows": 37,
    "old_has_amount": true,
@@ -10,8 +10,8 @@
    "amount_delta_pct": 0.0
   },
   "sales_7d": {
-   "old_ms": 415,
-   "new_ms": 418,
+   "old_ms": 371,
+   "new_ms": 369,
    "old_rows": 229,
    "new_rows": 229,
    "old_has_amount": true,
@@ -19,8 +19,8 @@
    "amount_delta_pct": 0.0
   },
   "sales_30d": {
-   "old_ms": 413,
-   "new_ms": 413,
+   "old_ms": 427,
+   "new_ms": 364,
    "old_rows": 908,
    "new_rows": 842,
    "old_has_amount": true,
@@ -28,8 +28,8 @@
    "amount_delta_pct": -5.31
   },
   "sales_12m": {
-   "old_ms": 456,
-   "new_ms": 432,
+   "old_ms": 369,
+   "new_ms": 376,
    "old_rows": 940,
    "new_rows": 970,
    "old_has_amount": true,
@@ -37,8 +37,8 @@
    "amount_delta_pct": 1.92
   },
   "purchases_30d": {
-   "old_ms": 421,
-   "new_ms": 401,
+   "old_ms": 369,
+   "new_ms": 381,
    "old_rows": 54,
    "new_rows": 54,
    "old_has_amount": true,
@@ -46,32 +46,32 @@
    "amount_delta_pct": 0.41
   },
   "weekday_mix": {
-   "old_ms": 414,
-   "new_ms": 420,
+   "old_ms": 412,
+   "new_ms": 389,
    "old_rows": 7,
    "new_rows": null
   },
   "visitor_share": {
-   "old_ms": 213,
-   "new_ms": 222,
+   "old_ms": 191,
+   "new_ms": 188,
    "old_rows": null,
    "new_rows": 9
   },
   "check_buckets": {
-   "old_ms": 418,
-   "new_ms": 207,
+   "old_ms": 382,
+   "new_ms": 241,
    "old_rows": null,
    "new_rows": null
   },
   "aging_unpaid": {
-   "old_ms": 212,
-   "new_ms": 412,
+   "old_ms": 196,
+   "new_ms": 376,
    "old_rows": 574,
    "new_rows": 574
   },
   "debtors": {
-   "old_ms": 417,
-   "new_ms": 414,
+   "old_ms": 374,
+   "new_ms": 384,
    "old_rows": 382,
    "new_rows": 382,
    "old_has_amount": true,
@@ -79,50 +79,50 @@
    "amount_delta_pct": 0.0
   },
   "customer_activity_30d": {
-   "old_ms": 402,
-   "new_ms": 431,
+   "old_ms": 373,
+   "new_ms": 374,
    "old_rows": 306,
    "new_rows": 296
   },
   "top_products_30d": {
-   "old_ms": 425,
-   "new_ms": 457,
+   "old_ms": 379,
+   "new_ms": 364,
    "old_rows": 492,
    "new_rows": 478
   },
   "product_profit_30d": {
-   "old_ms": 425,
-   "new_ms": 436,
+   "old_ms": 369,
+   "new_ms": 407,
    "old_rows": 4820,
    "new_rows": 4504
   },
   "stock_ledger_join": {
-   "old_ms": 409,
-   "new_ms": 437,
+   "old_ms": 366,
+   "new_ms": 365,
    "old_rows": 1803,
    "new_rows": 1803
   },
   "warehouses": {
-   "old_ms": 412,
-   "new_ms": 398,
+   "old_ms": 368,
+   "new_ms": 372,
    "old_rows": 1803,
    "new_rows": 1803
   },
   "visitor_goals": {
-   "old_ms": 415,
-   "new_ms": 211,
+   "old_ms": 396,
+   "new_ms": 183,
    "old_rows": null,
    "new_rows": 4
   },
   "credit_risk": {
-   "old_ms": 402,
-   "new_ms": 398,
+   "old_ms": 384,
+   "new_ms": 356,
    "old_rows": 2724,
    "new_rows": 2724
   },
   "activity_feed": {
-   "old_ms": 420,
-   "new_ms": 412,
+   "old_ms": 364,
+   "new_ms": 393,
    "old_rows": 1096,
    "new_rows": 1023
   }
@@ -213,6 +213,6 @@
    "rows": 2724
   }
  },
- "twelve_separate_queries_ms": 5170,
- "one_batched_query_ms": 960
+ "twelve_separate_queries_ms": 4373,
+ "one_batched_query_ms": 375
 }
