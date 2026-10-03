@@ -6718,7 +6718,7 @@ public class MainActivity extends Activity {
     /** Manager app, non-manager account: explain and stay on the login card instead of showing an empty shell. */
     private void showManagerGate() {
         session = null;
-        showLogin("این نسخه مخصوص مدیر است. با حساب مدیرکل یا مدیر وارد شوید، یا نسخهٔ مناسب شغل خود را نصب کنید.");
+        showLogin("این نسخه مخصوص مدیر است. با حساب مدیرکل/مدیر وارد شوید، یا از یک نشست مدیر در «مدیریت دسترسی کاربران» نقش این حساب را «مدیر» تعیین کنید؛ یا نسخهٔ مناسب شغل خود را نصب کنید.");
     }
 
     private String pagePermissionKey(String page) {
@@ -6930,6 +6930,12 @@ public class MainActivity extends Activity {
         if (visitorId == null || visitorId <= 0) visitorId = resolveVisitorIdForAccount(c, login, base.userName, base.userId);
         AccessProfile profile = resolveAccessProfile(c, login, base.userName, base.userId, visitorId);
         if (!profile.enabled) throw new DbException("دسترسی این کاربر توسط مدیر غیرفعال شده است.");
+        // Manager edition: when the admin has not configured any access row for this account yet,
+        // grant provisional full access instead of hard-blocking (owner directive: never block the work;
+        // security hardening comes later). Accounts WITH an explicit configured role stay restricted.
+        if (MANAGER_EDITION && !profile.explicit && !"admin".equals(profile.role) && !"manager".equals(profile.role)) {
+            return new UserSession(base.userId, visitorId, base.userName, "manager", profile.permissions);
+        }
         return new UserSession(base.userId, visitorId, base.userName, profile.role, profile.permissions);
     }
 
@@ -6937,6 +6943,7 @@ public class MainActivity extends Activity {
         String role = resolveAccessRole(c, login, display, userId, visitorId);
         String permissions = defaultPermissionString(role);
         boolean enabled = true;
+        boolean explicit = false;
         try {
             if (c != null && tableExists(c, "meelano_access_users")) {
                 try (PreparedStatement ps = c.prepareStatement("SELECT TOP (1) role_key, permissions, enabled FROM dbo.meelano_access_users WHERE LOWER(LTRIM(RTRIM(username)))=LOWER(LTRIM(RTRIM(?))) OR LOWER(LTRIM(RTRIM(display_name)))=LOWER(LTRIM(RTRIM(?))) ORDER BY updated_at DESC")) {
@@ -6945,7 +6952,7 @@ public class MainActivity extends Activity {
                     try (ResultSet r = ps.executeQuery()) {
                         if (r.next()) {
                             String storedRole = canonicalAccessRole(r.getString(1));
-                            if (!storedRole.isEmpty()) { role = storedRole; permissions = defaultPermissionString(role); }
+                            if (!storedRole.isEmpty()) { role = storedRole; permissions = defaultPermissionString(role); explicit = true; }
                             enabled = r.getBoolean(3);
                             String userPerms = stringOr(r.getString(2), "").trim();
                             if (!userPerms.isEmpty()) permissions = userPerms;
@@ -6961,7 +6968,7 @@ public class MainActivity extends Activity {
             }
         } catch (Exception ignored) { }
         if (identityLooksAdmin(login, display)) { role = "admin"; permissions = allPermissionString(); enabled = true; }
-        return new AccessProfile(role, permissions, enabled);
+        return new AccessProfile(role, permissions, enabled, explicit);
     }
 
     private Integer resolveVisitorIdForAccount(Connection c, String login, String display, Integer userId) {
@@ -23143,10 +23150,16 @@ public class MainActivity extends Activity {
         final String role;
         final String permissions;
         final boolean enabled;
+        /** true when a real meelano_access_users row with a role exists — only then is the role an explicit admin decision. */
+        final boolean explicit;
         AccessProfile(String role, String permissions, boolean enabled) {
+            this(role, permissions, enabled, false);
+        }
+        AccessProfile(String role, String permissions, boolean enabled, boolean explicit) {
             this.role = role == null ? "user" : role;
             this.permissions = permissions == null ? "" : permissions;
             this.enabled = enabled;
+            this.explicit = explicit;
         }
     }
 
