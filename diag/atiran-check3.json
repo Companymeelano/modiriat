@@ -5,7 +5,7 @@
  "sections": {
   "home_dashboard": {
    "statements": 9,
-   "ms": 1900,
+   "ms": 2080,
    "values": {
     "kpi_counts_one_statement": [
      [
@@ -104,7 +104,7 @@
   },
   "manager_reports": {
    "statements": 14,
-   "ms": 2914,
+   "ms": 3380,
    "values": {
     "sales_today": [
      [
@@ -225,7 +225,7 @@
   },
   "management_intelligence": {
    "statements": 9,
-   "ms": 2091,
+   "ms": 2271,
    "values": {
     "cockpit_sales_30d_with_prev": [
      [
@@ -408,7 +408,7 @@
   },
   "sales_supervision": {
    "statements": 6,
-   "ms": 1244,
+   "ms": 1410,
    "values": {
     "visitor_performance": [
      [
@@ -484,6 +484,70 @@
     ]
    },
    "notes": []
+  },
+  "extra_schema": {
+   "statements": 3,
+   "ms": 720,
+   "values": {
+    "putchk_rows": [
+     [
+      "202"
+     ]
+    ],
+    "putchk_date_like_columns": [
+     [
+      "putdate,sardate,done_date,IdDocumentZirSarfasl,D"
+     ]
+    ],
+    "getchk_date_like_columns": [
+     [
+      "getdate,sardate,our_bankrdf_date,naghddate,kharj"
+     ]
+    ]
+   },
+   "notes": []
+  },
+  "logins": {
+   "statements": 2,
+   "ms": 0,
+   "values": {
+    "visitor_logins": [
+     "None",
+     "nazari",
+     "mahmodi",
+     "asma",
+     "elham",
+     "latifi",
+     "khodayar",
+     "modir"
+    ],
+    "sysuser_logins": [
+     "Admin",
+     "مدير",
+     "الهام حمداني",
+     "اسما حمداني",
+     "خانم نظري",
+     "خانم محمودي"
+    ],
+    "Admin": {
+     "table": "sys_users",
+     "display": "آتيران نوين آتيران",
+     "active": "1",
+     "locked": "",
+     "password_matches": false,
+     "password_bytes": 7
+    },
+    "Modir": {
+     "table": "visitors",
+     "display": "ابتسام حمداني",
+     "active": "t",
+     "supervisor": "f",
+     "password_matches": true
+    }
+   },
+   "notes": [
+    "password_matches is true only when the stored value is the exact entered text or one of the encodings the Java matcher (passwordMatches) accepts."
+   ]
   }
  },
  "anchor": "1405/07/11",
@@ -498,7 +562,7 @@
   "p1a": "1403/07/13",
   "p1b": "1404/07/11"
  },
- "total_statements": 47,
- "total_ms": 8149,
+ "total_statements": 52,
+ "total_ms": 9861,
  "roundtrip_ms_reference": 192
 }
