@@ -30,7 +30,7 @@ jobs:
           if [ -n "$ZIP" ]; then
             echo "Using uploaded zip: $ZIP"; rm -rf MEELANO-Android; unzip -q -o "$ZIP"
           fi
-          VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle)
+          VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle | head -1)  # first = defaultConfig (edition flavours have their own versionName)
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Building version $VERSION"
@@ -180,7 +180,7 @@ jobs:
           mkdir -p apk
           cp out/*.apk apk/
           # Small manifest read by the app's "new version" check (Settings → بروزرسانی برنامه).
-          CODE=$(grep -oP "versionCode\s+\K[0-9]+" MEELANO-Android/app/build.gradle)
+          CODE=$(grep -oP "versionCode\s+\K[0-9]+" MEELANO-Android/app/build.gradle | head -1)  # first = defaultConfig
           printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-v%s-release.apk"}\n' \
             "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest.json
           printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Store-v%s-release.apk"}\n' \
