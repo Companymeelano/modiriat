@@ -124,6 +124,22 @@ jobs:
               grep -E "DIAGSQL|STEP .*FAIL|DONE" "$f" | sed 's/^.*MEELANO_SELFTEST[^:]*: *//' | cut -c1-3000 || true
             done
           } > tools/atiran-e2e/diag.txt
+          python3 - >> tools/atiran-e2e/diag.txt 2>&1 <<'PY' || true
+          import os
+          try:
+              import pytds
+              c = pytds.connect(server="127.0.0.1", port=1433, database="Atiran2", user="sa",
+                                password=os.environ["SA_PASS"], login_timeout=15, timeout=60)
+              cur = c.cursor()
+              cur.execute("SELECT COUNT(*) FROM dbo.visitors")
+              print("VISITOR_COUNT:", cur.fetchone()[0])
+              cur.execute("SELECT TOP 60 LTRIM(RTRIM(CAST(Username AS nvarchar(120)))) FROM dbo.visitors ORDER BY 1")
+              print("VISITOR_USERNAMES:", [r[0] for r in cur.fetchall()])
+              cur.execute("SELECT name FROM sys.columns WHERE object_id=OBJECT_ID('dbo.visitors') ORDER BY column_id")
+              print("VISITOR_COLUMNS:", [r[0] for r in cur.fetchall()])
+          except Exception as e:
+              print("DIAG_DB_ERR:", str(e)[:300])
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
           git add tools/atiran-e2e/diag.txt
