@@ -83,7 +83,7 @@ public final class AnalyticsLive {
             String src = "(SELECT x.* FROM dbo.[sailfact] x WHERE " + MeelanoSql.rangeCondition("date", MeelanoSql.rangeAnchor(c), 30, "x")
                     + " AND " + soft + ") h";
             String head = "SELECT ISNULL(SUM(" + numExpr + "),0), COUNT_BIG(1), COUNT(DISTINCT h.[shmo]) FROM " + src
-                    + " WHERE (N''''=''?'' OR ? IS NULL)";
+                    + " WHERE (N'x' = ? OR ? IS NULL)";
             // a real parameter keeps jTDS on the sp_executesql path, exactly like ManagerAnalytics
             for (int targetLen : new int[]{2500, 3500, 3900, 3990, 4000, 4010, 4050, 4100, 4200, 4300, 4500}) {
                 String sql = head;
