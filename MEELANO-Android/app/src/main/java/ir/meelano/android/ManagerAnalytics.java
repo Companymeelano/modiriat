@@ -423,6 +423,45 @@ final class ManagerAnalytics {
         return arr;
     }
 
+    /** Drill-down lists of real records for the executive KPI cards (§39). */
+    static JSONArray drill(Connection c, String kind, int range) throws Exception {
+        JSONArray arr = new JSONArray();
+        if ("debtors".equals(kind)) return debtors(c, 60);
+        if ("visitors".equals(kind)) return visitorPerformance(c, range);
+        if ("products".equals(kind)) return products(c, range).optJSONArray("top") == null ? arr : products(c, range).optJSONArray("top");
+        if ("sales".equals(kind)) {
+            Set<String> sail = columns(c, "sailfact");
+            String sDate = resolve(sail, "date");
+            String sNum = resolve(sail, "shfacfo");
+            String sAll = resolve(sail, "all");
+            String sShmo = resolve(sail, "shmo");
+            Set<String> cust = columns(c, "CUSTOMERS");
+            String cShmo = resolve(cust, "SHMO", "shmo");
+            String cName = resolve(cust, "MONAME", "Name", "CusName");
+            if (sDate != null && sAll != null) {
+                String joinSql = cName != null && sShmo != null && cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),[" + sShmo + "])" : "";
+                String nameExpr = cName != null && sShmo != null && cShmo != null ? "COALESCE(TRY_CONVERT(nvarchar(250),cu.[" + cName + "]),N'بدون نام')" : "N'بدون نام'";
+                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) TRY_CONVERT(nvarchar(20),[" + sDate + "]), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),[" + sNum + "])") + ", " + sqlNumberExpr(null, sAll, "decimal(19,2)") + ", " + nameExpr + " FROM dbo.sailfact" + joinSql + " ORDER BY TRY_CONVERT(datetime2,TRY_CONVERT(nvarchar(30),[" + sDate + "])) DESC")) {
+                    try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("number", r.getString(2) == null ? "" : r.getString(2)); o.put("amount", r.getDouble(3)); o.put("party", r.getString(4) == null ? "—" : r.getString(4)); arr.put(o); } }
+                }
+            }
+            return arr;
+        }
+        if ("checks".equals(kind)) {
+            Set<String> gc = columns(c, "getchk");
+            String gAmt = resolve(gc, "getchkmab", "mablagh", "amount");
+            String gDate = resolve(gc, "sarresid", "getchkdate", "chkdate", "date");
+            String gBank = resolve(gc, "bank", "Bank", "bankname", "BANK");
+            if (gAmt != null && gDate != null) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) TRY_CONVERT(nvarchar(20),[" + gDate + "]), TRY_CONVERT(decimal(19,2),[" + gAmt + "]), " + (gBank == null ? "CAST(NULL AS nvarchar(120))" : "TRY_CONVERT(nvarchar(120),[" + gBank + "])") + " FROM dbo.getchk ORDER BY TRY_CONVERT(datetime2,TRY_CONVERT(nvarchar(30),[" + gDate + "])) DESC")) {
+                    try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("amount", r.getDouble(2)); o.put("bank", r.getString(3) == null ? "—" : r.getString(3)); arr.put(o); } }
+                }
+            }
+            return arr;
+        }
+        return arr;
+    }
+
     // ============================ orchestrator ============================
     /** One connection, sequential validated queries, per-section error capture (never crashes the UI). */
     static JSONObject fetch(Connection c, int range) {

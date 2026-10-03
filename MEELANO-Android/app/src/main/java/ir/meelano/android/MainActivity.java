@@ -251,6 +251,8 @@ public class MainActivity extends Activity {
     private LinearLayout managerApprovalsRow;
     private TextView managerAppTitle;
     private int managerReportRange = 0;
+    private String managerExecCacheJson;
+    private String managerDrillKind = "sales";
     private int managerReportListCap = 5;
     private String managerReportsCacheJson;
     private TextView status;
@@ -3838,6 +3840,8 @@ public class MainActivity extends Activity {
             case "manager_approvals": loadManagerApprovals(); break;
             case "health": renderConnectionHealthPage(); break;
             case "dashboard":
+                if (MANAGER_EDITION) { loadManagerExecutive(); break; }
+            case "mgr_drill": loadManagerDrill(); break;
             default: loadDashboard(); break;
         }
     }
@@ -7184,7 +7188,7 @@ public class MainActivity extends Activity {
 
     private String firstAllowedPage() {
         if (MANAGER_EDITION) {
-            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings"};
+            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill"};
             for (String p : managerPages) if (canOpenPage(p)) return p;
             return "dashboard";
         }
@@ -12004,6 +12008,195 @@ public class MainActivity extends Activity {
         }
     }
 
+    // =============================== Phase 6-9: Executive dashboard + Action center + Drill-down ===============================
+    private String freshnessText(long syncAt) {
+        long min = (System.currentTimeMillis() - syncAt) / 60000;
+        if (min <= 0) return "همین حالا";
+        if (min < 60) return faDigits(String.valueOf(min)) + " دقیقه قبل";
+        return faDigits(String.valueOf(min / 60)) + " ساعت قبل";
+    }
+
+    private void loadManagerExecutive() {
+        content.removeAllViews();
+        addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.fetch(c, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { managerExecCacheJson = body; prefs.edit().putString("cache_manager_exec", body).apply(); renderManagerExecutive(safeJson(body)); }
+            @Override public void fail(Exception e) {
+                String cached = prefs.getString("cache_manager_exec", "");
+                if (cached != null && !cached.trim().isEmpty()) { managerExecCacheJson = cached; renderManagerExecutive(safeJson(cached)); addCacheBanner("داشبورد آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
+                showPageError("داشبورد", e, () -> loadManagerExecutive());
+            }
+        });
+    }
+
+    private JSONObject safeJson(String body) { try { return new JSONObject(body); } catch (Exception e) { return new JSONObject(); } }
+
+    private double pctDelta(double now, double prev) { return prev > 0 ? (now - prev) / prev * 100.0 : Double.NaN; }
+
+    private void addKpiCard(LinearLayout parent, String title, String glyph, int accent, String value, String delta, String sub, String drillKind) {
+        LinearLayout c = card();
+        c.setBackground(unifiedCardBg(accent, 20, false));
+        LinearLayout head = new LinearLayout(this); head.setOrientation(LinearLayout.HORIZONTAL); head.setGravity(Gravity.CENTER_VERTICAL);
+        head.addView(text(glyph, 13, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        TextView tt = text(title, 10.6f, MUTED, Typeface.BOLD);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, -2, 1f); tp.setMargins(dp(6), 0, 0, 0);
+        head.addView(tt, tp);
+        c.addView(head, new LinearLayout.LayoutParams(-1, -2));
+        c.addView(fitText(value, 17, 12, TEXT), new LinearLayout.LayoutParams(-1, dp(30)));
+        if (delta != null && !delta.isEmpty()) c.addView(text(delta, 10.2f, delta.contains("▼") ? tc(DANGER) : tc(SUCCESS), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        if (sub != null && !sub.isEmpty()) c.addView(text(sub, 9.6f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        if (drillKind != null) { c.setClickable(true); applyTouchFeedback(c); c.setOnClickListener(v -> { managerDrillKind = drillKind; showApp("mgr_drill"); }); c.setContentDescription(title + " — نمایش جزئیات"); }
+        parent.addView(c, new LinearLayout.LayoutParams(0, -2, 1f));
+    }
+
+    private void addBarLine(LinearLayout parent, String label, String valueText, double value, double max, int color) {
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(text(label, 10.2f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(dp(86), -2));
+        LinearLayout barWrap = new LinearLayout(this); barWrap.setOrientation(LinearLayout.HORIZONTAL);
+        barWrap.setBackground(rounded(alpha(MUTED, 26), 999));
+        View bar = new View(this); bar.setBackground(rounded(color, 999));
+        double safeMax = max > 0 ? max : 1;
+        barWrap.addView(bar, new LinearLayout.LayoutParams(0, dp(10), (float) Math.max(0.06, Math.min(1, value / safeMax))));
+        barWrap.addView(new View(this), new LinearLayout.LayoutParams(0, dp(10), 1f));
+        LinearLayout.LayoutParams wp = new LinearLayout.LayoutParams(0, -2, 1f); wp.setMargins(dp(6), 0, dp(6), 0);
+        row.addView(barWrap, wp);
+        row.addView(text(valueText, 10.2f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(5), 0, dp(5));
+        parent.addView(row, rp);
+    }
+
+    private void renderManagerExecutive(JSONObject m) {
+        content.removeAllViews();
+        addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است. آخرین بروزرسانی: " + freshnessText(m.optLong("syncAt", System.currentTimeMillis())));
+        LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
+        String[] labels = {"امروز", "۷ روز", "۳۰ روز"};
+        for (int i = 0; i < 3; i++) { final int rr = i; Button b = i == m.optInt("range", 0) ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; loadManagerExecutive(); }); filters.addView(b, weightedButtonLp()); }
+        LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
+        content.addView(filters, fp);
+        JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases"), recv = m.optJSONObject("receivables"), cust = m.optJSONObject("customers"), chk = m.optJSONObject("checkBuckets");
+        JSONArray visitors = m.optJSONArray("visitors");
+        LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
+        double sv = sales == null ? 0 : sales.optDouble("total", 0);
+        double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
+        double dSales = pctDelta(sv, sales == null ? 0 : sales.optDouble("prevTotal", 0));
+        addKpiCard(grid, "فروش", "↗", GOLD, sv > 0 ? money(Math.round(sv)) : "—", Double.isNaN(dSales) ? null : (dSales >= 0 ? "▲ " : "▼ ") + faDigits(String.format(java.util.Locale.US, "%.1f", Math.abs(dSales))) + "٪", (sales == null ? "" : formatNumber(sales.optLong("docs", 0)) + " سند"), "sales");
+        double margin = sv - pv;
+        addKpiCard(grid, "حاشیه ناخالص", "◎", margin >= 0 ? SUCCESS : DANGER, money(Math.round(margin)), sv > 0 ? faDigits(String.format(java.util.Locale.US, "%.0f", margin / sv * 100.0)) + "٪ از فروش" : null, "فروش − خرید", null);
+        grid.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout grid2 = new LinearLayout(this); grid2.setOrientation(LinearLayout.HORIZONTAL);
+        addKpiCard(grid2, "مطالبات", "♙", WARNING, recv != null && recv.optDouble("total", 0) > 0 ? money(Math.round(recv.optDouble("total", 0))) : "—", null, recv == null ? "" : formatNumber(recv.optLong("count", 0)) + " مشتری بدهکار", "debtors");
+        JSONObject soon = chk == null ? null : chk.optJSONObject("soon");
+        addKpiCard(grid2, "چک نزدیک سررسید", "✓", soon != null ? WARNING : SUCCESS, soon != null ? formatNumber(soon.optLong("count", 0)) + " فقره" : "۰", soon != null ? money(Math.round(soon.optDouble("total", 0))) : null, "≤ ۷ روز آینده", "checks");
+        grid2.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        content.addView(grid2, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout grid3 = new LinearLayout(this); grid3.setOrientation(LinearLayout.HORIZONTAL);
+        addKpiCard(grid3, "مشتری فعال", "♟", INFO, cust == null ? "—" : formatNumber(cust.optLong("active", 0)), null, cust == null ? "" : "بدون خرید: " + formatNumber(cust.optLong("noPurchase", 0)), "debtors");
+        long vOrders = 0; for (int i = 0; visitors != null && i < visitors.length(); i++) vOrders += visitors.optJSONObject(i) == null ? 0 : visitors.optJSONObject(i).optLong("orders", 0);
+        addKpiCard(grid3, "سفارش ویزیتورها", "♜", navAccent("personnel"), formatNumber(vOrders), null, visitors == null ? "" : formatNumber(visitors.length()) + " ویزیتور فعال", "visitors");
+        grid3.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        content.addView(grid3, new LinearLayout.LayoutParams(-1, -2));
+        JSONArray trend = m.optJSONArray("trend");
+        if (trend != null && trend.length() > 0) {
+            LinearLayout c = addReportCard("روند فروش ۷ روز اخیر", "↯", GOLD);
+            c.addView(new ManagerTrendChartView(this, trend), new LinearLayout.LayoutParams(-1, dp(150)));
+        }
+        if (chk != null) {
+            LinearLayout c = addReportCard("وضعیت وصول — سررسید چک‌ها", "✓", SUCCESS);
+            double mx = 1;
+            JSONObject over = chk.optJSONObject("over");
+            mx = Math.max(mx, over == null ? 0 : over.optDouble("total", 0)); mx = Math.max(mx, soon == null ? 0 : soon.optDouble("total", 0)); mx = Math.max(mx, chk.optJSONObject("ok") == null ? 0 : chk.optJSONObject("ok").optDouble("total", 0));
+            if (over != null) addBarLine(c, "معوق", money(Math.round(over.optDouble("total", 0))), over.optDouble("total", 0), mx, DANGER);
+            if (soon != null) addBarLine(c, "≤ ۷ روز", money(Math.round(soon.optDouble("total", 0))), soon.optDouble("total", 0), mx, WARNING);
+            if (chk.optJSONObject("ok") != null) addBarLine(c, "سررسید نشده", money(Math.round(chk.optJSONObject("ok").optDouble("total", 0))), chk.optJSONObject("ok").optDouble("total", 0), mx, SUCCESS);
+        }
+        addActionCenterCard(m);
+        addActivityFeedCard(m.optJSONArray("feed"));
+        addDeveloperCredit(content);
+    }
+
+    private void addActionCenterCard(JSONObject m) {
+        JSONArray debtors = m.optJSONArray("debtors");
+        JSONObject chk = m.optJSONObject("checkBuckets");
+        JSONObject cust = m.optJSONObject("customers");
+        JSONObject prods = m.optJSONObject("products");
+        JSONObject soon = chk == null ? null : chk.optJSONObject("soon");
+        int nDebt = debtors == null ? 0 : debtors.length();
+        int nSoon = soon == null ? 0 : (int) soon.optLong("count", 0);
+        long nNoP = cust == null ? 0 : cust.optLong("noPurchase", 0);
+        long nIna = cust == null ? 0 : cust.optLong("inactive", 0);
+        int nIdle = prods == null || prods.optJSONArray("idle") == null ? 0 : prods.optJSONArray("idle").length();
+        if (nDebt + nSoon + nNoP + nIna + nIdle == 0) return;
+        LinearLayout c = addReportCard("اقدامات ضروری امروز", "!", WARNING);
+        if (nDebt > 0) addActionLine(c, formatNumber(nDebt) + " مشتری بدهکار — وصول اولویت اول", DANGER, "debtors");
+        if (nSoon > 0) addActionLine(c, formatNumber(nSoon) + " چک نزدیک سررسید — موجودی بانک را چک کنید", WARNING, "checks");
+        if (nNoP > 0) addActionLine(c, formatNumber(nNoP) + " مشتری بدون خرید — برنامه ویزیت بچینید", INFO, "debtors");
+        if (nIna > 0) addActionLine(c, formatNumber(nIna) + " مشتری غیرفعال ۶۰ روزه — تماس فعال‌سازی", WARNING, "debtors");
+        if (nIdle > 0) addActionLine(c, formatNumber(nIdle) + " کالای بدون فروش در بازه — بررسی قیمت/موجودی", MUTED, "products");
+    }
+
+    private void addActionLine(LinearLayout parent, String label, int accent, String drillKind) {
+        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setBackground(roundedStroke(alpha(accent, 20), 14, alpha(accent, 70)));
+        row.setPadding(dp(10), dp(8), dp(10), dp(8));
+        TextView t = text(label, 10.8f, TEXT, Typeface.BOLD);
+        row.addView(t, new LinearLayout.LayoutParams(0, -2, 1f));
+        row.addView(text("‹", 13, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        row.setClickable(true); applyTouchFeedback(row);
+        row.setOnClickListener(v -> { managerDrillKind = drillKind; showApp("mgr_drill"); });
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, dp(6), 0, 0);
+        parent.addView(row, lp);
+    }
+
+    private void addActivityFeedCard(JSONArray feed) {
+        if (feed == null || feed.length() == 0) return;
+        LinearLayout c = addReportCard("فعالیت‌های اخیر", "◷", INFO);
+        for (int i = 0; i < Math.min(8, feed.length()); i++) {
+            JSONObject o = feed.optJSONObject(i); if (o == null) continue;
+            String type = o.optString("type", "sale");
+            String title = "sale".equals(type) ? "فروش " + (o.optString("number", "").isEmpty() ? "" : " #" + faDigits(o.optString("number", ""))) : "چک دریافتی";
+            addReportLine(c, faDigits(o.optString("date", "—")) + " • " + title + (o.optString("party", "").isEmpty() ? "" : " • " + o.optString("party", "")), money(Math.round(o.optDouble("amount", 0))), "sale".equals(type) ? tc(SUCCESS) : tc(INFO));
+        }
+    }
+
+    private void loadManagerDrill() {
+        content.removeAllViews();
+        String title = "sales".equals(managerDrillKind) ? "اسناد فروش بازه" : "checks".equals(managerDrillKind) ? "چک‌های دریافتی" : "debtors".equals(managerDrillKind) ? "بدهکاران اولویت‌دار" : "visitors".equals(managerDrillKind) ? "عملکرد ویزیتورها" : "کالاهای پرفروش";
+        addHero(title, "جزئیات واقعی رکوردها از آتیران — بدون داده ساختگی.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        final String kind = managerDrillKind;
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.drill(c, kind, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerDrill(title, safeArr(body)); }
+            @Override public void fail(Exception e) { showPageError(title, e, () -> loadManagerDrill()); }
+        });
+    }
+
+    private JSONArray safeArr(String body) { try { return new JSONArray(body); } catch (Exception e) { return new JSONArray(); } }
+
+    private void renderManagerDrill(String title, JSONArray rows) {
+        content.removeAllViews();
+        addHero(title, formatNumber(rows.length()) + " رکورد واقعی از آتیران.");
+        if (rows.length() == 0) { addEmptyTo(content, "برای این بازه داده‌ای ثبت نشده است."); addDeveloperCredit(content); return; }
+        LinearLayout c = card(); c.setBackground(themedSectionBg("reports", 24));
+        double max = 1;
+        for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o != null) max = Math.max(max, o.optDouble("amount", o.optDouble("sum", o.optDouble("sales", 0)))); }
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject o = rows.optJSONObject(i); if (o == null) continue;
+            double val = o.optDouble("amount", o.optDouble("sum", o.optDouble("sales", 0)));
+            String left = o.optString("party", o.optString("name", o.optString("bank", "")));
+            String right = o.optString("date", "").isEmpty() ? "" : faDigits(o.optString("date", "")) + " • ";
+            right += o.optString("number", "").isEmpty() ? "" : "#" + faDigits(o.optString("number", "")) + " • ";
+            if (o.optLong("orders", 0) > 0) right += formatNumber(o.optLong("orders", 0)) + " سفارش • ";
+            addBarLine(c, left.isEmpty() ? "—" : left, money(Math.round(val)), val, max, GOLD);
+            TextView detail = text(right, 9.4f, MUTED, Typeface.NORMAL);
+            LinearLayout.LayoutParams dp2 = new LinearLayout.LayoutParams(-1, -2); dp2.setMargins(dp(86), 0, 0, dp(4));
+            c.addView(detail, dp2);
+        }
+        content.addView(c, new LinearLayout.LayoutParams(-1, -2));
+        addDeveloperCredit(content);
+    }
+
     // =============================== Phase 3: manager daily report (PDF + share) ===============================
     private void generateManagerReportPdf() {
         if (designPreview) { buildAndShareManagerReport(new JSONObject()); return; }
@@ -12208,6 +12401,13 @@ public class MainActivity extends Activity {
                 new VisitorToolSpec("حضور و مرخصی", "تأیید و اصلاح تردد", "◷", navAccent("attendance"), () -> showApp("attendance"), canOpenPage("attendance")),
                 new VisitorToolSpec("گفتگو", "اتاق مدیر و کارکنان", "✉", navAccent("chat"), () -> showApp("chat"), canOpenPage("chat")),
                 new VisitorToolSpec("دستیار میلو", "پرسش از داده‌ها", "✧", navAccent("assistant"), () -> showApp("assistant"), canOpenPage("assistant"))
+        });
+        addVisitorMoreGroup("هوش مدیریتی", "دریل‌داون واقعی به رکوردهای آتیران", new VisitorToolSpec[]{
+                new VisitorToolSpec("اتاق فروش", "اسناد فروش بازه", "↗", navAccent("reports"), () -> { managerDrillKind = "sales"; showApp("mgr_drill"); }, true),
+                new VisitorToolSpec("مرکز وصول", "چک‌های دریافتی", "✓", SUCCESS, () -> { managerDrillKind = "checks"; showApp("mgr_drill"); }, true),
+                new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
+                new VisitorToolSpec("عملکرد ویزیتور", "فروش/سفارش/مشتری", "♜", navAccent("personnel"), () -> { managerDrillKind = "visitors"; showApp("mgr_drill"); }, true),
+                new VisitorToolSpec("هوش کالا", "پرفروش‌های بازه", "◈", navAccent("products"), () -> { managerDrillKind = "products"; showApp("mgr_drill"); }, true)
         });
         addDeveloperCredit(content);
     }
