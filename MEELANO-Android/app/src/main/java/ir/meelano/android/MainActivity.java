@@ -254,6 +254,8 @@ public class MainActivity extends Activity {
     private TextView managerAppTitle;
     private int managerReportRange = 2; // default 30 days — "today" often has no sales yet and looked like empty reports
     private String managerExecCacheJson;
+    /** Wall time of the last executive load (ms): shown to the manager so «کند بودن» is measurable. */
+    private long managerExecLoadMs;
     private String managerDrillKind = "sales";
     private int managerReportListCap = 5;
     private String managerReportsCacheJson;
@@ -12351,7 +12353,7 @@ public class MainActivity extends Activity {
     }
 
     private String managerIntelJson() throws Exception {
-        try (Connection c = openConnection()) { return ManagerAnalytics.fetch(c, managerReportRange).toString(); }
+        return ManagerAnalytics.fetchParallel(managerReportRange).toString();
     }
 
     private void exportManagerIntelPdf() {
@@ -12771,6 +12773,12 @@ public class MainActivity extends Activity {
     }
 
     // =============================== Phase 6-9: Executive dashboard + Action center + Drill-down ===============================
+    /** « • بارگذاری: ۱٫۲ ثانیه» — only once a real load has been measured. */
+    private String managerLoadTimeText() {
+        if (managerExecLoadMs <= 0) return "";
+        return " • بارگذاری: " + faDigits(String.format(java.util.Locale.US, "%.1f", managerExecLoadMs / 1000.0)) + " ثانیه";
+    }
+
     private String freshnessText(long syncAt) {
         long min = (System.currentTimeMillis() - syncAt) / 60000;
         if (min <= 0) return "همین حالا";
@@ -12784,8 +12792,18 @@ public class MainActivity extends Activity {
             addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است.");
             content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
         }
-        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.fetch(c, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { managerExecCacheJson = body; prefs.edit().putString("cache_manager_exec", body).apply(); renderManagerExecutive(safeJson(body)); }
+        // The twelve KPI sections run together on the connection pool instead of queueing one after the
+        // other (~1 s instead of ~5 s warm, ~18 s on the very first load on a ~180 ms link).
+        final long started = System.currentTimeMillis();
+        runDb(() -> ManagerAnalytics.fetchParallel(managerReportRange).toString(), new DbCallback() {
+            @Override public void ok(String body) {
+                managerExecLoadMs = System.currentTimeMillis() - started;
+                managerExecCacheJson = body;
+                prefs.edit().putString("cache_manager_exec", body).apply();
+                // A rendering bug must never take the manager's screen down (this callback used to be the
+                // only one without a guard): show the page error card instead.
+                try { renderManagerExecutive(safeJson(body)); } catch (Exception e) { showPageError("داشبورد", e, () -> loadManagerExecutive()); }
+            }
             @Override public void fail(Exception e) {
                 String cached = prefs.getString("cache_manager_exec", "");
                 if (cached != null && !cached.trim().isEmpty()) { managerExecCacheJson = cached; renderManagerExecutive(safeJson(cached)); addCacheBanner("داشبورد آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود."); return; }
@@ -12885,7 +12903,8 @@ public class MainActivity extends Activity {
 
     private void renderManagerExecutive(JSONObject m) {
         content.removeAllViews();
-        addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است. آخرین بروزرسانی: " + freshnessText(m.optLong("syncAt", System.currentTimeMillis())));
+        addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است. آخرین بروزرسانی: "
+                + freshnessText(m.optLong("syncAt", System.currentTimeMillis())) + managerLoadTimeText());
         addManagerSectionErrors(m.optJSONArray("errors"));
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
         String[] labels = {"امروز", "۷ روز", "۳۰ روز"};

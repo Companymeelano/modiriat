@@ -13,6 +13,10 @@ import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Management Intelligence data layer (spec phases 3-5): one read-only repository that turns
@@ -851,6 +855,99 @@ final class ManagerAnalytics {
             long ms = System.currentTimeMillis() - t0;
             try { timings.put(key, ms); } catch (Exception ignored) { }
         }
+    }
+
+    /** One dashboard section, bound to the connection it runs on. */
+    private interface Section { Object run(Connection c) throws Exception; }
+
+    private static final class Job {
+        final String key;
+        final Section body;
+        Job(String key, Section body) { this.key = key; this.body = body; }
+    }
+
+    /** The twelve sections of the executive dashboard, in render order. */
+    private static Job[] jobs(final int range) {
+        return new Job[]{
+                new Job("sales",        c -> rangeBlock(c, true, range)),
+                new Job("purchases",    c -> rangeBlock(c, false, range)),
+                new Job("trend",        c -> trend(c, 7)),
+                new Job("receivables",  c -> receivables(c)),
+                new Job("debtors",      c -> debtors(c, 8)),
+                new Job("customers",    c -> customerCategories(c, range)),
+                new Job("visitors",     c -> visitorGoals(c, range)),
+                new Job("products",     c -> products(c, range)),
+                new Job("checkBuckets", c -> checkBuckets(c)),
+                new Job("aging",        c -> collection(c)),
+                new Job("credit",       c -> creditRisk(c)),
+                new Job("feed",         c -> activityFeed(c))
+        };
+    }
+
+    /**
+     * The same payload as {@link #fetch(Connection, int)}, but the twelve sections share the connection
+     * pool and run four at a time instead of queueing behind each other.
+     *
+     * Why: every section needs its own round trips and the link to Atiran answers in ~180 ms, so the
+     * sequential version spent 5-6 s on a warm cache and 18 s on the first screen — long enough that the
+     * dashboard still showed its grey skeleton when the manager looked at it. Running the sections
+     * together brings the same figures in about a second, and keeps the per-section timings and error
+     * entries so a slow or failing card is still traceable from the screen.
+     */
+    static JSONObject fetchParallel(int range) {
+        JSONObject out = new JSONObject();
+        JSONArray errors = new JSONArray();
+        JSONObject timings = new JSONObject();
+        out.put("range", range);
+        out.put("syncAt", System.currentTimeMillis());
+        final Job[] jobs = jobs(range);
+        final JSONObject[] values = new JSONObject[jobs.length];
+        final String[] failures = new String[jobs.length];
+        final long[] took = new long[jobs.length];
+        final int workers = Math.min(4, jobs.length);
+        ExecutorService pool = Executors.newFixedThreadPool(workers, r -> {
+            Thread t = new Thread(r, "meelano-analytics");
+            t.setDaemon(true);
+            return t;
+        });
+        try {
+            final CountDownLatch done = new CountDownLatch(jobs.length);
+            for (int i = 0; i < jobs.length; i++) {
+                final int idx = i;
+                pool.execute(() -> {
+                    long t0 = System.currentTimeMillis();
+                    JSONObject box = new JSONObject();
+                    try (Connection c = MeelanoSql.lease()) {
+                        box.put("v", jobs[idx].body.run(c));
+                    } catch (Throwable t) {
+                        failures[idx] = String.valueOf(t.getMessage()) + sqlHint();
+                    } finally {
+                        took[idx] = System.currentTimeMillis() - t0;
+                        values[idx] = box;
+                        done.countDown();
+                    }
+                });
+            }
+            done.await(75, TimeUnit.SECONDS);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        } finally {
+            pool.shutdownNow();
+        }
+        for (int i = 0; i < jobs.length; i++) {
+            String key = jobs[i].key;
+            try {
+                if (failures[i] != null) errors.put(key + ": " + failures[i]);
+                else if (values[i] != null && values[i].has("v")) out.put(key, values[i].get("v"));
+                else errors.put(key + ": این بخش در زمان مقرر پاسخ نداد");
+                timings.put(key, took[i]);
+            } catch (Exception ignored) { }
+        }
+        try {
+            out.put("errors", errors);
+            out.put("timings", timings);
+        } catch (Exception ignored) { }
+        return out;
     }
 
     static JSONObject fetch(Connection c, int range) throws Exception {

@@ -24,6 +24,8 @@ import xml.etree.ElementTree as ET
 ERROR_MARKERS = [
     "برقرار نشد", "خطای", "خطا در", "Exception", "Invalid column", "SQLException",
     "net.sourceforge.jtds", "اتصال برقرار نشد", "پیدا نشد؛", "داده‌ای برای نمایش نیست",
+    # the manager dashboard reports a failed section in words, and the app now names the SQL error
+    "دریافت برخی بخش", "پاسخ نداد", "پرانتز نامتوازن", "Incorrect syntax", "Invalid object",
 ]
 MIN_TEXT_NODES = 8
 
@@ -70,10 +72,11 @@ def main():
 
     findings = {}
     totals = {"pages": 0, "clipped": 0, "unlabelled": 0, "overflow": 0, "tiny": 0, "errors": 0, "empty": 0}
-    lines = ["# Manager UI audit — %d page dumps, screen %dx%d @%ddpi" % (len(all_dumps), sw, screen[1], density), ""]
-
+    # The page-dump list must be built before it is written into the header — the previous order raised
+    # UnboundLocalError and the workflow never got an audit.txt for the current dump set.
     all_dumps = [q for q in sorted(glob.glob(os.path.join(xml_dir, "*.xml")))
                  if not os.path.basename(q).startswith("_")]
+    lines = ["# Manager UI audit — %d page dumps, screen %dx%d @%ddpi" % (len(all_dumps), sw, screen[1], density), ""]
     for path in all_dumps:
         name = os.path.basename(path)[:-4]
         nodes, err = parse(path)

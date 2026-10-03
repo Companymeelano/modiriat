@@ -106,6 +106,25 @@ jobs:
             cp "$f" docs/manager-review/xml/ || true
           done
           cp review-manager/env.txt docs/manager-review/env.txt || true
+          # Also keep the dumps of the pages the audit flagged (clipped text, dead buttons, tiny tap
+          # targets, empty pages). Those files are small, they make the layout findings reproducible
+          # from the repository alone, and the full set stays in the artifact.
+          python3 - <<'PY'
+          import json, os, shutil
+          try:
+              rep = json.load(open("review-manager/audit.txt.json", encoding="utf-8"))
+          except Exception as ex:
+              print("no audit json:", ex); raise SystemExit(0)
+          os.makedirs("docs/manager-review/xml", exist_ok=True)
+          kept = 0
+          for page, issues in rep.get("pages", {}).items():
+              if not any(issues.values()):
+                  continue
+              src = os.path.join("review-manager/xml", page + ".xml")
+              if os.path.exists(src):
+                  shutil.copy(src, os.path.join("docs/manager-review/xml", "audit-" + page + ".xml")); kept += 1
+          print("flagged page dumps kept:", kept)
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
           git add docs/manager-review

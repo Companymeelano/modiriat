@@ -14,30 +14,45 @@ import java.util.Set;
  *
  * Purpose: the emulator review can only show what the screen renders; this harness shows the exact
  * statement the app sends, how long each section takes and the server's own error text — so a broken
- * KPI can be traced to a line of SQL instead of guessed from a screenshot.
+ * KPI is traced to a line of SQL instead of guessed from a screenshot.
  *
  * Prints a plain-text report (stdout) that the workflow commits as diag/analytics-live.txt.
  */
 public final class AnalyticsLive {
 
-    private static long sectionMs;
-
     public static void main(String[] args) {
         System.out.println("== AnalyticsLive ==");
-        System.out.println("app build: MeelanoSql + ManagerAnalytics, jTDS driver "
+        System.out.println("app build: MeelanoSql + ManagerAnalytics + MeelanoJalali, jTDS "
                 + net.sourceforge.jtds.jdbc.Driver.class.getPackage().getImplementationVersion());
         System.out.println("server: " + MainActivity.sqlHost() + ":" + MainActivity.sqlPort() + "/" + MainActivity.sqlDatabase());
-        boolean anyError = false;
 
-        int[] ranges = {1, 7, 30};
-        for (int range : ranges) {
-            Connection c = null;
+        // ---- connection warm-up (first jTDS login to a server 170 ms away)
+        try {
+            long t0 = System.currentTimeMillis();
+            Connection c = MeelanoSql.lease();
+            c.close();
+            System.out.println("first connection (login + TCP): " + (System.currentTimeMillis() - t0) + " ms");
+        } catch (Throwable t) {
+            System.out.println("FATAL: cannot connect - " + t);
+            System.out.println("ANYERR=1");
+            return;
+        }
+
+        // ---- speed: the dashboard path (parallel) against the old sequential path, same warm pool
+        timed("cold fetchParallel(2)  [first dashboard load]", () -> ManagerAnalytics.fetchParallel(2));
+        timed("warm fetch(conn,2)      [old sequential path]", () -> {
+            try (Connection c = MeelanoSql.lease()) { return ManagerAnalytics.fetch(c, 2); }
+        });
+        timed("warm fetchParallel(2)   [shipped path]", () -> ManagerAnalytics.fetchParallel(2));
+
+        boolean anyError = false;
+        // ---- correctness: every window index the dashboard offers (0=today 1=7d 2=30d 3=12m)
+        for (int range : new int[]{0, 1, 2, 3}) {
             try {
-                c = MeelanoSql.lease();
                 long t0 = System.currentTimeMillis();
-                JSONObject j = ManagerAnalytics.fetch(c, range);
+                JSONObject j = ManagerAnalytics.fetchParallel(range);
                 long ms = System.currentTimeMillis() - t0;
-                System.out.println("\n================ fetch(range=" + range + ")  " + ms + " ms ================");
+                System.out.println("\n================ fetchParallel(range=" + range + ")  " + ms + " ms ================");
                 JSONArray errors = j.optJSONArray("errors");
                 if (errors != null && errors.length() > 0) {
                     anyError = true;
@@ -48,14 +63,14 @@ public final class AnalyticsLive {
                 }
                 System.out.println("-- section timings (ms) --");
                 System.out.println("   " + j.opt("timings"));
-                System.out.println("-- metrics --");
+                System.out.println("-- figures --");
+                System.out.println(summary(j));
+                System.out.println("-- full payload --");
                 System.out.println(j.toString(2));
             } catch (Throwable t) {
                 anyError = true;
                 System.out.println("FATAL for range " + range + ": " + t);
                 t.printStackTrace(System.out);
-            } finally {
-                if (c != null) try { c.close(); } catch (Exception ignored) { }
             }
         }
 
@@ -66,11 +81,80 @@ public final class AnalyticsLive {
         System.out.println("ANYERR=" + (anyError ? 1 : 0));
     }
 
+    private interface Work { JSONObject run() throws Exception; }
+
+    private static void timed(String label, Work work) {
+        try {
+            long t0 = System.currentTimeMillis();
+            JSONObject j = work.run();
+            long ms = System.currentTimeMillis() - t0;
+            System.out.println(String.format("%-46s %6d ms   errors=%d", label, ms, j.optJSONArray("errors") == null ? 0 : j.optJSONArray("errors").length()));
+        } catch (Throwable t) {
+            System.out.println(String.format("%-46s FAILED: %s", label, t));
+        }
+    }
+
+    /** The figures a manager reads off the dashboard, one line each — easy to check by eye. */
+    private static String summary(JSONObject j) {
+        StringBuilder b = new StringBuilder();
+        JSONObject sales = j.optJSONObject("sales");
+        if (sales != null) b.append("  sales: total=").append(sales.opt("total")).append(" docs=").append(sales.opt("docs"))
+                .append(" parties=").append(sales.opt("parties")).append(" paid=").append(sales.opt("paid"))
+                .append(" prev=").append(sales.opt("prevTotal")).append(" date=").append(sales.opt("date")).append("\n");
+        JSONObject pur = j.optJSONObject("purchases");
+        if (pur != null) b.append("  purchases: total=").append(pur.opt("total")).append(" docs=").append(pur.opt("docs"))
+                .append(" prev=").append(pur.opt("prevTotal")).append("\n");
+        JSONObject recv = j.optJSONObject("receivables");
+        if (recv != null) b.append("  receivables: total=").append(recv.opt("total")).append(" count=").append(recv.opt("count")).append("\n");
+        JSONObject cust = j.optJSONObject("customers");
+        if (cust != null) b.append("  customers: ").append(cust).append("\n");
+        JSONObject chk = j.optJSONObject("checkBuckets");
+        if (chk != null) b.append("  checkBuckets: ").append(chk).append("\n");
+        JSONArray aging = j.optJSONArray("aging");
+        if (aging != null) {
+            b.append("  aging: ");
+            for (int i = 0; i < aging.length(); i++) {
+                JSONObject o = aging.optJSONObject(i);
+                if (o != null) b.append(o.opt("label")).append("=").append(o.opt("value")).append("/").append(o.opt("docs")).append("  ");
+            }
+            b.append("\n");
+        }
+        JSONArray tr = j.optJSONArray("trend");
+        if (tr != null) {
+            b.append("  trend: ");
+            for (int i = 0; i < tr.length(); i++) {
+                JSONObject o = tr.optJSONObject(i);
+                if (o != null) b.append(o.opt("label")).append("=").append(o.opt("value")).append("  ");
+            }
+            b.append("\n");
+        }
+        JSONArray vis = j.optJSONArray("visitors");
+        if (vis != null) {
+            b.append("  visitors: ");
+            for (int i = 0; i < Math.min(4, vis.length()); i++) b.append(JSONObject.valueToString(vis.optJSONObject(i))).append("  ");
+            b.append("\n");
+        }
+        JSONArray prod = j.optJSONObject("products") == null ? null : j.optJSONObject("products").optJSONArray("top");
+        if (prod != null) {
+            b.append("  products top: ");
+            for (int i = 0; i < Math.min(3, prod.length()); i++) b.append(JSONObject.valueToString(prod.optJSONObject(i))).append("  ");
+            b.append("\n");
+        }
+        JSONArray feed = j.optJSONArray("feed");
+        if (feed != null) b.append("  feed: ").append(feed.length()).append(" rows, first=").append(feed.length() > 0 ? JSONObject.valueToString(feed.optJSONObject(0)) : "-").append("\n");
+        JSONArray cr = j.optJSONArray("credit");
+        if (cr != null) b.append("  credit: ").append(cr.length()).append(" rows, first=").append(cr.length() > 0 ? JSONObject.valueToString(cr.optJSONObject(0)) : "-").append("\n");
+        JSONArray db = j.optJSONArray("debtors");
+        if (db != null) b.append("  debtors: ").append(db.length()).append(" rows, first=").append(db.length() > 0 ? JSONObject.valueToString(db.optJSONObject(0)) : "-").append("\n");
+        return b.toString();
+    }
+
     /**
-     * The app's sales statement is ~4.3k characters. jTDS sends a prepared statement through
-     * sp_executesql with the SQL text as a parameter, so the exact length matters: this probe runs the
-     * same app-shaped statement padded to increasing lengths and reports where the server starts
-     * rejecting it. Pad is an ASCII comment, so byte and character counts move together.
+     * Statement-length probe. Two shapes matter on a jTDS client:
+     *  - no parameters  → jTDS sends the text as a plain batch (most manager sections);
+     *  - with parameters → jTDS wraps the text into sp_executesql, where the statement travels as a
+     *    LONGVARCHAR parameter and the driver has to chunk it.
+     * Both are grown with an ASCII comment so character and byte counts move together.
      */
     private static void sqlLengthProbe() throws Exception {
         System.out.println("\n================ jTDS statement-length probe ================");
@@ -80,29 +164,29 @@ public final class AnalyticsLive {
             Set<String> cols = ManagerAnalytics.columns(c, "sailfact");
             String numExpr = ManagerAnalytics.sqlNumberExpr("h", "all", "decimal(19,2)");
             String soft = ManagerAnalytics.softDeleteCondition(cols, "x");
-            String src = "(SELECT x.* FROM dbo.[sailfact] x WHERE " + MeelanoSql.rangeCondition("date", MeelanoSql.rangeAnchor(c), 30, "x")
-                    + " AND " + soft + ") h";
-            String head = "SELECT ISNULL(SUM(" + numExpr + "),0), COUNT_BIG(1), COUNT(DISTINCT h.[shmo]) FROM " + src
-                    + " WHERE (N'x' = ? OR ? IS NULL)";
-            // a real parameter keeps jTDS on the sp_executesql path, exactly like ManagerAnalytics
-            for (int targetLen : new int[]{2500, 3500, 3900, 3990, 4000, 4010, 4050, 4100, 4200, 4300, 4500}) {
-                String sql = head;
-                if (sql.length() < targetLen) {
-                    sql = sql + " /*" + pad(targetLen - sql.length() - 5) + "*/";
-                }
+            String where = MeelanoSql.rangeCondition("date", MeelanoSql.rangeAnchor(c), 2, "h");
+            if (!soft.isEmpty()) where += " AND " + soft;
+            String head = "SELECT ISNULL(SUM(" + numExpr + "),0), COUNT_BIG(1), COUNT(DISTINCT h.[shmo]) FROM dbo.[sailfact] h"
+                    + " WHERE " + where;
+            System.out.println("  base statement: " + head.length() + " chars / " + (head.length() * 2) + " utf16 bytes");
+            for (int targetLen : new int[]{4000, 6000, 8000, 12000, 16000, 20000}) {
+                String sql = head + " /*" + pad(targetLen - head.length() - 5) + "*/";
+                String plain;
                 long t0 = System.currentTimeMillis();
-                String verdict;
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    try (ResultSet r = ps.executeQuery()) { plain = r.next() ? ("OK " + r.getBigDecimal(1)) : "OK (no row)"; }
+                } catch (Exception ex) { plain = "ERR " + ex.getMessage(); }
+                long plainMs = System.currentTimeMillis() - t0;
+                String param;
+                t0 = System.currentTimeMillis();
+                try (PreparedStatement ps = c.prepareStatement(sql + " AND (N'x' = ? OR ? IS NULL)")) {
                     ps.setString(1, "x");
                     ps.setString(2, "y");
-                    try (ResultSet r = ps.executeQuery()) {
-                        verdict = r.next() ? ("OK rows=" + r.getBigDecimal(1) + "/" + r.getLong(2)) : "OK (no row)";
-                    }
-                } catch (Exception ex) {
-                    verdict = "ERR " + ex.getClass().getSimpleName() + ": " + ex.getMessage();
-                }
-                System.out.println("  len=" + sql.length() + " chars (" + (sql.length() * 2) + " utf16 bytes)  "
-                        + (System.currentTimeMillis() - t0) + " ms  -> " + verdict);
+                    try (ResultSet r = ps.executeQuery()) { param = r.next() ? ("OK " + r.getBigDecimal(1)) : "OK (no row)"; }
+                } catch (Exception ex) { param = "ERR " + ex.getMessage(); }
+                long paramMs = System.currentTimeMillis() - t0;
+                System.out.println("  len=" + sql.length() + " chars (" + (sql.length() * 2) + " bytes)  plain: " + plainMs + "ms "
+                        + plain + "   |   with params: " + paramMs + "ms " + param);
             }
         } finally {
             if (c != null) try { c.close(); } catch (Exception ignored) { }
@@ -115,7 +199,7 @@ public final class AnalyticsLive {
         return b.toString();
     }
 
-    /** Positive control for the local parenthesis guard added to MeelanoSql: it must reject, locally. */
+    /** Positive control for the local parenthesis guard: an unbalanced statement must fail locally. */
     private static void guardProbe() throws Exception {
         System.out.println("\n================ parenthesis guard ================");
         Connection c = null;

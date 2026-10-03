@@ -44,6 +44,21 @@ dump () {  # name
 
 cap () { dismiss_sys; adb exec-out screencap -p > "$OUT/$1.png"; dump "$1"; echo "captured $1"; }
 
+# Waits until the screen shows real figures (money is always rendered as «… ریال») so a «settled»
+# photo is taken after the data arrived, not three seconds after the tap. Records the wait in env.txt
+# so a screenshot can never again be mistaken for a data bug.
+wait_for_data () {  # label [seconds]
+  local label="$1" limit="${2:-45}" i=0
+  while [ "$i" -lt "$limit" ]; do
+    dump _wait
+    if grep -q "ریال" "$OUT/xml/_wait.xml" 2>/dev/null; then
+      echo "data ready ($label) after ${i}s" >> "$OUT/env.txt"; return 0
+    fi
+    i=$((i + 1)); sleep 1
+  done
+  echo "NO DATA on screen ($label) after ${limit}s" >> "$OUT/env.txt"; return 1
+}
+
 tap_text () {  # substring [required]
   dump _tap
   local xy
@@ -134,27 +149,36 @@ for i in $(seq 1 18); do
 done
 echo "login_ok=$LOGIN_OK" >> "$OUT/env.txt"
 cap 02-manager-home
-sleep 3
+wait_for_data "manager-home" 60 || true
 cap 03-manager-home-settled
+# The dashboard's own quick buttons (اتاق فروش / وصول / ویزیتور / کالا). They are NOT on the «بیشتر»
+# page, which is why the earlier review logged «NOT FOUND 'اتاق فروش'» instead of capturing them.
+for q in "اتاق فروش" "وصول" "ویزیتور" "کالا"; do
+  if tap_text_exact "$q" 600; then
+    wait_for_data "dashboard-$q" 45 || true
+    cap "12-$(echo "$q" | tr ' ' '-')"
+    adb shell input keyevent KEYCODE_BACK; sleep 3
+  fi
+done
+tap_text "خانه" || true; sleep 3
 
 # ---------------------------------------------------------------- walk every manager screen
 for name in "تأییدها" "گزارش‌ها" "پرسنل" "بیشتر"; do
   tap_text "$name" || true
-  sleep 5
+  sleep 4
   cap "10-$(echo "$name" | tr ' ' '-')"
-  sleep 2
+  wait_for_data "$name" 30 || true
   cap "11-$(echo "$name" | tr ' ' '-')-settled"
 done
 tap_text "خانه" || true; sleep 4
 
 # the «بیشتر» toolbox rows -> intelligence screens
 tap_text "بیشتر" || true; sleep 4
-for row in "اتاق فروش" "مرکز وصول" "عملکرد ویزیتور" "هوش کالا" "اعتبار مشتریان" "مشتری‌شناسی" "دفتر حساب مشتری" "ویزیت میدانی" "سلامت اتصال" "مشتریان" "کالاها" "تحویل بار" "اتاق فرمان" "حضور و مرخصی" "گفتگو" "دستیار میلو" "مدیریت دسترسی کاربران"; do
+for row in "مرکز وصول" "عملکرد ویزیتور" "هوش کالا" "اعتبار مشتریان" "مشتری‌شناسی" "دفتر حساب مشتری" "ویزیت میدانی" "سلامت اتصال" "مشتریان" "کالاها" "تحویل بار" "اتاق فرمان" "حضور و مرخصی" "گفتگو" "دستیار میلو" "مدیریت دسترسی کاربران"; do
   tap_text "بیشتر" || true; sleep 3
-  if tap_text "$row"; then
-    sleep 6
+  if tap_text_exact "$row" 500; then
+    wait_for_data "$row" 40 || true
     cap "20-$(echo "$row" | tr ' ' '-')"
-    sleep 2
     cap "21-$(echo "$row" | tr ' ' '-')-settled"
     adb shell input keyevent KEYCODE_BACK; sleep 2
   fi
@@ -169,13 +193,18 @@ adb shell wm size 720x1480
 adb shell wm density 340
 adb shell am force-stop "$PKG"
 adb shell am start -S -W -n "$PKG/$ACT" >/dev/null
-sleep 12
+sleep 10
+wait_for_data "narrow-home" 60 || true
 cap "30-narrow-1.3x-home"
-for name in "بیشتر" "گزارش‌ها"; do tap_text "$name" || true; sleep 5; cap "31-narrow-$(echo "$name" | tr ' ' '-')"; done
-tap_text "بیشتر" || true; sleep 4
-for row in "اتاق فروش" "مرکز وصول" "هوش کالا"; do
+# The four dashboard quick buttons again, this time on the compact screen where clipping would show.
+for q in "اتاق فروش" "وصول" "ویزیتور" "کالا"; do
+  if tap_text_exact "$q" 600; then wait_for_data "narrow-$q" 40 || true; cap "32-narrow-$(echo "$q" | tr ' ' '-')"; adb shell input keyevent KEYCODE_BACK; sleep 3; fi
+done
+for name in "بیشتر" "گزارش‌ها" "تأییدها"; do tap_text "$name" || true; sleep 3; wait_for_data "narrow-$name" 30 || true; cap "31-narrow-$(echo "$name" | tr ' ' '-')"; done
+tap_text "بیشتر" || true; sleep 3
+for row in "مرکز وصول" "هوش کالا" "سلامت اتصال"; do
   tap_text "بیشتر" || true; sleep 3
-  tap_text "$row" && { sleep 6; cap "32-narrow-$(echo "$row" | tr ' ' '-')"; adb shell input keyevent KEYCODE_BACK; sleep 2; }
+  tap_text_exact "$row" 500 && { wait_for_data "narrow-$row" 40 || true; cap "33-narrow-$(echo "$row" | tr ' ' '-')"; adb shell input keyevent KEYCODE_BACK; sleep 2; }
 done
 adb shell wm size reset
 adb shell wm density reset
