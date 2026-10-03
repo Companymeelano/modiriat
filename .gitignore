@@ -1,0 +1,12 @@
+MEELANO-Android/.gradle/
+MEELANO-Android/build/
+MEELANO-Android/app/build/
+MEELANO-Android/finance/build/
+MEELANO-Android/finance/local.properties
+MEELANO-Android/local.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+.arena/
+__pycache__/

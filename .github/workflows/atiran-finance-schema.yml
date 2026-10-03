@@ -1,0 +1,102 @@
+name: Atiran Finance schema (backup, metadata only)
+
+on:
+  push:
+    branches:
+      - arena/01a102c5-modiriat
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atiran-finance-schema-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  schema:
+    if: contains(github.event.head_commit.message, '[finance-schema-restore]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify and extract the attached backup
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from hashlib import sha256
+          from pathlib import Path
+          from zipfile import ZipFile
+          source = Path("14050603.zip")
+          expected = "71d23aba0547ff69310d046e5f447529edf0d661165f185b2da3845e3487d925"
+          digest = sha256(source.read_bytes()).hexdigest()
+          if digest != expected:
+              raise SystemExit("Backup archive digest differs from the reviewed attachment")
+          with ZipFile(source) as archive:
+              candidates = [item for item in archive.infolist() if item.filename == "14050603"]
+              if len(candidates) != 1 or candidates[0].file_size <= 0:
+                  raise SystemExit("Expected one non-empty backup member named 14050603")
+              destination = Path("${{ runner.temp }}/Atiran2.bak")
+              destination.write_bytes(archive.read(candidates[0]))
+              print("Verified backup archive and extracted one member; bytes=%d; sha256=%s" %
+                    (candidates[0].file_size, digest))
+          PY
+
+      - name: Start an isolated SQL Server container
+        run: |
+          set -euo pipefail
+          SA_PASS="Sa1!$(openssl rand -hex 20)"
+          echo "::add-mask::$SA_PASS"
+          printf 'SA_PASS=%s\n' "$SA_PASS" >> "$GITHUB_ENV"
+          docker run -d --name atiran-finance-schema-sql \
+            -e ACCEPT_EULA=Y \
+            -e MSSQL_PID=Developer \
+            -e "MSSQL_SA_PASSWORD=$SA_PASS" \
+            -p 1433:1433 \
+            mcr.microsoft.com/mssql/server:2022-latest
+          docker exec -u 0 atiran-finance-schema-sql mkdir -p /var/opt/mssql/backup
+          docker cp "${{ runner.temp }}/Atiran2.bak" atiran-finance-schema-sql:/var/opt/mssql/backup/Atiran2.bak
+          docker exec -u 0 atiran-finance-schema-sql chown -R mssql /var/opt/mssql/backup
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Restore locally and read SQL catalog metadata only
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet python-tds
+          python .github/scripts/atiran_finance_schema_snapshot.py "$RUNNER_TEMP/schema.json"
+          test -s "$RUNNER_TEMP/schema.json"
+
+      - name: Encrypt schema snapshot for the authorized workspace
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/finance-schema-encrypted"
+          KEY="$RUNNER_TEMP/finance-schema-aes.key"
+          mkdir -p "$OUT"
+          openssl rand -out "$KEY" 32
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in "$RUNNER_TEMP/schema.json" \
+            -out "$OUT/schema.json.enc" \
+            -pass file:"$KEY"
+          openssl pkeyutl -encrypt -pubin \
+            -inkey tools/finance-schema/schema-public-key.pem \
+            -pkeyopt rsa_padding_mode:oaep \
+            -pkeyopt rsa_oaep_md:sha256 \
+            -pkeyopt rsa_mgf1_md:sha256 \
+            -in "$KEY" -out "$OUT/schema.key.enc"
+          printf 'Encrypted SQL catalog metadata only. Source archive SHA-256: %s.\n' \
+            '71d23aba0547ff69310d046e5f447529edf0d661165f185b2da3845e3487d925' > "$OUT/README.txt"
+          rm -f "$KEY" "$RUNNER_TEMP/schema.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atiran-finance-schema-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/finance-schema-encrypted/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Stop and remove the temporary database
+        if: always()
+        run: docker rm -f atiran-finance-schema-sql >/dev/null 2>&1 || true
