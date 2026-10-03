@@ -55,17 +55,25 @@ jobs:
         if: failure() && github.event_name == 'push'
         run: |
           mkdir -p docs/finance
+          sed 's/derakhshan-install/***/g' "$RUNNER_TEMP/fin-build.log" > "$RUNNER_TEMP/clean.log"
+          grep -n "" "$RUNNER_TEMP/clean.log" > "$RUNNER_TEMP/numbered.log"
           {
             echo "# Finance build diagnostics ($GITHUB_SHA)"
             echo
-            echo '## Merger / task failure'
+            echo '## Manifest merger errors'
             echo '```'
-            grep -n -B 4 -A 30 -E "What went wrong|Execution failed for task|Manifest merger failed|error:" "$RUNNER_TEMP/fin-build.log" | head -160
+            FIRST=$(grep -n -m1 -E " Error:$" "$RUNNER_TEMP/numbered.log" | cut -d: -f1)
+            if [ -n "$FIRST" ]; then awk -v s="$FIRST" 'NR>=s-2 && NR<=s+70' "$RUNNER_TEMP/numbered.log" | sed 's/^[0-9]*://'; fi
+            echo '```'
+            echo
+            echo '## Task failure block'
+            echo '```'
+            grep -n -B 12 -A 14 -E "Execution failed for task" "$RUNNER_TEMP/clean.log" | sed 's/^[0-9]*[-:]//' | head -80
             echo '```'
             echo
             echo '## Java errors'
             echo '```'
-            grep -E "\.java:[0-9]+|cannot find symbol|symbol:|location:|error:" "$RUNNER_TEMP/fin-build.log" | head -80
+            grep -E "\.java:[0-9]+|cannot find symbol|symbol:|location:|error:" "$RUNNER_TEMP/clean.log" | head -80
             echo '```'
           } > docs/finance/build-error.md
           git config user.name "github-actions[bot]"

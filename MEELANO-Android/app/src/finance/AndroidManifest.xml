@@ -10,17 +10,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- The finance app needs the network plus notifications for due-cheque / reconciliation alerts. -->
+    <!-- The finance app is a desktop/office tool: location, microphone, boot jobs, notifications,
+         wifi state and biometric permissions of the shared manifest are removed, exactly the way the
+         tax edition removes them. Only the network is used, for the SQL Server connection. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove" />
 
     <application
         android:name=".finance.FinApp"
