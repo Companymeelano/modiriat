@@ -59,6 +59,8 @@ public final class FinanceActivity extends Activity {
     private String notice = "";
     private long requestSerial = 0;
     private FinanceSchemaInspector.Snapshot schemaSnapshot;
+    private FinanceAuthorizationRepository.AccessSnapshot accessSnapshot;
+    private boolean accessCheckPending;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +76,7 @@ public final class FinanceActivity extends Activity {
     @Override
     protected void onDestroy() {
         requestSerial++;
+        accessSnapshot = null;
         dbExecutor.shutdownNow();
         super.onDestroy();
     }
@@ -182,20 +185,23 @@ public final class FinanceActivity extends Activity {
     }
 
     private void navigate(String route) {
+        if (!"security".equals(route)) accessSnapshot = null;
         currentPage = route;
         renderPage();
     }
 
     private void renderPage() {
         if (pageContent == null) return;
-        if ("connect".equals(currentPage) || "connecting".equals(currentPage)) {
+        if ("connect".equals(currentPage) || "connecting".equals(currentPage) ||
+                ("security".equals(currentPage) && accessSnapshot != null)) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         if (headerStatus != null) {
-            headerStatus.setText(schemaSnapshot == null ? "TEST" : "SCHEMA");
-            headerStatus.setTextColor(schemaSnapshot == null ? WARNING : SUCCESS);
+            String status = accessSnapshot != null ? "ACL" : schemaSnapshot != null ? "SCHEMA" : "TEST";
+            headerStatus.setText(status);
+            headerStatus.setTextColor(accessSnapshot != null || schemaSnapshot != null ? SUCCESS : WARNING);
         }
         pageContent.removeAllViews();
         switch (currentPage) {
@@ -288,9 +294,9 @@ public final class FinanceActivity extends Activity {
     }
 
     private void renderConnectionForm() {
-        addHeading("اتصال آزمایشی مستقیم به SQL Server", "این فرم فقط برای خواندن Metadata در نسخهٔ Debug است؛ اتصال از Release عمداً مسدود است.");
+        addHeading("اتصال مستقیم آزمایشی به SQL Server", "در Debug دو آزمون جدا وجود دارد: Catalog-only و بررسی هویت/ACL همان SQL principal. اتصال Release مسدود است.");
         if (!notice.isEmpty()) addNotice(notice, ERROR);
-        addNotice("از حساب موقت و فقط‌خواندنی استفاده کنید. گواهی TLS نامعتبر/ناشناخته باعث رد اتصال می‌شود. رمز در SharedPreferences، فایل یا Log ذخیره نمی‌شود.", WARNING);
+        addNotice("فقط از SQL principal غیرـsysadmin و غیرـdb_owner با دسترسی محدود استفاده کنید. آزمون هویت فقط ردیف sys_users حساب جاری و ACL همان user_id را می‌خواند؛ password/hash و ردیف مالی خوانده نمی‌شود. گواهی TLS نامعتبر/ناشناخته باعث رد اتصال می‌شود.", WARNING);
 
         EditText host = input("Host یا IP سرور");
         host.setSaveEnabled(false);
@@ -308,7 +314,7 @@ public final class FinanceActivity extends Activity {
         catalog.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
         pageContent.addView(catalog, marginParams(-1, dp(50), 0, dp(5), 0, 8));
 
-        EditText user = input("نام کاربری SQL (فقط‌خواندنی)");
+        EditText user = input("کاربر SQL (برای ACL: principal آتیران)");
         user.setSaveEnabled(false);
         user.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
         pageContent.addView(user, marginParams(-1, dp(50), 0, dp(5), 0, 8));
@@ -321,8 +327,12 @@ public final class FinanceActivity extends Activity {
 
         TextView connect = action("اتصال امن و خواندن Metadata", true);
         connect.setOnClickListener(v -> startSchemaInspection(host, port, catalog, user, password));
-        pageContent.addView(connect, marginParams(-1, dp(52), 0, dp(10), 0, 12));
-        addBodyPanel("حریم اتصال", "نام کاربری و رمز در حافظهٔ اجرای برنامه فقط برای همین درخواست استفاده می‌شوند؛ پس از تلاش، فیلد رمز پاک می‌شود. رشته‌های موقت JVM/درایور ممکن است تا آزادشدن حافظه باقی بمانند. برای Production از این فرم استفاده نکنید.");
+        pageContent.addView(connect, marginParams(-1, dp(52), 0, dp(10), 0, 8));
+
+        TextView verify = action("بررسی هویت SQL و ACL کاربر جاری", false);
+        verify.setOnClickListener(v -> startAccessCheck(host, port, catalog, user, password));
+        pageContent.addView(verify, marginParams(-1, dp(50), 0, 0, 0, 12));
+        addBodyPanel("حریم اتصال", "نام کاربری و رمز SQL فقط برای همین درخواست در حافظه استفاده می‌شوند؛ پس از تلاش، فیلد رمز پاک می‌شود و credential در SharedPreferences، فایل یا Log ذخیره نمی‌شود. رشته‌های موقت JVM/درایور ممکن است تا آزادشدن حافظه باقی بمانند. این فرم برای Production تأیید نشده است.");
     }
 
     private void startSchemaInspection(EditText hostField, EditText portField, EditText catalogField,
@@ -347,6 +357,8 @@ public final class FinanceActivity extends Activity {
         }
 
         notice = "";
+        accessSnapshot = null;
+        accessCheckPending = false;
         currentPage = "connecting";
         final long thisRequest = ++requestSerial;
         renderPage();
@@ -378,6 +390,65 @@ public final class FinanceActivity extends Activity {
         });
     }
 
+    private void startAccessCheck(EditText hostField, EditText portField, EditText catalogField,
+                                  EditText userField, EditText passwordField) {
+        if (!isDebuggableBuild()) {
+            notice = "بررسی هویت SQL فقط در Build قابل‌اشکال‌زدایی مجاز است.";
+            renderPage();
+            return;
+        }
+        final String host = hostField.getText().toString().trim();
+        final String port = portField.getText().toString().trim();
+        final String catalog = catalogField.getText().toString().trim();
+        final String user = userField.getText().toString().trim();
+        final char[] passwordChars = passwordField.getText().toString().toCharArray();
+        passwordField.setText("");
+        if (!validConnectionInput(host, port, catalog, user, passwordChars)) {
+            Arrays.fill(passwordChars, '\0');
+            notice = "ورودی اتصال معتبر نیست؛ Host، Port، Database و کاربر را بررسی کنید.";
+            currentPage = "connect";
+            renderPage();
+            return;
+        }
+
+        notice = "";
+        accessSnapshot = null;
+        accessCheckPending = true;
+        currentPage = "connecting";
+        final long thisRequest = ++requestSerial;
+        renderPage();
+        dbExecutor.execute(() -> {
+            FinanceAuthorizationRepository.AccessSnapshot found = null;
+            String safeError = "";
+            try (Connection connection = openMetadataConnection(host, port, catalog, user, passwordChars)) {
+                FinanceAuthorizationRepository repository = new FinanceAuthorizationRepository();
+                FinanceAuthorizationRepository.AuthenticatedUser identity =
+                        repository.authenticateCurrentSqlPrincipal(connection);
+                found = repository.load(connection, identity);
+            } catch (Exception error) {
+                safeError = safeFailure(error);
+            } finally {
+                Arrays.fill(passwordChars, '\0');
+            }
+            final FinanceAuthorizationRepository.AccessSnapshot result = found;
+            final String failure = safeError;
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed() || thisRequest != requestSerial) return;
+                accessCheckPending = false;
+                if (result != null) {
+                    accessSnapshot = result;
+                    notice = "";
+                    currentPage = "security";
+                } else {
+                    accessSnapshot = null;
+                    notice = failure;
+                    currentPage = "connect";
+                }
+                renderPage();
+            });
+        });
+    }
+
     private boolean validConnectionInput(String host, String port, String catalog, String user, char[] password) {
         if (host.isEmpty() || catalog.isEmpty() || user.isEmpty() || password == null || password.length == 0) return false;
         if (!host.matches("[A-Za-z0-9._:-]{1,253}")) return false;
@@ -395,7 +466,7 @@ public final class FinanceActivity extends Activity {
                                               String user, char[] passwordChars) throws Exception {
         Class.forName("net.sourceforge.jtds.jdbc.Driver");
         String url = "jdbc:jtds:sqlserver://" + host + ":" + port + "/" + catalog +
-                ";loginTimeout=10;socketTimeout=25;appName=AtiranFinanceSchemaInspector;ssl=authenticate;";
+                ";loginTimeout=10;socketTimeout=25;appName=AtiranFinance;ssl=authenticate;";
         Properties properties = new Properties();
         properties.setProperty("user", user);
         properties.setProperty("password", new String(passwordChars));
@@ -415,7 +486,7 @@ public final class FinanceActivity extends Activity {
         String kind = error == null ? "ConnectionError" : error.getClass().getSimpleName();
         String state = error instanceof SQLException ? ((SQLException) error).getSQLState() : null;
         String code = error instanceof SQLException ? String.valueOf(((SQLException) error).getErrorCode()) : "";
-        return "اتصال/خواندن Metadata ناموفق بود: " + kind +
+        return "اتصال SQL یا بررسی مجاز ناموفق بود: " + kind +
                 (state == null || state.trim().isEmpty() ? "" : " • SQLState " + state) +
                 (code.isEmpty() || "0".equals(code) ? "" : " • کد " + code) +
                 ". متن خام خطا عمداً نمایش/ثبت نمی‌شود تا اطلاعات اتصال افشا نشود.";
@@ -426,14 +497,24 @@ public final class FinanceActivity extends Activity {
     }
 
     private void renderConnecting() {
-        addHeading("در حال بررسی کاتالوگ", "فقط اطلاعات ساختاری SQL Server خوانده می‌شوند.");
+        if (accessCheckPending) {
+            addHeading("در حال بررسی هویت و ACL", "هویت SQL با sys_users تطبیق می‌شود؛ فقط مجوزهای کاربر جاری خوانده می‌شوند.");
+        } else {
+            addHeading("در حال بررسی کاتالوگ", "فقط اطلاعات ساختاری SQL Server خوانده می‌شوند.");
+        }
         LinearLayout box = panel();
         ProgressBar progress = new ProgressBar(this);
         box.addView(progress, new LinearLayout.LayoutParams(dp(44), dp(44)));
         box.addView(label("هیچ Query روی رکوردهای مالی اجرا نمی‌شود…", 12, MUTED, false), marginParams(-1, -2, 0, dp(10), 0, 0));
         pageContent.addView(box, marginParams(-1, -2, 0, 0, 0, 12));
         TextView cancel = action("بازگشت", false);
-        cancel.setOnClickListener(v -> { requestSerial++; currentPage = "connect"; renderPage(); });
+        cancel.setOnClickListener(v -> {
+            requestSerial++;
+            accessCheckPending = false;
+            accessSnapshot = null;
+            currentPage = "connect";
+            renderPage();
+        });
         pageContent.addView(cancel, marginParams(-1, dp(46), 0, 0, 0, 10));
     }
 
@@ -567,15 +648,21 @@ public final class FinanceActivity extends Activity {
 
     private void renderSecurity() {
         addHeading("وضعیت امنیت و آمادگی", "این صفحه وضعیت فعلی پیاده‌سازی را شفاف می‌کند؛ PASS فقط با آزمون واقعی صادر می‌شود.");
+        if (accessSnapshot != null) {
+            addStatusCard("SQL principal در این درخواست authenticate شد", "RoleID واقعی: " + accessSnapshot.roleId +
+                    " • MenuID برگشتی از ProcMenuPermission: " + accessSnapshot.permittedMenuIds().size() +
+                    " • Menu/Form قابل نگاشت از vw_MenuInfo: " + accessSnapshot.permittedMenus().size() +
+                    " • snapshot فقط در حافظه است؛ هیچ ردیف مالی خوانده نشد.", SUCCESS);
+        }
         addStatusCard("Database credential در Source/APK: ندارد", "Finance یک ماژول مستقل است و از credentialهای مبهم‌شدهٔ MainActivity قدیمی استفاده نمی‌کند.", SUCCESS);
-        addStatusCard("اتصال مستقیم SQL: Debug و Metadata-only", "در Release، شروع اتصال مستقیم در کد مسدود است. این مسیر برای دادهٔ مالی Production تأیید نشده.", WARNING);
+        addStatusCard("اتصال مستقیم SQL: Debug و فقط Metadata/ACL", "در Release، شروع اتصال مستقیم در کد مسدود است. مسیر احراز هویت فقط SQL principal محدود و ACL همان حساب را می‌خواند؛ برای دادهٔ مالی Production تأیید نشده.", WARNING);
         addStatusCard("TLS: گواهی باید تأیید شود", "اتصال از jTDS با ssl=authenticate درخواست می‌شود؛ سازگاری گواهی، TLS و نسخهٔ واقعی Driver هنوز آزموده نشده است.", WARNING);
-        addStatusCard("Atiran Authentication / Role: PROTOTYPE — NOT VERIFIED", "آداپتور fail-closed برای اتصال SQL principal به sys_users و dbo.get_role_id وجود دارد، اما به UI وصل یا روی سرور زنده آزموده نشده است؛ session و Permission مؤثر تأیید نشده و دسترسی دادهٔ مالی ممنوع است.", ERROR);
-        addStatusCard("ACL واقعی: شواهد کاتالوگ موجود، مجوز کاربر نامعلوم", "dbo.ProcMenuPermission فقط MenuID را با وجود grant فرم و زیرسیستم برمی‌گرداند و PermissionId را فیلتر نمی‌کند. جزئیات در ACCESS-CONTROL-fa.md ثبت شده است.", WARNING);
+        addStatusCard("Atiran Authentication / Role: PROTOTYPE — NOT VERIFIED LIVE", "دکمهٔ Debug هویت SQL را فقط با تطبیق یکتای sys_users، active/IsLocked و dbo.get_role_id بررسی می‌کند؛ روی سرور زنده آزموده و به session عملیاتی وصل نشده است. دادهٔ مالی ممنوع است.", accessSnapshot == null ? ERROR : WARNING);
+        addStatusCard("ACL واقعی: قرارداد کاتالوگ بررسی شده؛ policy action باز است", "dbo.ProcMenuPermission فقط MenuID را با وجود grant فرم و زیرسیستم برمی‌گرداند و PermissionId را فیلتر نمی‌کند؛ Permissionهای جداگانه نمایش داده می‌شوند و ترکیب آن‌ها حدس زده نمی‌شود.", WARNING);
         addStatusCard("SQL provisioning خطرناک: استفاده نمی‌شود", "تعریف dbo.Create_Login به SQL login نقش sysadmin و db_owner می‌دهد؛ Finance آن را اجرا نمی‌کند. اتصال مستقیم Release تا تأیید SQL principal محدود و مجوز سمت سرور مسدود است.", ERROR);
         addStatusCard("نوشتن مالی / Audit / idempotency: غیرفعال", "این نسخه هیچ عملیات INSERT / UPDATE / DELETE / DDL مالی ندارد.", SUCCESS);
         addStatusCard("Offline cache: ندارد", "هیچ داده یا credential مالی به SharedPreferences، فایل یا Backup نوشته نمی‌شود.", SUCCESS);
-        addBodyPanel("برای ادامه", "پس از تأیید Schema و Authentication واقعی، هر منبع مالی باید جداگانه نگاشت و آزمون شود. هر عملیات نوشتنی باید سمت SQL با Permission، Transaction، Audit و کلید idempotency محافظت شود؛ در این نسخه عمداً پیاده‌سازی نشده است.");
+        addBodyPanel("برای ادامه", "پس از تأیید Schema زنده و policy مؤثر، هر منبع مالی باید جداگانه نگاشت و آزمون شود. هر عملیات نوشتنی باید سمت SQL/سرویس قابل‌اعتماد با Permission، Transaction، Audit و کلید idempotency محافظت شود؛ در این نسخه عمداً پیاده‌سازی نشده است.");
     }
 
     private void addHeading(String title, String subtitle) {

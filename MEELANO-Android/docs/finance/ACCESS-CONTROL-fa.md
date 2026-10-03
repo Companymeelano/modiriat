@@ -62,7 +62,7 @@ Procedure منوهایی را برمی‌گرداند که `security.Menu.FormID
 
 ## منطق آداپتور Android
 
-`finance/src/main/java/ir/atiran/finance/FinanceAuthorizationRepository.java` یک آداپتور read-only است و در UI استفاده نمی‌شود. ابتدا هویت SQL جاری را از `SUSER_SNAME()` و `ORIGINAL_LOGIN()` می‌گیرد، SQL principal privileged را رد می‌کند و تطبیق دقیق DB با یک `sys_users` فعال/باز را می‌طلبد؛ سپس نتیجهٔ `dbo.get_role_id` را با `sys_users.role_id` مقایسه می‌کند. نگاشت SQL principal ↔ `user_name` هنوز روی سرور زنده تأیید نشده است. پس از آن آداپتور:
+`finance/src/main/java/ir/atiran/finance/FinanceAuthorizationRepository.java` یک آداپتور read-only است که فقط از دکمهٔ ACL در فرم Debug فراخوانی می‌شود؛ صفحهٔ مالی عملیاتی از نتیجه استفاده نمی‌کند. ابتدا هویت SQL جاری را از `SUSER_SNAME()` و `ORIGINAL_LOGIN()` می‌گیرد، SQL principal privileged را رد می‌کند و تطبیق دقیق DB با یک `sys_users` فعال/باز را می‌طلبد؛ سپس نتیجهٔ `dbo.get_role_id` را با `sys_users.role_id` مقایسه می‌کند. نگاشت SQL principal ↔ `user_name` هنوز روی سرور زنده تأیید نشده است. پس از آن آداپتور:
 
 1. شناسه‌های منو را از `dbo.ProcMenuPermission(?)` می‌گیرد؛
 2. نام‌های فرم و زیرسیستم را از `dbo.vw_MenuInfo` می‌خواند و فقط MenuIDهای برگشتی را نگه می‌دارد؛
