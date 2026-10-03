@@ -1,71 +1,120 @@
-# Finance build diagnostics (3500cf601ff36beb532e807c32b30afdb0ab1972)
+# Finance build diagnostics (51730349a6e85e51d73ab69b3440bc4c7be5fc7e)
 
 ## Manifest merger errors
 ```
-
-> Task :app:processFinanceDebugMainManifest FAILED
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/AndroidManifest.xml:19:9-43 Error:
-	Attribute application@icon value=(@mipmap/ic_fin_launcher) from AndroidManifest.xml:19:9-43
-	is also present at AndroidManifest.xml:19:9-43 value=(@mipmap/ic_launcher).
-	Suggestion: add 'tools:replace="android:icon"' to <application> element at AndroidManifest.xml:25:5-54:19 to override.
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/AndroidManifest.xml:21:9-41 Error:
-	Attribute application@label value=(@string/fin_app_name) from AndroidManifest.xml:21:9-41
-	is also present at AndroidManifest.xml:21:9-41 value=(@string/app_name).
-	Suggestion: add 'tools:replace="android:label"' to <application> element at AndroidManifest.xml:25:5-54:19 to override.
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/AndroidManifest.xml:20:9-54 Error:
-	Attribute application@roundIcon value=(@mipmap/ic_fin_launcher_round) from AndroidManifest.xml:20:9-54
-	is also present at AndroidManifest.xml:20:9-54 value=(@mipmap/ic_launcher_round).
-	Suggestion: add 'tools:replace="android:roundIcon"' to <application> element at AndroidManifest.xml:25:5-54:19 to override.
-
-See https://developer.android.com/r/studio-ui/build/manifest-merger for more information about the manifest merger.
-
-
-> Task :app:parseFinanceDebugLocalResources
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791066663502.json
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:processFinanceDebugMainManifest'.
-> Manifest merger failed with multiple errors, see logs
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 33s
-11 actionable tasks: 11 executed
 ```
 
 ## Task failure block
 ```
-	is also present at AndroidManifest.xml:20:9-54 value=(@mipmap/ic_launcher_round).
-	Suggestion: add 'tools:replace="android:roundIcon"' to <application> element at AndroidManifest.xml:25:5-54:19 to override.
+  reason: actual and formal argument lists differ in length
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+45 errors
 
-See https://developer.android.com/r/studio-ui/build/manifest-merger for more information about the manifest merger.
-
-
-> Task :app:parseFinanceDebugLocalResources
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791066663502.json
+> Task :app:compileFinanceDebugJavaWithJavac FAILED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1791066744410.json
+[Incubating] Problems report is available at: file:///home/runner/work/modiriat/modiriat/MEELANO-Android/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':app:processFinanceDebugMainManifest'.
-> Manifest merger failed with multiple errors, see logs
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 33s
-11 actionable tasks: 11 executed
+Execution failed for task ':app:compileFinanceDebugJavaWithJavac'.
+> Compilation failed; see the compiler output below.
+  /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:3: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+  import ir.meelano.android.MeelanoJalali;
+                           ^
+  /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:106: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+          String monthStart = MeelanoJalali.monthStart(today);
+                              ^
+  /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:186: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+          int mismatched = mismatchCount(c, MeelanoJalali.monthStart(today), today);
+                                            ^
+  /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:741: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+          o.put("inMonth", sum(c, "SELECT ISNULL(SUM(BED),0) AS v" + live + " AND DATE>=? AND DATE<=?", MeelanoJalali.monthStart(today), today));
+                                                                                                        ^
+  /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:742: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
 ```
 
 ## Java errors
 ```
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinDb.java:496: error: method text(Connection,String,Object...) is already defined in class FinDb
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:3: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:15: error: cannot find symbol
+  symbol:   static text
+  location: class FinDb
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/AtiranFinanceActivity.java:309: error: cannot find symbol
+  symbol:   method fa(serverToda[...]Today)
+  location: class AtiranFinanceActivity
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:85: error: cannot find symbol
+  symbol:   method text(Connection,String)
+  location: class FinQueries
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:106: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:186: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:741: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:742: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:745: error: cannot find symbol
+  symbol:   method text(Connection,String)
+  location: class FinQueries
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinQueries.java:746: error: cannot find symbol
+  symbol:   method text(Connection,String)
+  location: class FinQueries
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:58: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:58: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:60: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:63: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:64: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:72: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:74: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:78: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:80: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:81: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:85: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:87: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:112: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:114: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinFmt.java:116: error: cannot find symbol
+  symbol:   variable MeelanoJalali
+  location: class FinFmt
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:79: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:80: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:81: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:82: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:83: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:84: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:87: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:88: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:89: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenCustomer.java:91: error: method kv in class FinScreen cannot be applied to given types;
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenHome.java:68: error: MeelanoJalali is not public in ir.meelano.android; cannot be accessed from outside package
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/finance/java/ir/meelano/android/finance/FinScreenHome.java:252: error: cannot find symbol
+  symbol:   class TextView
+  location: class FinScreenHome
 ```
