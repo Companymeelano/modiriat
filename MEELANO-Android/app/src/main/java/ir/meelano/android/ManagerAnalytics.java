@@ -894,7 +894,12 @@ final class ManagerAnalytics {
      * together brings the same figures in about a second, and keeps the per-section timings and error
      * entries so a slow or failing card is still traceable from the screen.
      */
-    static JSONObject fetchParallel(int range) throws Exception {
+    static JSONObject fetchParallel(int range) throws Exception { return fetchParallel(range, null); }
+
+    /** Called as soon as one section has its figures, on the worker thread that ran it. */
+    interface SectionDone { void done(String key, Object value, long ms); }
+
+    static JSONObject fetchParallel(int range, SectionDone listener) throws Exception {
         JSONObject out = new JSONObject();
         JSONArray errors = new JSONArray();
         JSONObject timings = new JSONObject();
@@ -924,6 +929,11 @@ final class ManagerAnalytics {
                     } finally {
                         took[idx] = System.currentTimeMillis() - t0;
                         values[idx] = box;
+                        // Let the screen paint the KPI row as soon as the numbers exist instead of
+                        // waiting for the slowest section (the manager sees figures in ~1 s).
+                        if (listener != null) {
+                            try { listener.done(jobs[idx].key, failures[idx] != null ? null : box.opt("v"), took[idx]); } catch (Throwable ignored) { }
+                        }
                         done.countDown();
                     }
                 });

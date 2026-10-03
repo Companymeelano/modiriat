@@ -256,6 +256,9 @@ public class MainActivity extends Activity {
     private String managerExecCacheJson;
     /** Wall time of the last executive load (ms): shown to the manager so «کند بودن» is measurable. */
     private long managerExecLoadMs;
+    /** The sections painted first: sales, purchases, receivables and cheque buckets. */
+    private static final java.util.List<String> MANAGER_CORE_SECTIONS =
+            java.util.Arrays.asList("sales", "purchases", "receivables", "checkBuckets");
     private String managerDrillKind = "sales";
     private int managerReportListCap = 5;
     private String managerReportsCacheJson;
@@ -12793,9 +12796,30 @@ public class MainActivity extends Activity {
             content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
         }
         // The twelve KPI sections run together on the connection pool instead of queueing one after the
-        // other (~1 s instead of ~5 s warm, ~18 s on the very first load on a ~180 ms link).
+        // other (~1 s instead of ~5 s warm, ~18 s on the very first load on a ~180 ms link). The four
+        // sections the manager looks at first are painted the moment they arrive, so the page is not a
+        // grey skeleton while the slower cards (products, visitors, feed) are still on the wire.
         final long started = System.currentTimeMillis();
-        runDb(() -> ManagerAnalytics.fetchParallel(managerReportRange).toString(), new DbCallback() {
+        final JSONObject partial = new JSONObject();
+        final java.util.HashSet<String> ready = new java.util.HashSet<>();
+        final java.util.concurrent.atomic.AtomicBoolean painted = new java.util.concurrent.atomic.AtomicBoolean(false);
+        runDb(() -> ManagerAnalytics.fetchParallel(managerReportRange, (key, value, ms) -> {
+            synchronized (partial) {
+                if (value == null) return;
+                try {
+                    partial.put(key, value);
+                    partial.put("range", managerReportRange);
+                    partial.put("syncAt", started);
+                    partial.put("timings", new JSONObject());
+                } catch (Exception ignored) { }
+                ready.add(key);
+                if (painted.get() || !ready.containsAll(MANAGER_CORE_SECTIONS)) return;
+                if (System.currentTimeMillis() - started < 600) return;    // a fast load paints once
+                painted.set(true);
+                final String snapshot = partial.toString();
+                runOnUiThread(() -> { if (!isFinishing()) renderManagerExecutive(safeJson(snapshot)); });
+            }
+        }).toString(), new DbCallback() {
             @Override public void ok(String body) {
                 managerExecLoadMs = System.currentTimeMillis() - started;
                 managerExecCacheJson = body;
