@@ -50,6 +50,7 @@ jobs:
           rm -f "$RUNNER_TEMP/k.bin" "$RUNNER_TEMP/probe.json" "$RUNNER_TEMP/probe.json.gz"
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git add tools/atiran-probe/probe.json.gz.enc tools/atiran-probe/probe.key.enc
+          cp "$RUNNER_TEMP/probe.json.diag" tools/atiran-probe/probe-diag.json 2>/dev/null || true
+          git add tools/atiran-probe/probe.json.gz.enc tools/atiran-probe/probe.key.enc tools/atiran-probe/probe-diag.json
           git commit -m "Atiran probe result (encrypted) [skip ci]" || echo "No changes"
           for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

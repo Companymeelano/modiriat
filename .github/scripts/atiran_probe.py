@@ -79,11 +79,13 @@ def main():
     if os.environ.get("PROBE_STAGE") == "3":
         stage3(conn, q, safe, out)
         json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, default=str)
+        write_diag(out)
         print("stage3 errors:", len(out["errors"]))
         return
     if os.environ.get("PROBE_STAGE") == "2":
         stage2(q, safe)
         json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, default=str)
+        write_diag(out)
         print("stage2 sections:", len(out) - 1, "errors:", len(out["errors"]))
         return
 
@@ -200,6 +202,7 @@ def main():
             out["errors"].append("reported row %s: %s" % (tbl, str(ex)[:200]))
 
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, default=str)
+    write_diag(out)
     print("probe ok: tables=%d columns=%d samples=%d plan_pish=%d errors=%d" % (
         len(tables), len(out.get("columns", {}).get("rows", [])), len(out["samples"]),
         len(out.get("plan_cache_pish", {}).get("rows", [])), len(out["errors"])))
@@ -297,9 +300,21 @@ def stage3(conn, q, safe, out):
     out["stage3"] = steps
 
 
+def write_diag(out):
+    """Plaintext sidecar with ONLY error strings and section names (schema-level info already public
+    via the app source). Lets maintainers debug probe runs without the private key."""
+    try:
+        diag = {"sections": sorted(out.keys()), "errors": out.get("errors", [])}
+        with open(OUT + ".diag", "w", encoding="utf-8") as f:
+            json.dump(diag, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
 if __name__ == "__main__":
     try:
         main()
     except Exception as ex:  # never print connection details
         json.dump({"errors": ["fatal: %s" % type(ex).__name__, str(ex)[:120].replace(".", "·")]}, open(OUT, "w"))
+        write_diag({"errors": ["fatal: %s: %s" % (type(ex).__name__, str(ex)[:160])]})
         print("probe failed:", type(ex).__name__)
