@@ -130,6 +130,37 @@ def main():
                 stream += "|" + "|".join("%s=%s" % (t, ",".join(perw[t])) for t in sorted(perw))
             except Exception as ex:
                 stream += "|ANBAR_ERR=" + type(ex).__name__
+            # ---- live data diagnostics: why do reports look empty? (exact app logic, 30d window) ----
+            def one(sql):
+                r = q(sql)
+                v = r["rows"][0][0] if r["rows"] else None
+                return "none" if v is None else str(v)
+            try:
+                maxd = "(SELECT MAX(TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))) FROM dbo.sailfact)"
+                rng = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))>=DATEADD(day,-29," + maxd + ")"
+                stream += "|SAIL_TOTAL=" + one("SELECT COUNT(*) FROM dbo.sailfact")
+                stream += "|SAIL_MAXDATE=" + one("SELECT MAX(TRY_CONVERT(nvarchar(20),[date])) FROM dbo.sailfact")
+                av = q("SELECT TOP 5 TRY_CONVERT(nvarchar(20),[active]), COUNT(*) FROM dbo.sailfact GROUP BY TRY_CONVERT(nvarchar(20),[active]) ORDER BY COUNT(*) DESC")
+                stream += "|SAIL_ACTIVE=" + ",".join("%s:%s" % (str(x[0]), str(x[1])) for x in av["rows"])
+                dv = q("SELECT TOP 5 TRY_CONVERT(nvarchar(20),[Deleted]), COUNT(*) FROM dbo.sailfact GROUP BY TRY_CONVERT(nvarchar(20),[Deleted]) ORDER BY COUNT(*) DESC")
+                stream += "|SAIL_DELETED=" + ",".join("%s:%s" % (str(x[0]), str(x[1])) for x in dv["rows"])
+                stv = q("SELECT TOP 5 TRY_CONVERT(nvarchar(20),[Status]), COUNT(*) FROM dbo.sailfact GROUP BY TRY_CONVERT(nvarchar(20),[Status]) ORDER BY COUNT(*) DESC")
+                stream += "|SAIL_STATUS=" + ",".join("%s:%s" % (str(x[0]), str(x[1])) for x in stv["rows"])
+                stream += "|SAIL_30D=" + one("SELECT COUNT(*) FROM dbo.sailfact WHERE " + rng)
+                stream += "|SAIL_SUM30=" + one("SELECT SUM(TRY_CONVERT(decimal(19,2),[all])) FROM dbo.sailfact WHERE " + rng)
+                dd = q("SELECT COUNT(*), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[all])),0) FROM (SELECT [all], ROW_NUMBER() OVER(PARTITION BY NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),[shfacfo]))),N'') ORDER BY (SELECT NULL)) rn FROM dbo.sailfact WHERE " + rng + ") z WHERE z.rn=1")
+                stream += "|SAIL_DEDUP30=" + ("%s/%s" % (str(dd["rows"][0][0]), str(dd["rows"][0][1])) if dd["rows"] else "none")
+                av30 = q("SELECT TOP 5 TRY_CONVERT(nvarchar(20),[active]), COUNT(*) FROM dbo.sailfact WHERE " + rng + " GROUP BY TRY_CONVERT(nvarchar(20),[active]) ORDER BY COUNT(*) DESC")
+                stream += "|SAIL_ACTIVE30=" + ",".join("%s:%s" % (str(x[0]), str(x[1])) for x in av30["rows"])
+            except Exception as ex:
+                stream += "|DATA_ERR=" + type(ex).__name__ + ":" + str(ex)[:160].replace("\n", " ")
+            try:
+                stream += "|BUY_TOTAL=" + one("SELECT COUNT(*) FROM dbo.buyfact")
+                stream += "|ANBARS=" + one("SELECT COUNT(*) FROM dbo.anbars")
+                stream += "|INV_ANBARS=" + one("SELECT COUNT(*) FROM dbo.inventory_anbars")
+                stream += "|VISITORS=" + one("SELECT COUNT(*) FROM dbo.visitors")
+            except Exception as ex:
+                stream += "|DATA2_ERR=" + type(ex).__name__
             b = base64.b64encode(stream.encode("utf-8")).decode("ascii")
             part = 0
             for i in range(0, len(b), 3000):
