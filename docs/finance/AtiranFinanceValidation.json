@@ -1,0 +1,1330 @@
+{
+ "ok": true,
+ "generated_utc": "2026-10-03T22:10:52.148035Z",
+ "errors": [
+  "role_table: (\"Invalid object name 'dbo.role'.\", None)",
+  "user_role: (\"Invalid object name 'dbo.UserRole'.\", None)",
+  "pos_join: ('Cannot perform an aggregate function on an expression containing an aggregate or a subquery. Cannot perform an aggregate function on an expression containing an aggregate or a subquery. Cannot perform an aggregate function on an expression containing an aggregate or a subquery. Cannot perform an a"
+ ],
+ "sections": {
+  "clock": [
+   {
+    "jalali_today": "1405/07/12",
+    "gregorian_now": "2026-10-04",
+    "time_now": "01:40:54"
+   }
+  ],
+  "check_status_names": [
+   {
+    "GetStatusID": 1,
+    "StatusName": "دريافت در خريد و فروش"
+   },
+   {
+    "GetStatusID": 2,
+    "StatusName": "دريافت در حسابداري"
+   },
+   {
+    "GetStatusID": 3,
+    "StatusName": "چك اول دوره"
+   },
+   {
+    "GetStatusID": 4,
+    "StatusName": "خرج چك در پرداخت خريد و فروش"
+   },
+   {
+    "GetStatusID": 5,
+    "StatusName": "‌خرج چك در پرداخت حسابداري"
+   },
+   {
+    "GetStatusID": 6,
+    "StatusName": "خرج چك در سرفصل"
+   },
+   {
+    "GetStatusID": 7,
+    "StatusName": "خرج چك در خزانه داري"
+   },
+   {
+    "GetStatusID": 8,
+    "StatusName": "اخذ چك از مشتري در خزانه داري"
+   },
+   {
+    "GetStatusID": 9,
+    "StatusName": "اخذ چك از سرفصل در خزانه داري"
+   },
+   {
+    "GetStatusID": 10,
+    "StatusName": "اخذ چك از تفصيل در خزنه داري"
+   },
+   {
+    "GetStatusID": 11,
+    "StatusName": "برگشت چك به صندوق در ويرايش دريافت"
+   },
+   {
+    "GetStatusID": 12,
+    "StatusName": "<text 43>"
+   },
+   {
+    "GetStatusID": 13,
+    "StatusName": "برگشت چك به صندوق در ويرايش پرداخت"
+   },
+   {
+    "GetStatusID": 14,
+    "StatusName": "<text 43>"
+   },
+   {
+    "GetStatusID": 15,
+    "StatusName": "واگذاري چك به حساب در خزانه داري"
+   },
+   {
+    "GetStatusID": 16,
+    "StatusName": "<text 59>"
+   },
+   {
+    "GetStatusID": 17,
+    "StatusName": "<text 58>"
+   },
+   {
+    "GetStatusID": 18,
+    "StatusName": "<text 59>"
+   },
+   {
+    "GetStatusID": 19,
+    "StatusName": "وصول چك بانك در خزانه داري"
+   },
+   {
+    "GetStatusID": 20,
+    "StatusName": "وصول چك صندوق در خزانه داري"
+   },
+   {
+    "GetStatusID": 21,
+    "StatusName": "استرداد چك دريافتي"
+   },
+   {
+    "GetStatusID": 22,
+    "StatusName": "ثبت چك برگشتي چك هاي بانك"
+   },
+   {
+    "GetStatusID": 23,
+    "StatusName": "ثبت چك برگشتي چك هاي صندوق"
+   },
+   {
+    "GetStatusID": 24,
+    "StatusName": "رفع سوء اثر چك"
+   },
+   {
+    "GetStatusID": 25,
+    "StatusName": "دريافت چك اماني"
+   }
+  ],
+  "roles_table": [
+   {
+    "id": 1,
+    "name": "مدير",
+    "SubSystemId": null
+   },
+   {
+    "id": 2,
+    "name": "مدير فروش",
+    "SubSystemId": null
+   },
+   {
+    "id": 3,
+    "name": "مدير حسابداري",
+    "SubSystemId": null
+   },
+   {
+    "id": 4,
+    "name": "حسابدار",
+    "SubSystemId": null
+   },
+   {
+    "id": 5,
+    "name": "ويزيتور",
+    "SubSystemId": null
+   },
+   {
+    "id": 6,
+    "name": "کاربر",
+    "SubSystemId": null
+   },
+   {
+    "id": 7,
+    "name": "مدير شعبه",
+    "SubSystemId": null
+   }
+  ],
+  "role_table": [],
+  "user_role": [],
+  "checktypes": [
+   {
+    "ID": 1,
+    "Desciption": "چك هاي كاغذي"
+   },
+   {
+    "ID": 2,
+    "Desciption": "چك هاي الكترونيك"
+   }
+  ],
+  "tasvieh_types": [
+   {
+    "TasviehID": 1,
+    "Description": "نقدی",
+    "TedRooz": 3
+   },
+   {
+    "TasviehID": 2,
+    "Description": "30 روزه",
+    "TedRooz": 30
+   }
+  ],
+  "bank_list": [
+   {
+    "RDF": 1,
+    "BANKNAME": "ملي#حذف شده#",
+    "SHHE": " ملي 0114686653008",
+    "ShabaNumber": "IR",
+    "MAN": "<1e3",
+    "IsPos": false,
+    "IsCard": false,
+    "Active": false,
+    "BankRdf": 1,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 2,
+    "BANKNAME": "ملي",
+    "SHHE": "ملي0114686653008",
+    "ShabaNumber": "IR",
+    "MAN": "<1e9",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 1,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 3,
+    "BANKNAME": "ملت",
+    "SHHE": " ملت كيان آباد 6011460952",
+    "ShabaNumber": "IR",
+    "MAN": "<1e12",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 3,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 4,
+    "BANKNAME": "سپه",
+    "SHHE": " سپه مركزي7304869706",
+    "ShabaNumber": "IR",
+    "MAN": "<1e9",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 4,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 5,
+    "BANKNAME": "سپه",
+    "SHHE": " دسته چك 7800295807",
+    "ShabaNumber": "IR",
+    "MAN": "<1e9",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 4,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 6,
+    "BANKNAME": "تجارت",
+    "SHHE": " تجارت 6085001432",
+    "ShabaNumber": "IR",
+    "MAN": "<1e9",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 2,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 7,
+    "BANKNAME": "ملت",
+    "SHHE": "73062853 ملت بابا",
+    "ShabaNumber": "IR",
+    "MAN": "<1e12",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 3,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   },
+   {
+    "RDF": 8,
+    "BANKNAME": "سپه",
+    "SHHE": "67950100105368 سپه مصطفي",
+    "ShabaNumber": "IR",
+    "MAN": "<1e12",
+    "IsPos": true,
+    "IsCard": false,
+    "Active": true,
+    "BankRdf": 4,
+    "AccountType": 1,
+    "BranchCode": null,
+    "HaveEChecks": false,
+    "BlackList": false
+   }
+  ],
+  "bank_flags": [
+   {
+    "banks": 8,
+    "active": 7,
+    "pos_banks": 7,
+    "echeck_banks": 0,
+    "with_shaba": 8
+   }
+  ],
+  "kinds_cust_act": [
+   {
+    "act_id": 0,
+    "n": 2724,
+    "sample_text": "حساب قبلي"
+   },
+   {
+    "act_id": 55,
+    "n": 993,
+    "sample_text": "فروش فاکتور شماره1 به علي عليزاده-"
+   },
+   {
+    "act_id": 20,
+    "n": 993,
+    "sample_text": "فروش فاكتور شماره 1  به علي عليزاد"
+   },
+   {
+    "act_id": 1,
+    "n": 857,
+    "sample_text": "قبض دريافت 100-ش.پوز سيار يك5768  "
+   },
+   {
+    "act_id": 9,
+    "n": 129,
+    "sample_text": "قبض پرداخت 100-ش.حواله    - حقوق ش"
+   },
+   {
+    "act_id": 3,
+    "n": 70,
+    "sample_text": "قبض دريافت 104 - بانك ملي رديف 35-"
+   },
+   {
+    "act_id": 44,
+    "n": 67,
+    "sample_text": " قبض پرداخت  103 - خرج چک رديف 83 "
+   },
+   {
+    "act_id": 11,
+    "n": 56,
+    "sample_text": "خريد شماره فاکتور1- بارنامه "
+   },
+   {
+    "act_id": 118,
+    "n": 50,
+    "sample_text": "اصلاح سند برگشت از مشتري10()"
+   },
+   {
+    "act_id": 27,
+    "n": 50,
+    "sample_text": "اصلاح برگشت از مشتري 10 /  "
+   },
+   {
+    "act_id": 100,
+    "n": 47,
+    "sample_text": "ابطال به سرفصل ها  از مشتري (07كري"
+   },
+   {
+    "act_id": 10,
+    "n": 32,
+    "sample_text": "انتقال وجه بين طرف حساب‌ها از04 ام"
+   },
+   {
+    "act_id": 17,
+    "n": 23,
+    "sample_text": "سند ابطال فروش 10-ش.ف394"
+   },
+   {
+    "act_id": 114,
+    "n": 23,
+    "sample_text": "سند ابطال فروش 10-ش.ف394()"
+   },
+   {
+    "act_id": 54,
+    "n": 12,
+    "sample_text": "تخفيف درق100/ "
+   },
+   {
+    "act_id": 2,
+    "n": 12,
+    "sample_text": "قبض پرداخت 1 - نقدي -"
+   },
+   {
+    "act_id": 4,
+    "n": 10,
+    "sample_text": "قبض پرداخت 62 - بانك سپه رديف 102-"
+   },
+   {
+    "act_id": 101,
+    "n": 9,
+    "sample_text": "ابطال از سرفصل ها از سرفصل پرداخت "
+   },
+   {
+    "act_id": 56,
+    "n": 4,
+    "sample_text": "سند برگشت از فروش 1-ش.ف694()"
+   },
+   {
+    "act_id": 21,
+    "n": 4,
+    "sample_text": "سند برگشت از فروش 1-ش.ف694"
+   },
+   {
+    "act_id": 113,
+    "n": 4,
+    "sample_text": "ثبت طلب  / شماره قبض1 / پورسانت5/1"
+   },
+   {
+    "act_id": 26,
+    "n": 3,
+    "sample_text": "سند برگشت به تامين كننده 1 /  "
+   },
+   {
+    "act_id": 14,
+    "n": 3,
+    "sample_text": "تخفيف بابت  به شماره قبض 3"
+   },
+   {
+    "act_id": 7,
+    "n": 1,
+    "sample_text": "گرفتن تخفيف بابت   به شماره قبض 1"
+   }
+  ],
+  "kinds_ban_act": [
+   {
+    "act_id": 8,
+    "n": 830,
+    "sample_text": "زهرا پيماني فروشاني - حواله  به شم"
+   },
+   {
+    "act_id": 78,
+    "n": 131,
+    "sample_text": "از حساب جاري تجارت (شماره حساب  تج"
+   },
+   {
+    "act_id": 9,
+    "n": 129,
+    "sample_text": " - ------ - حواله -- -- --  به شما"
+   },
+   {
+    "act_id": 80,
+    "n": 108,
+    "sample_text": "از  تجارت 6085001432 طي كارت به كا"
+   },
+   {
+    "act_id": 77,
+    "n": 19,
+    "sample_text": "ابطال از سرفصل انبار (زير سرفصل حر"
+   },
+   {
+    "act_id": 76,
+    "n": 8,
+    "sample_text": "موجودي قبلي"
+   },
+   {
+    "act_id": 50,
+    "n": 6,
+    "sample_text": "  از صندوق / فيش  "
+   },
+   {
+    "act_id": 75,
+    "n": 1,
+    "sample_text": "پ چک ر 51سر 224585 - شركت شيرين عس"
+   }
+  ],
+  "kinds_COW": [
+   {
+    "act_id": 62,
+    "n": 31,
+    "sample_text": "ابطال از صندوق به سرفصل انبار و زي"
+   },
+   {
+    "act_id": 1,
+    "n": 27,
+    "sample_text": "قبض دريافت 15 - نقدي -هادي فيلي.پر"
+   },
+   {
+    "act_id": 2,
+    "n": 12,
+    "sample_text": "قبض پرداخت 1 - نقدي -بهمن پروتئين "
+   },
+   {
+    "act_id": 50,
+    "n": 6,
+    "sample_text": "واريز به  تجارت 6085001432  فيش با"
+   },
+   {
+    "act_id": 71,
+    "n": 1,
+    "sample_text": "موجودي اوليه صندوق"
+   }
+  ],
+  "agree_receipt_total": [
+   {
+    "receipts": 812,
+    "agreeing": 694,
+    "mismatch": 118
+   }
+  ],
+  "agree_customer_balance": [
+   {
+    "compared": 2724,
+    "agreeing": 2724,
+    "mismatch": 0,
+    "negative_balance": 218
+   }
+  ],
+  "agree_invoice_lines": [
+   {
+    "invoices": 1168,
+    "agreeing": 458,
+    "mismatch": 710
+   }
+  ],
+  "receipt_breakdown": [
+   {
+    "receipts": 812,
+    "with_cash": 27,
+    "with_checks": 53,
+    "check_rows": 70,
+    "linked_to_invoice": 3
+   }
+  ],
+  "getchk_by_status": [
+   {
+    "status_id": 5,
+    "status_name": "‌خرج چك در پرداخت حسابداري",
+    "n": 67,
+    "returned": 0,
+    "deposited": 0,
+    "withdrawn": 67
+   },
+   {
+    "status_id": 8,
+    "status_name": "اخذ چك از مشتري در خزانه داري",
+    "n": 27,
+    "returned": 0,
+    "deposited": 0,
+    "withdrawn": 27
+   },
+   {
+    "status_id": 1,
+    "status_name": "دريافت در خريد و فروش",
+    "n": 21,
+    "returned": 0,
+    "deposited": 0,
+    "withdrawn": 13
+   },
+   {
+    "status_id": 6,
+    "status_name": "خرج چك در سرفصل",
+    "n": 3,
+    "returned": 0,
+    "deposited": 0,
+    "withdrawn": 0
+   }
+  ],
+  "getchk_due_windows": [
+   {
+    "all_checks": 118,
+    "due_today": 0,
+    "overdue": 29,
+    "future": 89,
+    "unreasonably_old": 0,
+    "min_due": "1402/12/10",
+    "max_due": "1405/09/12"
+   }
+  ],
+  "getchk_open_amount": [
+   {
+    "status_id": 5,
+    "n": 67,
+    "total": "<1e12"
+   },
+   {
+    "status_id": 8,
+    "n": 27,
+    "total": "<1e12"
+   },
+   {
+    "status_id": 1,
+    "n": 21,
+    "total": "<1e12"
+   },
+   {
+    "status_id": 6,
+    "n": 3,
+    "total": "<1e12"
+   }
+  ],
+  "putchk_by_status": [
+   {
+    "status_id": 0,
+    "n": 109,
+    "total": "<1e3",
+    "overdue": 0
+   },
+   {
+    "status_id": 1,
+    "n": 63,
+    "total": "<1e12",
+    "overdue": 49
+   },
+   {
+    "status_id": 2,
+    "n": 29,
+    "total": "<1e12",
+    "overdue": 1
+   },
+   {
+    "status_id": 7,
+    "n": 1,
+    "total": "<1e12",
+    "overdue": 0
+   }
+  ],
+  "getchk_link": [
+   {
+    "all_checks": 118,
+    "with_receipt": 100,
+    "with_customer": 100,
+    "with_visitor": 0,
+    "with_bank": 0,
+    "with_sayad": 10
+   }
+  ],
+  "pos_join": [],
+  "pos_by_bank_name": [
+   {
+    "bank": 6,
+    "bank_name": "تجارت",
+    "n": 479,
+    "total": "<1e12",
+    "fee": "<1e3"
+   },
+   {
+    "bank": 4,
+    "bank_name": "سپه",
+    "n": 260,
+    "total": "<1e12",
+    "fee": "<1e3"
+   },
+   {
+    "bank": 3,
+    "bank_name": "ملت",
+    "n": 229,
+    "total": "<1e12",
+    "fee": "<1e3"
+   },
+   {
+    "bank": 2,
+    "bank_name": "ملي",
+    "n": 81,
+    "total": "<1e12",
+    "fee": "<1e3"
+   },
+   {
+    "bank": 5,
+    "bank_name": "سپه",
+    "n": 22,
+    "total": "<1e12",
+    "fee": "<1e3"
+   },
+   {
+    "bank": 7,
+    "bank_name": "ملت",
+    "n": 8,
+    "total": "<1e12",
+    "fee": null
+   },
+   {
+    "bank": 8,
+    "bank_name": "سپه",
+    "n": 4,
+    "total": "<1e12",
+    "fee": null
+   }
+  ],
+  "pos_by_user": [
+   {
+    "UserID": 6,
+    "vis_name": "جواد لطيفي/ويزيتور",
+    "username": "latifi",
+    "n": 526,
+    "total": "<1e12"
+   },
+   {
+    "UserID": 3,
+    "vis_name": "فاطمه محمودي/پرسنل",
+    "username": "mahmodi",
+    "n": 331,
+    "total": "<1e12"
+   },
+   {
+    "UserID": 5,
+    "vis_name": "الهام حمداني/پرسنل",
+    "username": "elham",
+    "n": 175,
+    "total": "<1e12"
+   },
+   {
+    "UserID": 4,
+    "vis_name": "اسما حمداني/پرسنل",
+    "username": "asma",
+    "n": 23,
+    "total": "<1e12"
+   },
+   {
+    "UserID": 1,
+    "vis_name": "ويزيتور سيستم",
+    "username": "",
+    "n": 15,
+    "total": "<1e9"
+   },
+   {
+    "UserID": 2,
+    "vis_name": "شادي نظري/پرسنل",
+    "username": "nazari",
+    "n": 13,
+    "total": "<1e12"
+   }
+  ],
+  "pos_by_day": [
+   {
+    "jalali_date": "1405/07/11",
+    "n": 24,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/10",
+    "n": 8,
+    "total": "<1e9"
+   },
+   {
+    "jalali_date": "1405/07/09",
+    "n": 49,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/08",
+    "n": 40,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/07",
+    "n": 46,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/06",
+    "n": 41,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/05",
+    "n": 51,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/04",
+    "n": 47,
+    "total": "<1e12"
+   },
+   {
+    "jalali_date": "1405/07/03",
+    "n": 4,
+    "total": "<1e9"
+   },
+   {
+    "jalali_date": "1405/07/02",
+    "n": 36,
+    "total": "<1e12"
+   }
+  ],
+  "terminal_tables": [
+   {
+    "name": "BankPos",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "DF_BANK_IsPos",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_BankPos_Active",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_PeygiriMotalebat_PosAmount",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_PishDaryaftPos_IsPDA",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_PosDetails_isEdited",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_PosDetails_IsHavaleh",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_PosDetails_Rdf_",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_PosDetailsInAccounting_Karmozd",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_subsailfact_TafifPos_",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_subsailtemp_TafifPos_",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_tafif_f_formula_PerPos",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_TerminalPos_Active",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_UserPos_Active",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "DF_UserPos_isDefault",
+    "type": "D ",
+    "rows_est": null
+   },
+   {
+    "name": "find_per_taf_pos",
+    "type": "FN",
+    "rows_est": null
+   },
+   {
+    "name": "FK_BankPos_BANK",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_BankPos_sys_users",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_BankPos_TerminalPos",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_PishDaryaftPos_BANK",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_PishDaryaftPos_PishDaryaft",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_PosDetails_BANK",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_PosDetails_dar",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_PosDetailsInAccounting_BANK",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "<text 43>",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_postpone_task",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_postpone_user",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_StationTerminals_StationManagment",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_StationTerminals_TerminalPos",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_TerminalPos_sys_users",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_TerminalPos_TerminalCompanyPos",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_UserPos_BANK",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_UserPos_sys_users",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "FK_UserPos_sys_users1",
+    "type": "F ",
+    "rows_est": null
+   },
+   {
+    "name": "PishDaryaftPos",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "PK_BankPos",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_PishDaryaftPos",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_PosDetails",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_PosDetailsInAccounting",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_postpone",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_StationTerminals",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_TerminalCompanyPos",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_TerminalPos",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PK_UserPos",
+    "type": "PK",
+    "rows_est": null
+   },
+   {
+    "name": "PosDetails",
+    "type": "U ",
+    "rows_est": 1083
+   },
+   {
+    "name": "PosDetailsInAccounting",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "postpone",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "StationTerminals",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "Syncer_NewBankPos",
+    "type": "P ",
+    "rows_est": null
+   },
+   {
+    "name": "Syncer_NewTerminal",
+    "type": "P ",
+    "rows_est": null
+   },
+   {
+    "name": "TerminalCompanyPos",
+    "type": "U ",
+    "rows_est": 8
+   },
+   {
+    "name": "TerminalPos",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "UserPos",
+    "type": "U ",
+    "rows_est": 0
+   },
+   {
+    "name": "VW_BankPos",
+    "type": "V ",
+    "rows_est": null
+   },
+   {
+    "name": "Vw_listPos",
+    "type": "V ",
+    "rows_est": null
+   },
+   {
+    "name": "VW_UserPos",
+    "type": "V ",
+    "rows_est": null
+   }
+  ],
+  "ban_act_kinds": [
+   {
+    "act_id": 8,
+    "n": 830,
+    "sample_text": "زهرا پيماني فروشاني - حواله  به شم",
+    "sum_bes": "<1e3",
+    "sum_bed": "<1e12"
+   },
+   {
+    "act_id": 78,
+    "n": 131,
+    "sample_text": "از حساب جاري تجارت (شماره حساب  تج",
+    "sum_bes": "<1e12",
+    "sum_bed": "<1e3"
+   },
+   {
+    "act_id": 9,
+    "n": 129,
+    "sample_text": " - ------ - حواله -- -- --  به شما",
+    "sum_bes": "<1e12",
+    "sum_bed": "<1e3"
+   },
+   {
+    "act_id": 80,
+    "n": 108,
+    "sample_text": "از  تجارت 6085001432 طي كارت به كا",
+    "sum_bes": "<1e12",
+    "sum_bed": "<1e12"
+   },
+   {
+    "act_id": 77,
+    "n": 19,
+    "sample_text": "ابطال از سرفصل انبار (زير سرفصل حر",
+    "sum_bes": "<1e12",
+    "sum_bed": "<1e12"
+   },
+   {
+    "act_id": 76,
+    "n": 8,
+    "sample_text": "موجودي قبلي",
+    "sum_bes": "<1e3",
+    "sum_bed": "<1e12"
+   },
+   {
+    "act_id": 50,
+    "n": 6,
+    "sample_text": "  از صندوق / فيش  ",
+    "sum_bes": "<1e3",
+    "sum_bed": "<1e9"
+   },
+   {
+    "act_id": 75,
+    "n": 1,
+    "sample_text": "پ چک ر 51سر 224585 - شركت شيرين عس",
+    "sum_bes": "<1e12",
+    "sum_bed": "<1e3"
+   }
+  ],
+  "cow_summary": [
+   {
+    "rows_all": 77,
+    "sum_bes": "<1e9",
+    "sum_bed": "<1e9",
+    "boxes": 4,
+    "min_date": "1405/06/10",
+    "max_date": "1405/07/11"
+   }
+  ],
+  "cow_kinds": [
+   {
+    "act_id": 62,
+    "n": 31,
+    "sample_text": "ابطال از صندوق به سرفصل انبار "
+   },
+   {
+    "act_id": 1,
+    "n": 27,
+    "sample_text": "قبض دريافت 15 - نقدي -هادي فيل"
+   },
+   {
+    "act_id": 2,
+    "n": 12,
+    "sample_text": "قبض پرداخت 1 - نقدي -بهمن پروت"
+   },
+   {
+    "act_id": 50,
+    "n": 6,
+    "sample_text": "واريز به  تجارت 6085001432  في"
+   },
+   {
+    "act_id": 71,
+    "n": 1,
+    "sample_text": "موجودي اوليه صندوق"
+   }
+  ],
+  "bank_act_recent": [
+   {
+    "bank_rdf": 3,
+    "act_id": 8,
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_date": "1405/07/11",
+    "Ghno": 839,
+    "isActive": null
+   },
+   {
+    "bank_rdf": 6,
+    "act_id": 8,
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_date": "1405/07/11",
+    "Ghno": 837,
+    "isActive": null
+   },
+   {
+    "bank_rdf": 6,
+    "act_id": 8,
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_date": "1405/07/11",
+    "Ghno": 836,
+    "isActive": null
+   },
+   {
+    "bank_rdf": 6,
+    "act_id": 8,
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_date": "1405/07/11",
+    "Ghno": 836,
+    "isActive": null
+   },
+   {
+    "bank_rdf": 6,
+    "act_id": 8,
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_date": "1405/07/11",
+    "Ghno": 835,
+    "isActive": null
+   },
+   {
+    "bank_rdf": 3,
+    "act_id": 8,
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_date": "1405/07/11",
+    "Ghno": 834,
+    "isActive": null
+   }
+  ],
+  "cow_recent": [
+   {
+    "DATE": "1405/07/11",
+    "act_id": 62,
+    "BES": "<1e9",
+    "BED": "<1e3",
+    "bank_rdf": 0,
+    "Ghno": 226,
+    "isActive": true
+   },
+   {
+    "DATE": "1405/07/11",
+    "act_id": 1,
+    "BES": "<1e3",
+    "BED": "<1e9",
+    "bank_rdf": null,
+    "Ghno": 811,
+    "isActive": true
+   },
+   {
+    "DATE": "1405/07/08",
+    "act_id": 62,
+    "BES": "<1e9",
+    "BED": "<1e3",
+    "bank_rdf": 0,
+    "Ghno": 223,
+    "isActive": true
+   },
+   {
+    "DATE": "1405/07/11",
+    "act_id": 1,
+    "BES": "<1e3",
+    "BED": "<1e9",
+    "bank_rdf": null,
+    "Ghno": 803,
+    "isActive": true
+   },
+   {
+    "DATE": "1405/07/11",
+    "act_id": 2,
+    "BES": "<1e9",
+    "BED": "<1e3",
+    "bank_rdf": 0,
+    "Ghno": 122,
+    "isActive": true
+   },
+   {
+    "DATE": "1405/07/09",
+    "act_id": 1,
+    "BES": "<1e3",
+    "BED": "<1e9",
+    "bank_rdf": null,
+    "Ghno": 781,
+    "isActive": true
+   }
+  ],
+  "customers_terms": [
+   {
+    "n": 2724,
+    "with_date": 2724,
+    "with_checkdays": 0,
+    "min_checkdays": 0,
+    "max_checkdays": 0,
+    "with_credit": 2,
+    "check_credit_on": 2714
+   }
+  ],
+  "zamanbandi": [],
+  "sailfact_tasvieh_mix": [
+   {
+    "tasvieh": "f",
+    "n": 460,
+    "sum_left": 460,
+    "sum_all": "<1e12"
+   },
+   {
+    "tasvieh": "t",
+    "n": 510,
+    "sum_left": 507,
+    "sum_all": "<1e12"
+   }
+  ],
+  "sailfact_aging_source": [
+   {
+    "invoices": 970,
+    "open_invoices": 967,
+    "min_date": "1405/06/10",
+    "max_date": "1405/07/11",
+    "open_total": 967
+   }
+  ],
+  "accounting_docs": [
+   {
+    "name": "Document",
+    "rows_est": 0
+   },
+   {
+    "name": "DocumentDetails",
+    "rows_est": 0
+   },
+   {
+    "name": "DocumentSourceKind",
+    "rows_est": 3
+   }
+  ],
+  "sales_by_visitor": [
+   {
+    "invoices": 970,
+    "with_visitor": 970,
+    "visitors": 9
+   }
+  ]
+ }
+}
