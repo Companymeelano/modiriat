@@ -62,9 +62,15 @@ jobs:
 
       - name: Audit the captured layout
         run: |
-          W=$(grep -oP 'screen \K[0-9]+' review-manager/env.txt | head -1); W=${W:-1080}
-          H=$(grep -oP 'screen [0-9]+x\K[0-9]+' review-manager/env.txt | head -1); H=${H:-2340}
-          D=$(grep -oP 'density \K[0-9]+' review-manager/env.txt | head -1); D=${D:-420}
+          read -r W H D < <(python3 - <<'PY'
+          import re
+          txt = open("review-manager/env.txt", encoding="utf-8", errors="replace").read()
+          m = re.search(r"screen (\d+)x(\d+)", txt)
+          d = re.search(r"density (\d+)", txt)
+          print(m.group(1) if m else 1080, m.group(2) if m else 2340, d.group(1) if d else 420)
+          PY
+          )
+          echo "audit screen ${W}x${H} @${D}dpi"
           python3 .github/scripts/manager_ui_audit.py review-manager/xml review-manager/audit.txt --screen "${W}x${H}" --density "$D" || true
           cat review-manager/audit.txt
           # Publish the interesting findings as annotations so they are visible without downloading artifacts.
