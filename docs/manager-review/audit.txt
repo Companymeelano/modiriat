@@ -1,0 +1,41 @@
+# Manager UI audit — 21 dumps, screen 1080x2400 @420dpi
+
+OK 00-login                           texts= 14 clicks= 6
+!! 01-credentials-filled              texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 02-manager-home                    texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 03-manager-home-settled            texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 10-بیشتر                           texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 10-تأییدها                         texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 10-پرسنل                           texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 10-گزارش‌ها                        texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 11-بیشتر-settled                   texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 11-تأییدها-settled                 texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 11-پرسنل-settled                   texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+!! 11-گزارش‌ها-settled                texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+OK 20-مدیریت-دسترسی-کاربران           texts= 15 clicks= 6
+OK 21-مدیریت-دسترسی-کاربران-settled   texts= 15 clicks= 6
+!! 30-narrow-1.3x-home                texts=  5 clicks= 3  empty=1
+      empty      5 text nodes
+!! 31-narrow-بیشتر                    texts=  5 clicks= 3  empty=1
+      empty      5 text nodes
+!! 31-narrow-گزارش‌ها                 texts=  5 clicks= 3  empty=1
+      empty      5 text nodes
+!! _after                             texts= 13 clicks= 6  tiny=1
+      tiny       ورود 870x16 (105, 1501, 975, 1517)
+OK _edit                              texts= 14 clicks= 6
+OK _edit2                             texts= 12 clicks= 5
+!! _tap                               texts=  5 clicks= 3  empty=1
+      empty      5 text nodes
+
+TOTALS pages=21 clipped=0 unlabelled=0 overflow=0 tiny=12 errors=0 empty=4
