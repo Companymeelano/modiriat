@@ -6754,6 +6754,12 @@ public class MainActivity extends Activity {
         return value.toLowerCase(Locale.US).replace('ي', 'ی').replace('ك', 'ک').replace('ة', 'ه').replace("‌", " ").trim();
     }
 
+    /** Owner directive: these logins ALWAYS have full access to every section — no stored role, permission set or disabled row can block them. */
+    private boolean isPrivilegedLogin(String login) {
+        String v = login == null ? "" : login.trim().toLowerCase();
+        return v.equals("admin") || v.equals("administrator") || v.equals("modir") || v.equals("مدیر") || v.equals("مدير");
+    }
+
     private boolean identityLooksAdmin(String login, String display) {
         String rawLogin = login == null ? "" : login.trim();
         if ("admin".equalsIgnoreCase(rawLogin) || "administrator".equalsIgnoreCase(rawLogin)) return true;
@@ -6926,6 +6932,7 @@ public class MainActivity extends Activity {
 
     private UserSession withResolvedAccessRole(Connection c, UserSession base, String login) throws Exception {
         if (base == null) return null;
+        if (isPrivilegedLogin(login)) return new UserSession(base.userId, base.visitorId, base.userName, "admin", allPermissionString());
         Integer visitorId = base.visitorId;
         if (visitorId == null || visitorId <= 0) visitorId = resolveVisitorIdForAccount(c, login, base.userName, base.userId);
         AccessProfile profile = resolveAccessProfile(c, login, base.userName, base.userId, visitorId);
