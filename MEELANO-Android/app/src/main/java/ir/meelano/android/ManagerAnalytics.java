@@ -446,6 +446,22 @@ final class ManagerAnalytics {
     }
 
     /** Drill-down lists of real records for the executive KPI cards (§39). */
+    private static final java.util.regex.Pattern GREGORIAN_DAY = java.util.regex.Pattern.compile("^(\\d{4})-(\\d{1,2})-(\\d{1,2}).*$");
+
+    /** «1405/07/11» for both Jalali and Gregorian («2026-09-01») inputs, so one ledger reads uniformly. */
+    static String displayDateJalali(String raw) {
+        if (raw == null) return "—";
+        String s = raw.trim();
+        java.util.regex.Matcher m = GREGORIAN_DAY.matcher(s);
+        if (m.matches()) {
+            try {
+                int[] j = MeelanoJalali.fromDay(MeelanoJalali.gregorianDay(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3))));
+                if (j != null && j.length >= 3) return String.format(Locale.US, "%04d/%02d/%02d", j[0], j[1], j[2]);
+            } catch (Exception ignored) { }
+        }
+        return s.length() >= 10 ? s.substring(0, 10) : s;
+    }
+
     static JSONArray drill(Connection c, String kind, int range) throws Exception {
         JSONArray arr = new JSONArray();
         if ("debtors".equals(kind)) return debtors(c, 60);
@@ -463,9 +479,35 @@ final class ManagerAnalytics {
             String cName = resolve(cust, "MONAME", "Name", "CusName");
             String nameExpr = cShmo != null && cName != null ? "COALESCE(TRY_CONVERT(nvarchar(200),cu.[" + cName + "]),N'بدون نام')" : "N'—'";
             String joinCust = cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),a.[" + aShmo + "])" : "";
-            String sql = "SELECT TOP (60) TRY_CONVERT(nvarchar(30),a.[" + aDate + "]), " + nameExpr + ", ISNULL(" + sqlNumberExpr("a", aBed, "decimal(19,2)") + ",0) - ISNULL(" + sqlNumberExpr("a", aBes, "decimal(19,2)") + ",0), " + (aDoc == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),a.[" + aDoc + "])") + " FROM dbo.cust_act a" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),a.[" + aDate + "]) DESC";
-            try (PreparedStatement ps = c.prepareStatement(sql)) {
-                try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("party", r.getString(2) == null ? "—" : r.getString(2)); o.put("amount", r.getDouble(3)); o.put("number", r.getString(4) == null ? "" : r.getString(4)); arr.put(o); } }
+            // cust_act carries BOTH shapes: Jalali «1405/07/11» and Gregorian «2026-09-01». Sorting the raw
+            // strings put every Gregorian row on top of the page, so the two shapes are read separately
+            // (newest first inside each) and merged by real date in Java.
+            String base = "SELECT TOP (60) TRY_CONVERT(nvarchar(30),a.[" + aDate + "]), " + nameExpr
+                    + ", ISNULL(" + sqlNumberExpr("a", aBed, "decimal(19,2)") + ",0) - ISNULL(" + sqlNumberExpr("a", aBes, "decimal(19,2)") + ",0), "
+                    + (aDoc == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),a.[" + aDoc + "])")
+                    + " FROM dbo.cust_act a" + joinCust;
+            String dayExpr = "TRY_CONVERT(nvarchar(30),a.[" + aDate + "])";
+            java.util.List<String[]> rows = new ArrayList<>();
+            for (String shape : new String[]{dayExpr + " NOT LIKE N'%-%'", dayExpr + " LIKE N'%-%'"}) {
+                try (PreparedStatement ps = c.prepareStatement(base + " WHERE " + shape + " ORDER BY " + dayExpr + " DESC")) {
+                    try (ResultSet r = ps.executeQuery()) {
+                        while (r.next()) {
+                            String day = displayDateJalali(r.getString(1));
+                            rows.add(new String[]{day, r.getString(2) == null ? "—" : r.getString(2),
+                                    String.valueOf(r.getDouble(3)), r.getString(4) == null ? "" : r.getString(4)});
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(rows, (x, y) -> y[0].compareTo(x[0]));   // newest first
+            for (int i = 0; i < rows.size() && i < 60; i++) {
+                String[] row = rows.get(i);
+                JSONObject o = new JSONObject();
+                o.put("date", row[0]);
+                o.put("party", row[1]);
+                o.put("amount", Double.parseDouble(row[2]));
+                o.put("number", row[3]);
+                arr.put(o);
             }
             return arr;
         }
@@ -481,9 +523,12 @@ final class ManagerAnalytics {
             String cShmo = resolve(cust, "SHMO", "shmo");
             String cName = resolve(cust, "MONAME", "Name", "CusName");
             if (sDate != null && sAll != null) {
-                String joinSql = cName != null && sShmo != null && cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),[" + sShmo + "])" : "";
+                // Every sailfact column is written as h.[col]: the join to CUSTOMERS also exposes «shmo»,
+                // and the previous unqualified reference made SQL Server reject the whole page with
+                // «Ambiguous column name 'shmo'» (the sales drill-down from the KPI card was empty).
+                String joinSql = cName != null && sShmo != null && cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),h.[" + sShmo + "])" : "";
                 String nameExpr = cName != null && sShmo != null && cShmo != null ? "COALESCE(TRY_CONVERT(nvarchar(250),cu.[" + cName + "]),N'بدون نام')" : "N'بدون نام'";
-                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) LEFT(LTRIM(RTRIM([" + sDate + "])),10), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),[" + sNum + "])") + ", " + sqlNumberExpr(null, sAll, "decimal(19,2)") + ", " + nameExpr + " FROM dbo.sailfact WITH (NOLOCK)" + joinSql + " ORDER BY LEFT(LTRIM(RTRIM([" + sDate + "])),10) DESC")) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) LEFT(LTRIM(RTRIM(h.[" + sDate + "])),10), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),h.[" + sNum + "])") + ", " + sqlNumberExpr("h", sAll, "decimal(19,2)") + ", " + nameExpr + " FROM dbo.sailfact h WITH (NOLOCK)" + joinSql + " ORDER BY LEFT(LTRIM(RTRIM(h.[" + sDate + "])),10) DESC")) {
                     try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("number", r.getString(2) == null ? "" : r.getString(2)); o.put("amount", r.getDouble(3)); o.put("party", r.getString(4) == null ? "—" : r.getString(4)); arr.put(o); } }
                 }
             }
