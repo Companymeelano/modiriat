@@ -95,6 +95,20 @@ def main():
                c.is_identity, c.is_computed, OBJECT_DEFINITION(c.default_object_id) default_def
         FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id JOIN sys.types ty ON ty.user_type_id=c.user_type_id
         WHERE o.type='U' ORDER BY o.name, c.column_id"""))
+    def announce_meta():
+        """Metadata-only: column NAMES of the GPS/visit-intelligence candidate tables (no row data).
+        Column names are already public via the app's Java SQL; this only confirms real schema."""
+        r = q("""SELECT o.name tbl, c.name col FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id
+                 WHERE o.type IN ('U','V') AND o.name IN ('Visit','cust_act','TellBook','Sys_Mandeh_Customer','sailfact_pish','vw_customer','visitors','vis_goals')
+                 ORDER BY o.name, c.column_id""")
+        per = {}
+        for row in r["rows"]:
+            per.setdefault(str(row[0]), []).append(str(row[1]))
+        for t in sorted(per):
+            print("::notice title=meta-%s::%s" % (t, ",".join(per[t])))
+        return {t: len(v) for t, v in per.items()}
+    safe("visit_meta_announce", announce_meta)
+
     safe("keys", lambda: q("""
         SELECT o.name tbl, i.name idx, i.is_primary_key, i.is_unique, STUFF((SELECT ','+c.name FROM sys.index_columns ic JOIN sys.columns c ON c.object_id=ic.object_id AND c.column_id=ic.column_id
                WHERE ic.object_id=i.object_id AND ic.index_id=i.index_id ORDER BY ic.key_ordinal FOR XML PATH('')),1,1,'') cols

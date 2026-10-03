@@ -12132,6 +12132,110 @@ public class MainActivity extends Activity {
         });
     }
 
+    // =============================== Per-page PDF exports (cockpit / collection) ===============================
+    private MeelanoDailyReportPdf.Data baseManagerPdfData(String title) {
+        MeelanoDailyReportPdf.Data d = new MeelanoDailyReportPdf.Data();
+        d.title = title;
+        d.visitor = session == null ? "" : session.userName;
+        d.date = faDigits(todayDateText());
+        d.developer = DEVELOPER_NAME;
+        d.appVersion = appVersionName();
+        d.managerBrand = true;
+        return d;
+    }
+
+    private void shareManagerPdf(MeelanoDailyReportPdf.Data d, String tag) throws Exception {
+        String fileName = "Darakhshan-Manager-" + tag + "-" + new java.text.SimpleDateFormat("yyyyMMdd-HHmm", java.util.Locale.US).format(new java.util.Date()) + ".pdf";
+        File out = new File(MeelanoShareProvider.shareDir(this), fileName);
+        MeelanoDailyReportPdf.write(this, d, MEELANO_REGULAR, MEELANO_BOLD, out);
+        MeelanoShareProvider.share(this, out, "application/pdf", d.title + (d.visitor.isEmpty() ? "" : " — " + d.visitor));
+    }
+
+    private void exportCockpitPdf() {
+        showNotice("در حال ساخت PDF اتاق فروش…", false);
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.cockpit(c, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) {
+                try {
+                    JSONObject m = safeJson(body);
+                    MeelanoDailyReportPdf.Data d = baseManagerPdfData("گزارش اتاق فروش");
+                    JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases");
+                    double sv = sales == null ? 0 : sales.optDouble("total", 0);
+                    double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
+                    if (sv > 0) d.summary.add(new String[]{ "فروش بازه", money(Math.round(sv)) });
+                    if (pv > 0) d.summary.add(new String[]{ "خرید بازه", money(Math.round(pv)) });
+                    if (sv > 0 || pv > 0) d.summary.add(new String[]{ "حاشیه ناخالص", money(Math.round(sv - pv)) });
+                    if (sales != null) d.summary.add(new String[]{ "اسناد فروش", formatNumber(sales.optLong("docs", 0)) });
+                    JSONArray byDay = m.optJSONArray("byDay");
+                    double tot = 0;
+                    if (byDay != null) for (int i = 0; i < byDay.length(); i++) { JSONObject o = byDay.optJSONObject(i); if (o != null) tot += o.optDouble("value", 0); }
+                    d.preTitle = "ترکیب فروش بر پایهٔ روز هفته";
+                    d.preHead = new String[]{ "روز", "شرح", "مبلغ", "سهم" };
+                    d.preEmpty = "فروشی در این بازه ثبت نشده است.";
+                    if (byDay != null) for (int i = 0; i < byDay.length(); i++) {
+                        JSONObject o = byDay.optJSONObject(i); if (o == null) continue;
+                        double v = o.optDouble("value", 0);
+                        d.prefactors.add(new String[]{ o.optString("label", "—"), "فروش روز", money(Math.round(v)), faDigits(String.format(java.util.Locale.US, "%.0f", tot > 0 ? v / tot * 100.0 : 0)) + "٪" });
+                    }
+                    JSONArray top = m.optJSONArray("top");
+                    d.visTitle = "پرفروش‌های بازه";
+                    d.visHead = new String[]{ "کالا", "فروش", "سهم" };
+                    d.visEmpty = "فروش کالایی در این بازه ثبت نشده است.";
+                    double totTop = 0;
+                    if (top != null) for (int i = 0; i < top.length(); i++) { JSONObject o = top.optJSONObject(i); if (o != null) totTop += o.optDouble("sum", 0); }
+                    if (top != null) for (int i = 0; i < top.length(); i++) {
+                        JSONObject o = top.optJSONObject(i); if (o == null) continue;
+                        double v = o.optDouble("sum", 0);
+                        d.visits.add(new String[]{ o.optString("name", "—"), money(Math.round(v)), faDigits(String.format(java.util.Locale.US, "%.0f", totTop > 0 ? v / totTop * 100.0 : 0)) + "٪" });
+                    }
+                    d.note = "خروجی نسخهٔ مدیریت پخش درخشان — ارقام از sailfact/buyfact/subsailfact آتیران.";
+                    shareManagerPdf(d, "Cockpit");
+                } catch (Exception ex) { showNotice("ساخت PDF ممکن نشد: " + shortError(ex), true); }
+            }
+            @Override public void fail(Exception e) { showNotice("اتصال برقرار نشد؛ PDF ساخته نشد: " + shortError(e), true); }
+        });
+    }
+
+    private void exportCollectionPdf() {
+        showNotice("در حال ساخت PDF مرکز وصول…", false);
+        runDb(() -> {
+            JSONObject o = new JSONObject();
+            try (Connection c = openConnection()) { o.put("aging", ManagerAnalytics.collection(c)); o.put("debtors", ManagerAnalytics.drill(c, "debtors", managerReportRange)); }
+            return o.toString();
+        }, new DbCallback() {
+            @Override public void ok(String body) {
+                try {
+                    JSONObject m = safeJson(body);
+                    MeelanoDailyReportPdf.Data d = baseManagerPdfData("گزارش مرکز وصول");
+                    JSONArray aging = m.optJSONArray("aging");
+                    double total = 0, cur = 0, docs = 0;
+                    if (aging != null) for (int i = 0; i < aging.length(); i++) { JSONObject b = aging.optJSONObject(i); if (b == null) continue; total += b.optDouble("value", 0); docs += b.optLong("docs", 0); if (b.optString("label", "").startsWith("جاری")) cur += b.optDouble("value", 0); }
+                    if (total > 0) d.summary.add(new String[]{ "کل مطالبات", money(Math.round(total)) });
+                    if (total - cur > 0) d.summary.add(new String[]{ "معوق", money(Math.round(total - cur)) });
+                    if (cur > 0) d.summary.add(new String[]{ "جاری", money(Math.round(cur)) });
+                    if (docs > 0) d.summary.add(new String[]{ "فاکتور باز", formatNumber((long) docs) });
+                    d.preTitle = "سبد سنی مطالبات";
+                    d.preHead = new String[]{ "بازه", "شرح", "مبلغ", "اسناد" };
+                    d.preEmpty = "فاکتور تسویه‌نشده‌ای یافت نشد.";
+                    if (aging != null) for (int i = 0; i < aging.length(); i++) {
+                        JSONObject b = aging.optJSONObject(i); if (b == null) continue;
+                        d.prefactors.add(new String[]{ b.optString("label", "—"), "فاکتور تسویه‌نشده", money(Math.round(b.optDouble("value", 0))), formatNumber(b.optLong("docs", 0)) });
+                    }
+                    JSONArray debtors = m.optJSONArray("debtors");
+                    d.visTitle = "بدهکاران اولویت‌دار";
+                    d.visHead = new String[]{ "مشتری", "کد", "مانده" };
+                    d.visEmpty = "بدهکاری یافت نشد.";
+                    if (debtors != null) for (int i = 0; i < debtors.length(); i++) {
+                        JSONObject b = debtors.optJSONObject(i); if (b == null) continue;
+                        d.visits.add(new String[]{ b.optString("party", "—"), faDigits(b.optString("code", "")), money(Math.round(b.optDouble("amount", 0))) });
+                    }
+                    d.note = "خروجی نسخهٔ مدیریت پخش درخشان — مبنا: tasvieh='f' + t_date + dbo.dif_date_alan و ماندهٔ CUSTOMERS.man.";
+                    shareManagerPdf(d, "Collection");
+                } catch (Exception ex) { showNotice("ساخت PDF ممکن نشد: " + shortError(ex), true); }
+            }
+            @Override public void fail(Exception e) { showNotice("اتصال برقرار نشد؛ PDF ساخته نشد: " + shortError(e), true); }
+        });
+    }
+
     // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
     private LinearLayout managerRangeRow(Runnable reload) {
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
@@ -12160,6 +12264,10 @@ public class MainActivity extends Activity {
         content.removeAllViews();
         addHero("اتاق فروش", "فروش در برابر خرید و بازهٔ قبل + ترکیب روز و کالا — همه از رکوردهای واقعی sailfact/buyfact.");
         content.addView(managerRangeRow(() -> loadManagerCockpit()));
+        LinearLayout exp = new LinearLayout(this); exp.setOrientation(LinearLayout.HORIZONTAL);
+        Button cp = primaryButton("PDF اتاق فروش"); cp.setTextSize(fs(10.2f)); cp.setOnClickListener(v -> exportCockpitPdf()); exp.addView(cp, weightedButtonLp());
+        LinearLayout.LayoutParams cpLp = new LinearLayout.LayoutParams(-1, -2); cpLp.setMargins(0, 0, 0, dp(10));
+        content.addView(exp, cpLp);
         JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases");
         LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
         double sv = sales == null ? 0 : sales.optDouble("total", 0);
@@ -12216,6 +12324,9 @@ public class MainActivity extends Activity {
         addKpiCard(grid, "کل مطالبات سررسیدشده", "♙", WARNING, total > 0 ? money(Math.round(total)) : "—", null, formatNumber((long) docs) + " فاکتور باز", "debtors");
         addKpiCard(grid, "معوق (گذشته از سررسید)", "!", overdue > 0 ? DANGER : SUCCESS, overdue > 0 ? money(Math.round(overdue)) : "بدون معوقی", null, "بر پایهٔ t_date واقعی", null);
         grid.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
+        LinearLayout exp2 = new LinearLayout(this); exp2.setOrientation(LinearLayout.HORIZONTAL);
+        Button cl = primaryButton("PDF مرکز وصول"); cl.setTextSize(fs(10.2f)); cl.setOnClickListener(v -> exportCollectionPdf()); exp2.addView(cl, weightedButtonLp());
+        content.addView(exp2, new LinearLayout.LayoutParams(-1, -2));
         content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
         if (rows.length() == 0) { addEmptyTo(content, "دادهٔ سن‌یابی در دسترس نیست (ستون t_date یا تابع dif_date_alan تأیید نشد)."); addDeveloperCredit(content); return; }
         LinearLayout c = addReportCard("سبد سنی مطالبات", "◔", WARNING);
