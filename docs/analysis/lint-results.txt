@@ -743,19 +743,16 @@ final class MeelanoSignatureView extends View {
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:26949: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                 assistantInput.setText("این کد/بارکد را در کالاها بررسی کن: " + stringOr(code, ""));
                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:77: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
-        export.setText("خروجی CSV");
-                       ~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:129: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:163: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
         status.setText("در حال ساخت خروجی CSV…");
                        ~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:140: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:174: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                 main.post(() -> status.setText("خروجی ذخیره شد: " + path));
                                                ~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:142: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:176: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
                 main.post(() -> status.setText("خروجی CSV با مشکل مواجه شد."));
                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:155: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:190: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
         status.setText("جستجو برای: " + q);
                        ~~~~~~~~~~~~~~~~~~
 
@@ -975,4 +972,4 @@ final class MeelanoSignatureView extends View {
    the left bitmask. Therefore, you can use gravity="start" rather than
    gravity="left|start".)
 
-4 errors, 236 warnings
+4 errors, 235 warnings

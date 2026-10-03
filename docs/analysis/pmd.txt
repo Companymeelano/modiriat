@@ -3410,18 +3410,28 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouse.java:506:	
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouse.java:524:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouse.java:531:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouse.java:538:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:106:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:130:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:148:	AvoidFileStream:	Avoid instantiating FileInputStream, FileOutputStream, FileReader, or FileWriter
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:157:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:173:	AvoidDuplicateLiterals:	The String literal "name" appears 5 times in this file; the first occurrence is on line 173
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:174:	AvoidDuplicateLiterals:	The String literal "\u0645\u0648\u0631\u062f\u06cc \u0628\u0631\u0627\u06cc \u0646\u0645\u0627\u06cc\u0634 \u0648\u062c\u0648\u062f \u0646\u062f\u0627\u0631\u062f." appears 6 times in this file; the first occurrence is on line 174
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:179:	AvoidDuplicateLiterals:	The String literal "shfacfo" appears 4 times in this file; the first occurrence is on line 179
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:179:	AvoidDuplicateLiterals:	The String literal "  \u2022  " appears 9 times in this file; the first occurrence is on line 179
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:194:	UnusedFormalParameter:	Avoid unused method parameters such as 'sales'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:194:	UnusedFormalParameter:	Avoid unused method parameters such as 'inv'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:199:	AvoidDuplicateLiterals:	The String literal "delivered" appears 6 times in this file; the first occurrence is on line 199
-MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:200:	AvoidDuplicateLiterals:	The String literal "incomplete" appears 4 times in this file; the first occurrence is on line 200
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:48:	AvoidFieldNameMatchingMethodName:	Field CARD has the same name as a method
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:116:	UnusedPrivateMethod:	Avoid unused private methods such as 'button(String, OnClickListener, float)'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:133:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:152:	UnusedPrivateMethod:	Avoid unused private methods such as 'showError()'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:164:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:182:	AvoidFileStream:	Avoid instantiating FileInputStream, FileOutputStream, FileReader, or FileWriter
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:192:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:208:	AvoidDuplicateLiterals:	The String literal "name" appears 10 times in this file; the first occurrence is on line 208
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:208:	AvoidDuplicateLiterals:	The String literal "shka" appears 5 times in this file; the first occurrence is on line 208
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:208:	AvoidDuplicateLiterals:	The String literal "stock" appears 4 times in this file; the first occurrence is on line 208
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:210:	AvoidDuplicateLiterals:	The String literal "\u0645\u0648\u0631\u062f\u06cc \u0628\u0631\u0627\u06cc \u0646\u0645\u0627\u06cc\u0634 \u0648\u062c\u0648\u062f \u0646\u062f\u0627\u0631\u062f." appears 11 times in this file; the first occurrence is on line 210
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:215:	AvoidDuplicateLiterals:	The String literal "shfacfo" appears 8 times in this file; the first occurrence is on line 215
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:215:	AvoidDuplicateLiterals:	The String literal "  \u2022  " appears 11 times in this file; the first occurrence is on line 215
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:234:	AvoidDuplicateLiterals:	The String literal "delivered" appears 6 times in this file; the first occurrence is on line 234
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:235:	AvoidDuplicateLiterals:	The String literal "incomplete" appears 4 times in this file; the first occurrence is on line 235
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:291:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:295:	InsufficientStringBufferDeclaration:	StringBuilder has been initialized with size 16, but has at least 29 characters appended.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:310:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:314:	InsufficientStringBufferDeclaration:	StringBuilder has been initialized with size 16, but has at least 36 characters appended.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:320:	AppendCharacterWithChar:	Avoid appending characters as strings in StringBuffer.append.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:347:	UnusedPrivateMethod:	Avoid unused private methods such as 'tap(String, int, OnClickListener)'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java:353:	UnusedFormalParameter:	Avoid unused method parameters such as 'fill'.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWidgetProvider.java:29:	UseVarargs:	Consider using varargs for methods or constructors which take an array the last parameter.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWidgetProvider.java:34:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWidgetProvider.java:37:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
