@@ -88,6 +88,12 @@ def main():
            "pos": {}, "treasury": {}, "checks": {}, "balances": {}, "operators": {},
            "definitions_digest": {}, "money": {}, "counts": {}}
 
+    def ident(name):
+        """Metadata-only script: never interpolate anything that is not a plain identifier."""
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]{0,80}", str(name)):
+            raise ValueError("unsafe identifier: %r" % name)
+        return str(name)
+
     def q(sql, params=None, limit=200):
         cur = conn.cursor()
         cur.execute(sql, params)
@@ -135,7 +141,7 @@ def main():
                     JOIN sys.types ty ON ty.user_type_id = c.user_type_id
                     LEFT JOIN sys.default_constraints dc ON dc.parent_object_id=c.object_id
                                                         AND dc.parent_column_id=c.column_id
-                    WHERE o.name = ? ORDER BY c.column_id""", (name,), 400)
+                    WHERE o.name = N'%s' ORDER BY c.column_id""" % ident(name), None, 400)
 
     # ---------------------------------------------------------------- 1. tables
     out["counts"]["object_types"] = q_safe("objtypes", """SELECT o.type, COUNT(*) AS n
@@ -283,12 +289,12 @@ def main():
         res["getcheckhistorystatus"] = q("SELECT TOP (30) * FROM dbo.getcheckhistorystatus WITH (NOLOCK)")
         res["chkbatch_cols"] = out["tables"].get("chkbatch")
         res["checks_table"] = q("SELECT TOP (5) * FROM dbo.checks WITH (NOLOCK)")
-        res["check_dates_relative"] = q("""SELECT SUM(CASE WHEN sardate = ? THEN 1 ELSE 0 END) AS due_today,
-                                                  SUM(CASE WHEN sardate > ? AND sardate <= ? THEN 1 ELSE 0 END) AS due_next7,
-                                                  SUM(CASE WHEN sardate < ? THEN 1 ELSE 0 END) AS overdue,
+        res["check_dates_relative"] = q("""SELECT SUM(CASE WHEN sardate = dbo.ReturnDateServer() THEN 1 ELSE 0 END) AS due_today,
+                                                  SUM(CASE WHEN sardate > dbo.ReturnDateServer()
+                                                            AND sardate <= DATEPART(year, GETDATE()) THEN 1 ELSE 0 END) AS _x,
+                                                  SUM(CASE WHEN sardate < dbo.ReturnDateServer() THEN 1 ELSE 0 END) AS overdue,
                                                   COUNT(*) AS all_rows
-                                           FROM dbo.getchk WITH (NOLOCK)""",
-                                        None, 4)
+                                           FROM dbo.getchk WITH (NOLOCK)""", None, 4)
         return res
 
     out["checks"] = safe("checks", checks, {})
@@ -361,7 +367,7 @@ def main():
     def definitions():
         res = {}
         for name in DEF_OBJECTS:
-            d = q("SELECT OBJECT_DEFINITION(OBJECT_ID(?)) AS d", (name,))
+            d = q("SELECT OBJECT_DEFINITION(OBJECT_ID(N'%s')) AS d" % ident(name))
             if not d or not d[0].get("d"):
                 continue
             txt = d[0]["d"]
