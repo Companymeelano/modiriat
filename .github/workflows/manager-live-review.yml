@@ -1,0 +1,114 @@
+name: Manager live UI review
+
+# Runs the manager app on a real Android emulator against the live Atiran2 database, walks every
+# screen, and writes a layout audit (clipped / unlabelled / empty / error nodes) plus screenshots.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manager-live-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  manager-live-review:
+    # The database and emulator work only run when the commit asks for it ([manager-live]) or on manual dispatch.
+    if: contains(github.event.head_commit.message, '[manager-live]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0 build-tools;36.0.0'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build manager debug APK
+        working-directory: MEELANO-Android
+        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g assembleManagerDebug
+
+      - name: Stage APK for install
+        run: cp MEELANO-Android/app/build/outputs/apk/manager/debug/*.apk app-manager-debug.apk && ls -la app-manager-debug.apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Capture manager screens on Android 15 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash .github/scripts/manager-live-review.sh review-manager
+
+      - name: Audit the captured layout
+        run: |
+          W=$(grep -oP 'screen \K[0-9]+' review-manager/env.txt | head -1); W=${W:-1080}
+          H=$(grep -oP 'screen [0-9]+x\K[0-9]+' review-manager/env.txt | head -1); H=${H:-2340}
+          D=$(grep -oP 'density \K[0-9]+' review-manager/env.txt | head -1); D=${D:-420}
+          python3 .github/scripts/manager_ui_audit.py review-manager/xml review-manager/audit.txt --screen "${W}x${H}" --density "$D" || true
+          cat review-manager/audit.txt
+          # Publish the interesting findings as annotations so they are visible without downloading artifacts.
+          grep -E "^!!|^TOTALS" review-manager/audit.txt | head -30 | while IFS= read -r line; do
+            echo "::warning title=Manager UI::$line"
+          done
+          grep -E "login_ok=|dump failed|NOT FOUND" review-manager/env.txt | head -20 | while IFS= read -r line; do
+            echo "::notice title=Manager run::$line"
+          done
+
+      - name: Compress and commit review
+        if: github.event_name == 'push'
+        run: |
+          pip install --quiet pillow
+          python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          os.makedirs("docs/manager-review", exist_ok=True)
+          for f in sorted(glob.glob("review-manager/*.png")):
+              im = Image.open(f).convert("RGB")
+              w, h = im.size
+              im = im.resize((480, int(h * 480 / w)), Image.LANCZOS)
+              im.save("docs/manager-review/" + os.path.basename(f)[:-4] + ".jpg", "JPEG", quality=80, optimize=True)
+          PY
+          cp review-manager/audit.txt docs/manager-review/audit.txt || true
+          cp review-manager/env.txt docs/manager-review/env.txt || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add docs/manager-review
+          if git diff --cached --quiet; then echo "no review changes"; else git commit -m "Manager live UI review [skip ci]"; fi
+          pushed=0
+          for i in 1 2 3 4 5; do
+            git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" || git rebase --abort || true
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then pushed=1; break; fi
+            sleep 7
+          done
+          [ "$pushed" = "1" ] || echo "::warning title=Manager review::results could not be pushed"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: manager-live-review
+          path: |
+            review-manager/*.png
+            review-manager/xml/*.xml
+            review-manager/audit.txt
+            review-manager/env.txt

@@ -2617,6 +2617,14 @@ public class MainActivity extends Activity {
 
     private String visitorSectionHeadline(String title) {
         String t = title == null ? "" : title.trim();
+        if (MANAGER_EDITION) {
+            // Manager wording only: «ماموریت امروز»، «فروش سریع کالا» و «سبد فروش» belong to the visitor app.
+            if (t.contains("پخش درخشان") || t.contains("داشبورد")) return t.isEmpty() ? "داشبورد مدیریت" : t;
+            if (t.contains("کالا")) return "کالا و موجودی";
+            if (t.contains("حضور")) return "حضور و مرخصی پرسنل";
+            if (t.contains("گزارش")) return "گزارش‌های مدیریتی";
+            return t.isEmpty() ? editionTitle() : t;
+        }
         if (t.contains("پخش درخشان")) return "ماموریت امروز";
         if (t.contains("کالا")) return "فروش سریع کالا";
         if (t.contains("سبد")) return "سبد فروش";
@@ -4266,7 +4274,8 @@ public class MainActivity extends Activity {
         LinearLayout copy = new LinearLayout(this);
         copy.setOrientation(LinearLayout.VERTICAL);
         copy.setPadding(dp(11), 0, dp(8), 0);
-        TextView badge = text(STORE_EDITION ? "فروشگاه • فاکتور قطعی و گزارش" : "حالت ویزیت • فقط فروش میدانی", 9.2f, onColorFor(accent), Typeface.BOLD);
+        TextView badge = text(MANAGER_EDITION ? "مدیریت • نظارت کامل فروش و وصول"
+                : STORE_EDITION ? "فروشگاه • فاکتور قطعی و گزارش" : "حالت ویزیت • فقط فروش میدانی", 9.2f, onColorFor(accent), Typeface.BOLD);
         badge.setGravity(Gravity.CENTER);
         badge.setSingleLine(true);
         badge.setPadding(dp(8), dp(3), dp(8), dp(3));
@@ -4282,7 +4291,8 @@ public class MainActivity extends Activity {
         copy.addView(s, new LinearLayout.LayoutParams(-1, -2));
         row.addView(copy, new LinearLayout.LayoutParams(0, -2, 1f));
         hero.addView(row, new LinearLayout.LayoutParams(-1, -2));
-        if (!STORE_EDITION) addVisitorFlowRibbon(hero, accent);
+        if (MANAGER_EDITION) addManagerFlowRibbon(hero, accent);
+        else if (!STORE_EDITION) addVisitorFlowRibbon(hero, accent);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
         lp.setMargins(0, 0, 0, dp(12));
         content.addView(hero, lp);
@@ -4301,6 +4311,42 @@ public class MainActivity extends Activity {
             chip.setPadding(dp(3), 0, dp(3), 0);
             chip.setBackground(roundedStroke(alpha(c, isLightTheme() ? 20 : 34), 999, alpha(c, 88)));
             LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, dp(28), 1f);
+            cp.setMargins(dp(2), dp(10), dp(2), 0);
+            row.addView(chip, cp);
+        }
+        parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    /**
+     * Manager workflow ribbon. The visitor step ribbon («ماموریت/کالا/سبد/مشتری/حضور») was rendered on the
+     * manager dashboard too, which both mislabelled the app and wasted a row; managers get the five screens
+     * they actually open, and each chip navigates (the visitor ribbon chips were decorative only).
+     */
+    private void addManagerFlowRibbon(LinearLayout parent, int accent) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER);
+        String[][] steps = {
+                {"اتاق فروش", "mgr_cockpit", "↗"},
+                {"وصول", "mgr_collection", "✓"},
+                {"ویزیتور", "mgr_visits", "♜"},
+                {"کالا", "mgr_products", "◈"},
+                {"اعتبار", "mgr_credit", "♛"}
+        };
+        int[] colors = {GOLD, SUCCESS, navAccent("personnel"), navAccent("products"), DANGER};
+        for (int i = 0; i < steps.length; i++) {
+            int c = colors[i];
+            TextView chip = text(steps[i][2] + " " + steps[i][0], 9.0f, TEXT, Typeface.BOLD);
+            chip.setGravity(Gravity.CENTER);
+            chip.setSingleLine(true);
+            chip.setEllipsize(TextUtils.TruncateAt.END);
+            chip.setPadding(dp(3), 0, dp(3), 0);
+            chip.setBackground(roundedStroke(alpha(c, isLightTheme() ? 22 : 34), 999, alpha(c, 92)));
+            chip.setClickable(true);
+            final String page = steps[i][1];
+            chip.setOnClickListener(v -> showApp(page));
+            chip.setContentDescription(steps[i][0] + " — باز کردن صفحه");
+            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, dp(30), 1f);
             cp.setMargins(dp(2), dp(10), dp(2), 0);
             row.addView(chip, cp);
         }
