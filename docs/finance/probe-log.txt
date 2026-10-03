@@ -5,14 +5,54 @@ date probe columns: 74
 status domains: 63
 freshness tables: 7
 sample dumps: 34
-schema json written: docs/finance/AtiranFinancialSchema.json (1674443 bytes)
-FATAL: Traceback (most recent call last):
-  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 579, in cli
-    main()
-  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 462, in main
-    write_markdown(out, MD)
-  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 553, in write_markdown
-    add("| `%s` | %s | %s |" % (k, v.get("rows_est"), v.get("rows_exact", v.get("count_error", "—"))))
-                                   ^^^^^
-AttributeError: 'list' object has no attribute 'get'
-
+schema json written: docs/finance/AtiranFinancialSchema.json (1674432 bytes)
+schema mapping written: docs/finance/FinancialSchemaMapping.md
+---- finance candidates ----
+  sub_buyfact_temp             rows=0          score=23   hits=act,buy,sub_buyfact_temp.CustomerPrice,sub_buyfact_temp.MaxPrice,sub_buyfact_temp.MinPrice,sub_buyfact_temp.PerPos
+  Payslip                      rows=0          score=22   hits=Payslip.Active,Payslip.AtiranDocNumber,Payslip.FractionWorkPrice,Payslip.FractionWorkTime,Payslip.MissionDailyPrice,Payslip.MissionPerMinutePrice
+  getchk                       rows=118        score=21   hits=chk,getchk.CheckTypeID,getchk.DocID,getchk.FromAtiranDocID,getchk.GhnoPardakht,getchk.IdDocumentZirSarfasl
+  forosh_price                 rows=1803       score=19   hits=forosh,forosh_price.DiscountForosh1,forosh_price.DiscountForosh2,forosh_price.DiscountForosh3,forosh_price.DiscountForosh4,forosh_price.DiscountForosh5
+  meelano_prefactors           rows=13         score=17   hits=act,factor,meelano_prefactors.customer_code,meelano_prefactors.customer_name,meelano_prefactors.native_prefactor_no,meelano_prefactors.native_prefactor_table
+  sailfact                     rows=1168       score=17   hits=act,sail,sailfact.ChapWithTasvieh,sailfact.DocumentSourceID,sailfact.MabDaryaftFactor,sailfact.ShSanadFerestande
+  CUSTOMERS                    rows=2724       score=16   hits=CUSTOMERS.BANKNAME,CUSTOMERS.CheckDateDay,CUSTOMERS.CustomerBranch,CUSTOMERS.CustomerTypeTtmsId,CUSTOMERS.MaxManFactor,CUSTOMERS.PriceCheck
+  buyfact                      rows=62         score=15   hits=act,buy,buyfact.CashType,buyfact.DateModatPardakht,buyfact.MablaghPardakht,buyfact.MoeinIdKerayehHaml
+  cust_act                     rows=6176       score=15   hits=act,cust,cust_act.AccDocNumber,cust_act.DocNumber,cust_act.GhestPriceTemp,cust_act.UserID
+  inventory                    rows=1803       score=15   hits=inventory.ActiveCapillarySales,inventory.ActiveOnlineSales,inventory.FinalSalePrice,inventory.ImPureBuyPrice,inventory.MaxJozForosh,inventory.PerPos
+  Personnel                    rows=0          score=15   hits=Personnel.Active,Personnel.BadWeatherAllowancePrice,Personnel.BankAccountNumber,Personnel.BankName,Personnel.CardNumber,Personnel.ChildAllowancePrice
+  putchk                       rows=202        score=15   hits=chk,putchk.CheckTypeID,putchk.DocID,putchk.FromAtiranDocID,putchk.IdDocumentZirSarfasl,putchk.UserID
+  ban_act                      rows=1232       score=14   hits=act,ban_act.AccDocNumber,ban_act.DocNumber,ban_act.UserID,ban_act.act_bed,ban_act.act_bes
+  ka_act                       rows=6359       score=14   hits=act,ka_act.HAct_id,ka_act.PriceFinished,ka_act.RdfAnbar,ka_act.ShSanadAnbar,ka_act.UserID
+  PardakhtKerayeHamlDetails    rows=0          score=14   hits=PardakhtKerayeHamlDetails.ActID,PardakhtKerayeHamlDetails.Active,PardakhtKerayeHamlDetails.Price,PardakhtKerayeHamlDetails.RdfBank,PardakhtKerayeHamlDetails.RdfPutCheck,PardakhtKerayeHamlDetails.RdfZirSarfasl
+  sailfact_pish                rows=13         score=14   hits=act,sail,sailfact_pish.RejectedUser,sailfact_pish.USER__,sailfact_pish.UserTaedForush,sailfact_pish.UserTaedHesabdari
+  TerminalPos                  rows=0          score=14   hits=TerminalPos.Active,TerminalPos.TerminalCompanyID,TerminalPos.TerminalID,TerminalPos.TerminalIP,TerminalPos.TerminalName,TerminalPos.TerminalNumber
+  DaryaftVaPardakht            rows=0          score=13   hits=DaryaftVaPardakht.Active,DaryaftVaPardakht.IsDaryaft,DaryaftVaPardakht.Naghd,DaryaftVaPardakht.SumCheck,DaryaftVaPardakht.SumPos,DaryaftVaPardakht.UserID
+  BANK                         rows=8          score=12   hits=BANK.Active,BANK.BANKNAME,BANK.BankRdf,BANK.BankTransferCode,BANK.CardNumber,BANK.HaveEChecks
+  DeviceSettings               rows=5          score=12   hits=DeviceSettings.ActsLimit,DeviceSettings.CanDirectDaryaft,DeviceSettings.CheckCredit,DeviceSettings.CheckingBouncedCheck,DeviceSettings.DefaultPriceGrp,DeviceSettings.HasAccessPishDaryaft
+  PardakhtMultiFactor          rows=0          score=12   hits=PardakhtMultiFactor.GhnoPardakht,PardakhtMultiFactor.Mablagh,PardakhtMultiFactor.ShBuyFact,act,factor,pardakht
+  PayrollPayment               rows=0          score=12   hits=PayrollPayment.Active,PayrollPayment.BankID,PayrollPayment.BankTransfer,PayrollPayment.BankTransferPrice,PayrollPayment.CashPayment,PayrollPayment.CashPaymentPrice
+  subbuyfact_pish              rows=0          score=12   hits=act,buy,subbuyfact_pish.JOZPRICE,subbuyfact_pish.VAHPRICE,subbuyfact_pish.active,subbuyfact_pish.anbarName
+  subsailfact                  rows=4991       score=12   hits=act,sail,subsailfact.JOZPRICE,subsailfact.TafifNaghd,subsailfact.TafifPos,subsailfact.VAHPRICE
+  template_for_putchk          rows=0          score=12   hits=chk,template_for_putchk.IdDocumentZirSarfasl,template_for_putchk.UserID,template_for_putchk.bankrdf,template_for_putchk.chkbatch_num,template_for_putchk.putchk_dis
+---- seed lookup ----
+  CUSTOMERS                OK (table, 2724 rows)
+  inventory                OK (table, 1803 rows)
+  Variety                  OK (table, 1803 rows)
+  forosh_price             OK (table, 1803 rows)
+  kagroup                  OK (table, 3 rows)
+  sailfact                 OK (table, 1168 rows)
+  subsailfact              OK (table, 4991 rows)
+  buyfact                  OK (table, 62 rows)
+  subbuyfact               OK (table, 211 rows)
+  getchk                   OK (table, 118 rows)
+  putchk                   OK (table, 202 rows)
+  CheckTypes               OK (table, 2 rows)
+  BANK                     OK (table, 8 rows)
+  visitors                 OK (table, 10 rows)
+  vis_goals                OK (table, 4 rows)
+  Visit                    OK (table, 0 rows)
+  masir                    OK (table, 4 rows)
+  cust_act                 OK (table, 6176 rows)
+  Sys_Mandeh_Customer      OK (table, 2724 rows)
+  vw_customer              OK (view, 0 rows)
+  TellBook                 OK (table, 2732 rows)
+---- errors (0) ----
