@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Restore locally and read SQL catalog metadata only
+      - name: Restore backup and read catalog plus non-personal ACL reference data
         run: |
           set -euo pipefail
           python -m pip install --quiet python-tds

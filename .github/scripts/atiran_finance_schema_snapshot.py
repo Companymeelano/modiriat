@@ -285,6 +285,47 @@ def restore_and_collect(output_path: Path) -> None:
         "WHERE tr.parent_class = 1 ORDER BY s.name, t.name, tr.name",
     )
 
+    CURRENT_STAGE = "read non-personal access-control reference data"
+    acl_reference = {
+        "roles": query(
+            cursor,
+            "SELECT r.id AS role_id, r.name AS role_name, r.SubSystemId AS subsystem_id, "
+            "ss.[Name] AS subsystem_name, ss.[Status] AS subsystem_status "
+            "FROM dbo.Roles AS r LEFT JOIN security.[SubSystem] AS ss ON ss.SubSystemId = r.SubSystemId "
+            "ORDER BY r.id",
+        ),
+        "subsystems": query(
+            cursor,
+            "SELECT SubSystemId AS subsystem_id, [Name] AS subsystem_name, [Status] AS subsystem_status, ShowOrder "
+            "FROM security.[SubSystem] ORDER BY ShowOrder, SubSystemId",
+        ),
+        "permissions": query(
+            cursor,
+            "SELECT PermissionId AS permission_id, PermissionName AS permission_name "
+            "FROM security.[Permission] ORDER BY PermissionId",
+        ),
+        "forms": query(
+            cursor,
+            "SELECT FormId AS form_id, [Title] AS title, [NameSpace] AS namespace, [Class] AS class_name "
+            "FROM security.[Form] ORDER BY FormId",
+        ),
+        "fields": query(
+            cursor,
+            "SELECT FieldId AS field_id, FormId AS form_id, [Title] AS title "
+            "FROM security.[Field] ORDER BY FormId, FieldId",
+        ),
+        "role_form_permissions": query(
+            cursor,
+            "SELECT RoleId AS role_id, FormId AS form_id, PermissionId AS permission_id "
+            "FROM security.RoleFormPermission ORDER BY RoleId, FormId, PermissionId",
+        ),
+        "role_field_permissions": query(
+            cursor,
+            "SELECT RoleId AS role_id, FieldId AS field_id, PermissionId AS permission_id "
+            "FROM security.RoleFieldPermission ORDER BY RoleId, FieldId, PermissionId",
+        ),
+    }
+
     roles = query(
         cursor,
         "SELECT name AS role_name, type_desc, is_fixed_role, authentication_type_desc "
@@ -303,10 +344,11 @@ def restore_and_collect(output_path: Path) -> None:
 
     snapshot = {
         "inspection": {
-            "scope": "sql_catalog_metadata_only",
+            "scope": "sql_catalog_and_non_personal_acl_reference_data",
             "business_rows_read": False,
+            "personal_accounts_or_credentials_read": False,
             "application_procedures_executed": False,
-            "database_contents_modified": False,
+            "database_contents_modified_after_restore": False,
             "source_file": "14050603.zip",
         },
         "backup": backup_metadata,
@@ -322,6 +364,7 @@ def restore_and_collect(output_path: Path) -> None:
         "triggers": triggers,
         "database_roles": roles,
         "role_permissions": role_permissions,
+        "acl_reference_data": acl_reference,
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2, default=json_value), encoding="utf-8")
@@ -348,7 +391,7 @@ def main() -> int:
         detail = " ".join(detail.replace("\r", " ").replace("\n", " ").split())[:300]
         message = f"Stage: {CURRENT_STAGE}; error: {type(error).__name__}; detail: {detail or 'no driver detail'}"
         escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A").replace("::", "%3A%3A")
-        print("::error title=Metadata-only schema snapshot::" + escaped)
+        print("::error title=Schema and ACL snapshot::" + escaped)
         print("Schema snapshot failed: " + message, file=sys.stderr)
         return 1
 
