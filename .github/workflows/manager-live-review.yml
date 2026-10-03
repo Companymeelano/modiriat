@@ -97,6 +97,14 @@ jobs:
               im.save("docs/manager-review/" + os.path.basename(f)[:-4] + ".jpg", "JPEG", quality=80, optimize=True)
           PY
           cp review-manager/audit.txt docs/manager-review/audit.txt || true
+          # Any page that rendered a diagnostics card is copied verbatim (text stays searchable in git).
+          mkdir -p docs/manager-review/xml
+          grep -l "دریافت برخی بخش" review-manager/xml/*.xml 2>/dev/null | while read -r f; do
+            cp "$f" docs/manager-review/xml/ || true
+          done
+          grep -l "فعلاً اتصال" review-manager/xml/*.xml 2>/dev/null | while read -r f; do
+            cp "$f" docs/manager-review/xml/ || true
+          done
           cp review-manager/env.txt docs/manager-review/env.txt || true
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"

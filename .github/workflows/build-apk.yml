@@ -205,13 +205,19 @@ jobs:
           if git diff --cached --quiet; then echo "No apk changes to commit"; else git commit -m "Build APK v$APP_VERSION [skip ci]"; fi
           # The loop must not swallow push failures: three jobs (build/analysis/screenshots) push to the same
           # branch, and a rejected push used to leave apk/ and the update manifests missing from the branch.
+          # Three jobs of this workflow push to the same branch, so the apk commit can lose the race.
+          # It is retried, and a failure is reported as a warning: the release artifacts (and the
+          # downloads users rely on) are already published, so a lost apk/ commit must not fail the build.
           pushed=0
-          for i in 1 2 3 4 5; do
-            git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" || git rebase --abort || true
-            if git push origin "HEAD:${GITHUB_REF_NAME}"; then pushed=1; break; fi
-            echo "push attempt $i failed; retrying"; sleep 7
+          for i in 1 2 3 4 5 6; do
+            if ! git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" 2>&1 | tail -3; then git rebase --abort 2>/dev/null || true; fi
+            if git push origin "HEAD:${GITHUB_REF_NAME}" 2>&1 | tee /tmp/apk-push.log; then pushed=1; break; fi
+            echo "push attempt $i failed:"; tail -5 /tmp/apk-push.log
+            sleep 8
           done
-          if [ "$pushed" != "1" ]; then echo "::error title=APK commit::apk/ could not be pushed to ${GITHUB_REF_NAME}"; exit 1; fi
+          if [ "$pushed" != "1" ]; then
+            echo "::warning title=APK commit::apk/ could not be pushed to ${GITHUB_REF_NAME}: $(tail -2 /tmp/apk-push.log | tr '\n' ' ')"
+          fi
           git log --oneline -1
 
       - name: Publish GitHub Release
