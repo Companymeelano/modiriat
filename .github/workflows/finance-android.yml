@@ -67,8 +67,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          yes | "$SDKMANAGER" --licenses >/dev/null
-          "$SDKMANAGER" 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses < <(yes) >/dev/null
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
 
       - name: Run Finance unit tests and assemble Debug APK
         working-directory: MEELANO-Android
