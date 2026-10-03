@@ -232,6 +232,52 @@ def main():
     run(box, "routes",
         """SELECT COUNT_BIG(1) FROM dbo.masir WITH (NOLOCK)""")
 
+    # putchk (paid cheques) shape: the app lists sardate/putchkdate candidates, so record which exists.
+    box = section("extra_schema")
+    run(box, "putchk_rows", "SELECT COUNT_BIG(1) FROM dbo.putchk WITH (NOLOCK)")
+    run(box, "putchk_date_like_columns",
+        """SELECT STUFF((SELECT N',' + c.name FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id WHERE o.name=N'putchk' AND (c.name LIKE N'%date%' OR c.name LIKE N'%sar%') ORDER BY c.column_id FOR XML PATH('')),1,1,N'')""")
+    run(box, "getchk_date_like_columns",
+        """SELECT STUFF((SELECT N',' + c.name FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id WHERE o.name=N'getchk' AND (c.name LIKE N'%date%' OR c.name LIKE N'%sar%') ORDER BY c.column_id FOR XML PATH('')),1,1,N'')""")
+
+    # The app signs in as the shared back-office accounts «Admin/1385» and «Modir/123».
+    # Verify live that both exist in visitors (plain Password) or sys_users (hashed/encrypted)
+    # and that the entered password matches what the Java matcher would accept.
+    import hashlib
+    box = section("logins")
+    pairs = [("Admin", "1385"), ("Modir", "123")]
+    visitors = q("""SELECT LTRIM(RTRIM(TRY_CONVERT(nvarchar(200),Username))), TRY_CONVERT(nvarchar(200),Password), TRY_CONVERT(nvarchar(30),vis_name), ISNULL(active,''), TRY_CONVERT(nvarchar(20),is_supervisor) FROM dbo.visitors WITH (NOLOCK)""")
+    sysu = q("""SELECT LTRIM(RTRIM(TRY_CONVERT(nvarchar(100),user_name))), TRY_CONVERT(varbinary(200),user_password), TRY_CONVERT(nvarchar(30),user_lname)+N' '+TRY_CONVERT(nvarchar(30),user_fname), ISNULL(TRY_CONVERT(nvarchar(10),active),''), ISNULL(TRY_CONVERT(nvarchar(10),IsLocked),'') FROM dbo.sys_users WITH (NOLOCK)""")
+    box["values"]["visitor_logins"] = [r[0] for r in visitors if r and r[0]]
+    box["values"]["sysuser_logins"] = [r[0] for r in sysu if r and r[0]]
+    box["statements"] += 2
+
+    def candidates(pw):
+        out = {pw.encode("utf-8"), pw.encode("utf-16-le"), pw.encode("latin-1")}
+        for alg in ("md5", "sha1", "sha256", "sha512"):
+            d = hashlib.new(alg, pw.encode("utf-8")).digest()
+            out.add(d)
+        return out
+
+    for user, pw in pairs:
+        u = user.lower()
+        hit = None
+        for r in visitors:
+            if r and (r[0] or "").lower() == u:
+                hit = {"table": "visitors", "display": r[2], "active": r[3], "supervisor": r[4],
+                       "password_matches": (r[1] or "") in (pw, "  " if False else pw)}
+                break
+        if hit is None:
+            for r in sysu:
+                if r and (r[0] or "").lower() == u:
+                    raw = bytes.fromhex(r[1][2:]) if r[1] and r[1].startswith("0x") else (r[1] or "").encode("latin-1")
+                    hit = {"table": "sys_users", "display": r[2], "active": r[3], "locked": r[4],
+                           "password_matches": raw in candidates(pw), "password_bytes": len(raw)}
+                    break
+        box["values"][user] = hit or {"found": False}
+    box["notes"].append("password_matches is true only when the stored value is the exact entered "
+                        "text or one of the encodings the Java matcher (passwordMatches) accepts.")
+
     out["total_statements"] = statements[0]
     out["total_ms"] = sum(v["ms"] for v in out["sections"].values())
     out["roundtrip_ms_reference"] = 192

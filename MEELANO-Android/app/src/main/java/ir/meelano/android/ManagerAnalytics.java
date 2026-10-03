@@ -214,18 +214,18 @@ final class ManagerAnalytics {
             String inner = "WHERE " + rangeCondition(cols, dateCol, latest, range, "x") + activeAnd(cols, "x");
             String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) inner += " AND " + soft;
             String source = dedupeFactorSource(table, cols, numberCol, "h", inner);
-            String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
-                    (partyCol == null ? "CAST(0 AS bigint)" : "COUNT(DISTINCT h.[" + partyCol + "])") + ", " +
-                    (paidCol == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(SUM(" + sqlNumberExpr("h", paidCol, "decimal(19,2)") + "),0)") + " FROM " + source;
-            try (PreparedStatement ps = c.prepareStatement(sql)) {
-                try (ResultSet r = ps.executeQuery()) { if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); } }
-            }
             String pcond = previousRangeCondition(dateCol, latest, range, "x");
             String inner2 = "WHERE " + pcond + activeAnd(cols, "x");
             String soft2 = softDeleteCondition(cols, "x"); if (!soft2.isEmpty()) inner2 += " AND " + soft2;
             String source2 = dedupeFactorSource(table, cols, numberCol, "h", inner2);
-            try (PreparedStatement ps = c.prepareStatement("SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source2)) {
-                try (ResultSet r = ps.executeQuery()) { if (r.next()) prev = r.getDouble(1); }
+            // One statement for both the current window and «بازهٔ قبل» (scalar sub-select): halving the
+            // round trips of every report/cockpit load on a ~200 ms link.
+            String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
+                    (partyCol == null ? "CAST(0 AS bigint)" : "COUNT(DISTINCT h.[" + partyCol + "])") + ", " +
+                    (paidCol == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(SUM(" + sqlNumberExpr("h", paidCol, "decimal(19,2)") + "),0)") +
+                    ", (SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source2 + ") FROM " + source;
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                try (ResultSet r = ps.executeQuery()) { if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); prev = r.getDouble(5); } }
             }
         }
         o.put("total", total); o.put("docs", docs); o.put("parties", parties); o.put("paid", paid); o.put("prevTotal", prev);
@@ -395,7 +395,7 @@ final class ManagerAnalytics {
         JSONObject o = new JSONObject();
         Set<String> cols = columns(c, "getchk");
         String amount = resolve(cols, "getchkmab", "mablagh", "amount");
-        String dateCol = resolve(cols, "sardate", "sarresid", "getchkdate", "chkdate", "date", "t_date");
+        String dateCol = resolve(cols, "sardate", "DateOfReceipt", "getdate", "getchkdate", "chkdate", "date", "t_date");
         if (amount == null || dateCol == null) return o;
         // Jalali buckets: over = due before Atiran's today, soon = due within a week, ok = later.
         String anchor = anchor(c);
@@ -485,7 +485,7 @@ final class ManagerAnalytics {
         if ("checks".equals(kind)) {
             Set<String> gc = columns(c, "getchk");
             String gAmt = resolve(gc, "getchkmab", "mablagh", "amount");
-            String gDate = resolve(gc, "sarresid", "getchkdate", "chkdate", "date");
+            String gDate = resolve(gc, "sardate", "DateOfReceipt", "getdate", "getchkdate", "chkdate", "date");
             String gBank = resolve(gc, "bank", "Bank", "bankname", "BANK");
             if (gAmt != null && gDate != null) {
                 try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) LEFT(LTRIM(RTRIM([" + gDate + "])),10), TRY_CONVERT(decimal(19,2),[" + gAmt + "]), " + (gBank == null ? "CAST(NULL AS nvarchar(120))" : "TRY_CONVERT(nvarchar(120),[" + gBank + "])") + " FROM dbo.getchk WITH (NOLOCK) ORDER BY LEFT(LTRIM(RTRIM([" + gDate + "])),10) DESC")) {

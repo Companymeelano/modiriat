@@ -4182,7 +4182,7 @@ public class MainActivity extends Activity {
             Set<String> cols = columns(c, table);
             String num = incoming ? resolve(cols, "getchknum", "chknum", "number") : resolve(cols, "putchknum", "chknum", "number");
             String amount = incoming ? resolve(cols, "getchkmab", "amount") : resolve(cols, "putchkmab", "amount");
-            String date = incoming ? resolve(cols, "getchkdate", "date", "sarresid") : resolve(cols, "putchkdate", "date", "sarresid");
+            String date = incoming ? resolve(cols, "sardate", "DateOfReceipt", "getdate", "getchkdate", "date") : resolve(cols, "putchkdate", "sardate", "date");
             if (num == null) return;
             String sql = "SELECT TOP (5) TRY_CONVERT(nvarchar(100),[" + num + "]), " + (amount == null ? "CAST(0 AS decimal(19,2))" : "TRY_CONVERT(decimal(19,2),[" + amount + "])") + ", " + (date == null ? "N''" : "TRY_CONVERT(nvarchar(30),[" + date + "])") + " FROM dbo.[" + table + "] WHERE TRY_CONVERT(nvarchar(200),[" + num + "]) LIKE N'%' + ? + N'%'";
             try (PreparedStatement ps = c.prepareStatement(sql)) { ps.setString(1, q); try (ResultSet r = ps.executeQuery()) { while (r.next()) addGlobalResult(out, incoming ? "چک دریافتی" : "چک پرداختی", "شماره " + stringOr(r.getString(1), "—"), money(r.getDouble(2)) + " • " + stringOr(r.getString(3), ""), incoming ? SUCCESS : WARNING); } }
@@ -6202,7 +6202,7 @@ public class MainActivity extends Activity {
             String amount = incoming ? resolve(cols, "getchkmab", "mablagh", "amount") : resolve(cols, "putchkmab", "mablagh", "amount");
             String status = incoming ? resolve(cols, "chk_satus", "status") : resolve(cols, "putchk_status", "status");
             if (amount == null) return arr.toString();
-            String date = incoming ? resolve(cols, "getchkdate", "chkdate", "date", "sarresid", "t_date") : resolve(cols, "putchkdate", "chkdate", "date", "sarresid", "t_date");
+            String date = incoming ? resolve(cols, "sardate", "DateOfReceipt", "getdate", "getchkdate", "chkdate", "date", "t_date") : resolve(cols, "putchkdate", "sardate", "chkdate", "date", "t_date");
             String number = incoming ? resolve(cols, "getchknum", "chknum", "number", "serial") : resolve(cols, "putchknum", "chknum", "number", "serial");
             String bankRef = incoming ? resolve(cols, "our_bankrdf", "bankrdf", "BankRDF") : resolve(cols, "bankrdf", "our_bankrdf", "BankRDF");
             String shmo = resolve(cols, "shmo", "SHMO");
@@ -8474,7 +8474,7 @@ public class MainActivity extends Activity {
         if(vis==null) return;
         String amount=incoming?resolveFlexible(cols,"getchkmab","mablagh","amount"):resolveFlexible(cols,"putchkmab","mablagh","amount");
         if(amount==null) return;
-        String date=incoming?resolveFlexible(cols,"getchkdate","chkdate","date","sarresid"):resolveFlexible(cols,"putchkdate","chkdate","date","sarresid");
+        String date=incoming?resolveFlexible(cols,"sardate","DateOfReceipt","getdate","getchkdate","chkdate","date"):resolveFlexible(cols,"putchkdate","sardate","chkdate","date");
         String number=incoming?resolveFlexible(cols,"getchknum","chknum","number","serial"):resolveFlexible(cols,"putchknum","chknum","number","serial");
         String shmo=resolveFlexible(cols,"shmo","SHMO","customer","CustomerCode");
         String status=incoming?resolveFlexible(cols,"chk_satus","status","Status"):resolveFlexible(cols,"putchk_status","status","Status");
@@ -8496,7 +8496,7 @@ public class MainActivity extends Activity {
         if (userCol == null) return;
         String amount = incoming ? resolveFlexible(cols,"getchkmab","mablagh","amount") : resolveFlexible(cols,"putchkmab","mablagh","amount");
         if (amount == null) return;
-        String date = incoming ? resolveFlexible(cols,"getchkdate","chkdate","date","sarresid") : resolveFlexible(cols,"putchkdate","chkdate","date","sarresid");
+        String date = incoming ? resolveFlexible(cols,"sardate","DateOfReceipt","getdate","getchkdate","chkdate","date") : resolveFlexible(cols,"putchkdate","sardate","chkdate","date");
         String number = incoming ? resolveFlexible(cols,"getchknum","chknum","number","serial") : resolveFlexible(cols,"putchknum","chknum","number","serial");
         String shmo = resolveFlexible(cols,"shmo","SHMO","customer","CustomerCode");
         String status = incoming ? resolveFlexible(cols,"chk_satus","status","Status") : resolveFlexible(cols,"putchk_status","status","Status");
@@ -11117,7 +11117,7 @@ public class MainActivity extends Activity {
         Set<String> cols = columns(c, table); Set<String> typeCols = columns(c, "CheckTypes");
         String shmo = resolve(cols, "shmo"); String amount = incoming ? resolve(cols, "getchkmab", "mablagh") : resolve(cols, "putchkmab", "mablagh");
         if (shmo == null || amount == null) return;
-        String date = incoming ? resolve(cols, "getchkdate", "chkdate", "date", "sarresid") : resolve(cols, "putchkdate", "chkdate", "date", "sarresid");
+        String date = incoming ? resolve(cols, "sardate", "DateOfReceipt", "getdate", "getchkdate", "chkdate", "date") : resolve(cols, "putchkdate", "chkdate", "date", "sarresid");
         String number = incoming ? resolve(cols, "getchknum", "chknum", "number", "serial") : resolve(cols, "putchknum", "chknum", "number", "serial");
         String status = incoming ? resolve(cols, "chk_satus", "status") : resolve(cols, "putchk_status", "status");
         String desc = resolve(cols, "description", "Explain", "tozihat");
@@ -11939,29 +11939,27 @@ public class MainActivity extends Activity {
         o.put("date", anchor);
         o.put("from", bounds[0]);
         o.put("to", bounds[1]);
-        double total = 0, paid = 0; long docs = 0, parties = 0;
+        double total = 0, paid = 0, prev = 0; long docs = 0, parties = 0;
         if (dateCol != null && amountCol != null) {
             // Jalali string window (1405/06/13 .. 1405/07/11): no CAST to date, so month-31 rows such as
             // 1405/06/31 are never dropped, and the range follows the Persian calendar the user sees.
             String innerWhere = "WHERE " + MeelanoSql.range("x", dateCol, bounds) + activeAnd(cols, "x");
             String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
             String source = dedupeFactorSource(table, cols, numberCol, "h", innerWhere);
-            String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
+            String amountAgg = "ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
                     (partyCol == null ? "CAST(0 AS bigint)" : "COUNT(DISTINCT h.[" + partyCol + "])") + ", " +
-                    (paidCol == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(SUM(" + sqlNumberExpr("h", paidCol, "decimal(19,2)") + "),0)") + " FROM " + source;
-            try (PreparedStatement ps = c.prepareStatement(sql)) {
-                try (ResultSet r = ps.executeQuery()) { if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); } }
-            }
-        }
-        double prev = 0;
-        if (dateCol != null && amountCol != null) {
+                    (paidCol == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(SUM(" + sqlNumberExpr("h", paidCol, "decimal(19,2)") + "),0)");
             String pcond = MeelanoSql.previousRangeCondition(dateCol, anchor, range, "x");
             String innerWhere2 = "WHERE " + pcond + activeAnd(cols, "x");
             String soft2 = softDeleteCondition(cols, "x"); if (!soft2.isEmpty()) innerWhere2 += " AND " + soft2;
             String source2 = dedupeFactorSource(table, cols, numberCol, "h", innerWhere2);
-            String sql2 = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source2;
-            try (PreparedStatement ps = c.prepareStatement(sql2)) {
-                try (ResultSet r = ps.executeQuery()) { if (r.next()) prev = r.getDouble(1); }
+            // Current period and «بازهٔ قبل» in ONE round trip: the previous-period sum is a scalar
+            // sub-select of the same statement, so the page talks to the server once, not twice.
+            String sqlBoth = "SELECT " + amountAgg + ", (SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source2 + ") FROM " + source;
+            try (PreparedStatement ps = c.prepareStatement(sqlBoth)) {
+                try (ResultSet r = ps.executeQuery()) {
+                    if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); prev = r.getDouble(5); }
+                }
             }
         }
         o.put("prevTotal", prev);
