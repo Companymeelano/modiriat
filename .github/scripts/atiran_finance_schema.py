@@ -84,6 +84,17 @@ def mask(v):
     return v
 
 
+def scrub(text, secrets):
+    """Never let a credential or the server address reach the committed report."""
+    out = str(text)
+    for sec in secrets:
+        if sec and len(sec) > 2:
+            out = out.replace(sec, "<hidden>")
+    out = re.sub(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", "<server>", out)
+    out = re.sub(r"(?i)(password|pwd)\s*=\s*[^\s;]+", r"\1=<hidden>", out)
+    return out[:300]
+
+
 def money_masked(v):
     """Amounts are never published: only a magnitude bucket is kept."""
     if v is None:
@@ -104,7 +115,14 @@ def main():
     db = hidden("S_DB", src)
     user = hidden("S_USER", src)
     pw = hidden("S_PASS", src)
+    SECRETS = [host, user, pw, db]
     print("connecting to live Atiran server (host/db/user hidden, read-only)")
+
+    def dump(partial=False):
+        out["_partial"] = bool(partial)
+        os.makedirs(os.path.dirname(OUT) or ".", exist_ok=True)
+        with open(OUT, "w", encoding="utf-8") as fh:
+            json.dump(out, fh, ensure_ascii=False, indent=1, default=str)
     conn = pytds.connect(server=host, port=1433, database=db, user=user, password=pw,
                          login_timeout=30, timeout=180, autocommit=True)
     out = {"ok": True, "generated_utc": datetime.datetime.utcnow().isoformat() + "Z",
@@ -129,7 +147,7 @@ def main():
         try:
             return fn()
         except Exception as ex:
-            out["errors"].append("%s: %s" % (key, str(ex)[:220]))
+            out["errors"].append("%s: %s" % (key, scrub(ex, SECRETS)))
             return default
 
     def q_safe(key, sql, params=None, limit=None):
@@ -164,6 +182,7 @@ def main():
         return base
 
     out["server"] = safe("server_info", server_info, {})
+    dump(partial=True)
 
     # ---------------------------------------------------------------- all objects + row counts
     def objects():
@@ -190,6 +209,7 @@ def main():
             by_name[o["name"].lower()] = o
     print("objects: %d tables, %d views, %d procedures" % (
         len(out["tables"]), len(out["views"]), len(out["procedures"])))
+    dump(partial=True)
 
     # ---------------------------------------------------------------- seed lookup
     for n in SEED_NAMES:
@@ -223,6 +243,8 @@ def main():
             "scale": c["scale"], "nullable": bool(c["nullable"]), "identity": bool(c["identity_col"]),
             "computed": bool(c["computed"]), "default": (c["default_def"] or "")[:160],
             "computed_expr": (c["computed_def"] or "")[:200] or None})
+
+    dump(partial=True)
 
     # ---------------------------------------------------------------- keys, FKs, indexes
     def keys():
@@ -280,6 +302,8 @@ def main():
         t.setdefault("indexes", []).append({"name": i["name"], "type": i["type_desc"],
                                             "unique": bool(i["is_unique"]), "columns": i["cols"]})
 
+    dump(partial=True)
+
     # ---------------------------------------------------------------- column keyword index
     idx = {}
     for tbl, meta in out["tables"].items():
@@ -312,6 +336,7 @@ def main():
                            "hits": sorted(set(hits))[:12],
                            "columns": len(meta.get("columns", []))})
     out["candidates"] = sorted(scored, key=lambda x: -x["score"])[:80]
+    dump(partial=True)
 
     # Only these tables are probed row-by-row (keeps load on the live server minimal).
     focus = [c["table"] for c in out["candidates"][:60]]
@@ -356,6 +381,8 @@ def main():
         return res
 
     out["date_probe"] = safe("date_probe", date_probe, {})
+    dump(partial=True)
+    print("date probe columns: %d" % len(out["date_probe"]))
 
     # ---------------------------------------------------------------- domain probe (status / codes)
     def domain_probe():
@@ -382,6 +409,8 @@ def main():
         return res
 
     out["domain_probe"] = safe("domain_probe", domain_probe, {})
+    dump(partial=True)
+    print("status domains: %d" % len(out["domain_probe"]))
 
     # ---------------------------------------------------------------- freshness (is there data now?)
     def freshness():
@@ -403,6 +432,8 @@ def main():
         return res
 
     out["freshness"] = safe("freshness", freshness, {})
+    dump(partial=True)
+    print("freshness tables: %d" % len(out["freshness"]))
 
     # ---------------------------------------------------------------- sample values (masked, per candidate)
     def samples():
@@ -418,11 +449,11 @@ def main():
         return res
 
     out["samples_masked"] = safe("samples_masked", samples, {})
+    print("sample dumps: %d" % len(out["samples_masked"]))
 
     # ---------------------------------------------------------------- write
-    os.makedirs(os.path.dirname(OUT) or ".", exist_ok=True)
-    with open(OUT, "w", encoding="utf-8") as fh:
-        json.dump(out, fh, ensure_ascii=False, indent=1, default=str)
+    out["ok"] = True
+    dump()
     print("schema json written: %s (%d bytes)" % (OUT, os.path.getsize(OUT)))
 
     if MD:
@@ -541,5 +572,22 @@ def summary(o):
         print("  " + e)
 
 
+def cli():
+    try:
+        main()
+    except Exception as ex:  # never leave CI without a report
+        import traceback
+        tb = traceback.format_exc()
+        print("FATAL: " + tb)
+        try:
+            cur = {"ok": False, "fatal": scrub(ex, []), "generated_utc":
+                   datetime.datetime.utcnow().isoformat() + "Z", "errors": tb.splitlines()[-6:]}
+            with open(OUT, "w", encoding="utf-8") as fh:
+                json.dump(cur, fh, ensure_ascii=False, indent=1)
+        except Exception:
+            pass
+        raise SystemExit(3)
+
+
 if __name__ == "__main__":
-    main()
+    cli()

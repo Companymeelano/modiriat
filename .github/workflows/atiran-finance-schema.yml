@@ -31,16 +31,19 @@ jobs:
 
       - name: Network check (no data)
         run: |
-          python3 - <<'PY'
+          mkdir -p docs/finance
+          python3 - > docs/finance/probe-net.txt 2>&1 <<'PY'
           import re, socket
           s = open("MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java", encoding="utf-8").read()
           m = re.search(r"int\[\] S_HOST = \{([^}]*)\}", s)
           h = "".join(chr(int(x) ^ 73) for x in m.group(1).replace("\n", "").split(",") if x.strip())
+          print("host length:", len(h))
           try:
               socket.create_connection((h, 1433), timeout=20).close(); print("tcp 1433 reachable")
           except Exception as e:
-              print("tcp 1433 NOT reachable:", type(e).__name__)
+              print("tcp 1433 NOT reachable:", type(e).__name__, e)
           PY
+          cat docs/finance/probe-net.txt
 
       - name: Discover financial schema (read-only)
         continue-on-error: true
@@ -49,14 +52,17 @@ jobs:
           mkdir -p docs/finance
           python3 .github/scripts/atiran_finance_schema.py \
             docs/finance/AtiranFinancialSchema.json \
-            docs/finance/FinancialSchemaMapping.md 2>&1 | tail -80 | sed 's/[0-9]\{6,\}/<num>/g'
+            docs/finance/FinancialSchemaMapping.md > docs/finance/probe-log.txt 2>&1 || true
+          grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-log.txt | tail -70 | sed 's/[0-9]\{6,\}/<num>/g'
 
       - name: Commit the schema mapping
         run: |
           test -s docs/finance/AtiranFinancialSchema.json || echo '{"ok":false}' > docs/finance/AtiranFinancialSchema.json
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git add docs/finance
+          ls -la docs/finance/
+          head -c 400 docs/finance/probe-net.txt || true
+          git add -f docs/finance
           git commit -q -m "Finance schema discovery [skip ci]" || echo "No changes"
           for i in 1 2 3; do
             git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
