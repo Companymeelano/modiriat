@@ -170,6 +170,13 @@ p.table(['گروه', 'وضعیت', 'شرح'],
   ['ساخت/نصب/تست APK', 'مسدود محیط', 'بدون JDK/SDK/مخازن']],
  [0.30, 0.16, 0.54], rtl_cols=[0, 1, 2])
 
+# ---------- 13 apk ----------
+p.heading('۱۳) خروجی APK (ساخته‌شده توسط CI گیت‌هاب)', 1)
+p.para('ساخت در sandbox مسدود بود، اما با push به شاخه، 워크‌فلو Build APK روی رانر گیت‌هاب (JDK17+SDK36) اجرا شد و همهٔ گام‌ها از جمله کامپایل flavor انبار، امضا و انتشار موفق بودند. لینک‌های دانلود:', size=9.5)
+p.code('Release (signed):\nhttps://github.com/Companymeelano/modiriat/releases/download/v6.0.1-build-56/AtiranWarehouse-release.apk\nDebug:\nhttps://github.com/Companymeelano/modiriat/releases/download/v6.0.1-build-56/AtiranWarehouse-debug.apk\nRaw on branch:\nhttps://github.com/Companymeelano/modiriat/raw/arena/01a10295-modiriat/apk/AtiranWarehouse-release.apk')
+p.bullet('اندازه: release 2,528,032 بایت / debug 2,847,725 بایت؛ امضا با apksigner (v2/v3) در CI تأیید شد.')
+p.bullet('applicationId: ir.meelano.atiran.warehouse — جدا از نسخه‌های دیگر نصب می‌شود.')
+
 # ---------- 12 fingerprints ----------
 p.heading('۱۲) نسخه و اثرانگشت SHA-256', 1)
 files = [

@@ -175,3 +175,21 @@ Purchase(buyfact) → Receiving(meelano_wh_receive + مغایرت بدون اص�
 - Version Name 1.0.0 / Version Code 1 برای نسخهٔ انبار (پیشنهادی).
 - فایل‌های تحویل این جلسه: `docs/warehouse/*.md`, `tools/warehouse/persian_pdf.py`, `tools/warehouse/build_report.py`, `docs/warehouse/ATIRAN-WAREHOUSE-REPORT-fa.pdf`, `tools/icon/atiran-warehouse-icon-1024.png`.
 - SHA-256 هر فایل در خروجی `build_report.py` درج می‌شود.
+
+## ۱۴) خروجی APK (ساخته‌شده توسط CI گیت‌هاب)
+
+ساخت در sandbox مسدود بود، اما با push به شاخهٔ `arena/01a10295-modiriat`، 워크‌فلو `Build APK` روی رانر گیت‌هاب
+(JDK 17 + Android SDK 36) اجرا شد و **همهٔ گام‌ها موفق** بودند: کامپایل همهٔ flavorها از جمله `warehouse`،
+آزمون‌های واحد، بیلد release امضاشده، تأیید apksigner (v2/v3)، commit به `apk/` و انتشار Release.
+
+لینک‌های دانلود:
+```
+Release (signed):
+https://github.com/Companymeelano/modiriat/releases/download/v6.0.1-build-56/AtiranWarehouse-release.apk
+Debug:
+https://github.com/Companymeelano/modiriat/releases/download/v6.0.1-build-56/AtiranWarehouse-debug.apk
+Raw on branch:
+https://github.com/Companymeelano/modiriat/raw/arena/01a10295-modiriat/apk/AtiranWarehouse-release.apk
+```
+- اندازه: release 2,528,032 بایت / debug 2,847,725 بایت.
+- applicationId: `ir.meelano.atiran.warehouse` (جدا نصب می‌شود)؛ نسخه 1.0.0 / code 1.
