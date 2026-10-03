@@ -145,7 +145,12 @@ Purchase(buyfact) → Receiving(meelano_wh_receive + مغایرت بدون اص�
 | گروه | وضعیت | شرح |
 |---|---|---|
 | داشبورد انبار + KPI + صف کار | ✅ اعمال | MeelanoWarehouseActivity + dashboard() از دادهٔ واقعی |
+| برج کنترل + وضعیت فاکتورها (تب‌های جدید/برداشت/آماده/ناقص/تحویل) | ✅ اعمال | controlTower()/invoiceStages() — یک کوئری بدون N+1 |
 | مرکز فاکتور فروش + جزئیات + کسری | ✅ اعمال | salesList/salesDetail با موجودی ka_act |
+| جستجوی سراسری (کالا/فاکتور/مشتری) | ✅ اعمال | search() پارامتریزه با LIKE |
+| کالاهای بحرانی/کم‌موجود | ✅ اعمال | criticalStock() با الگوی تأییدشده stock<=5*mohvah |
+| تابلوی برداشت کارگران | ✅ اعمال | taskBoard() از meelano_wh_task |
+| فهرست تحویل‌ها | ✅ اعمال | deliveryList() از meelano_delivery |
 | دریافت خرید (باز/ثبت/بررسی مغایرت) | ✅ لایهٔ داده | openReceive/confirmReceive/reviewReceive؛ بدون اصلاح خودکار موجودی |
 | موجودی + گردش کالا | ✅ اعمال | inventoryList/movements |
 | شمارش/انبارگردانی + تأیید | ✅ لایهٔ داده | submitCount/approveCount (کور اختیاری) |

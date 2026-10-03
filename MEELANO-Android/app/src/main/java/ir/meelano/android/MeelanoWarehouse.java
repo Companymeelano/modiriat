@@ -409,4 +409,135 @@ final class MeelanoWarehouse {
         }
         return o;
     }
+
+    // ------------------------------------------------- invoice status center --
+    /** One query (no N+1) derives each sales invoice's warehouse stage from real tables. */
+    static JSONArray invoiceStages(Connection c, int top) throws Exception {
+        JSONArray arr = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) s.shfacfo, s.[date], ISNULL(c.MONAME,N'') man, "
+                        + "CASE WHEN EXISTS(SELECT 1 FROM dbo.meelano_delivery d WHERE d.shfacfo=s.shfacfo AND d.status=N'delivered') THEN N'delivered' "
+                        + "WHEN EXISTS(SELECT 1 FROM dbo.meelano_wh_task t WHERE t.shfacfo=s.shfacfo AND t.state=N'partial') THEN N'incomplete' "
+                        + "WHEN EXISTS(SELECT 1 FROM dbo.meelano_wh_task t WHERE t.shfacfo=s.shfacfo AND t.state=N'picking') THEN N'picking' "
+                        + "WHEN EXISTS(SELECT 1 FROM dbo.meelano_wh_task t WHERE t.shfacfo=s.shfacfo) THEN N'ready' "
+                        + "ELSE N'new' END stage "
+                        + "FROM dbo.sailfact s LEFT JOIN dbo.CUSTOMERS c ON c.SHMO=s.shmo "
+                        + "WHERE s.active='t' ORDER BY s.shfacfo DESC")) {
+            ps.setInt(1, top);
+            try (ResultSet r = ps.executeQuery()) {
+                while (r.next()) {
+                    arr.put(new JSONObject().put("shfacfo", r.getLong("shfacfo")).put("date", str(r, "date"))
+                            .put("customer", str(r, "man")).put("stage", str(r, "stage")));
+                }
+            }
+        }
+        return arr;
+    }
+
+    /** Control-tower flow counts, all from real data. */
+    static JSONObject controlTower(Connection c) throws Exception {
+        JSONObject o = new JSONObject();
+        JSONArray st = invoiceStages(c, 2000);
+        int nw = 0, pk = 0, rd = 0, inc = 0, dl = 0;
+        for (int i = 0; i < st.length(); i++) {
+            String s = st.optJSONObject(i).optString("stage");
+            if ("new".equals(s)) nw++; else if ("picking".equals(s)) pk++;
+            else if ("ready".equals(s)) rd++; else if ("incomplete".equals(s)) inc++;
+            else if ("delivered".equals(s)) dl++;
+        }
+        o.put("new", nw); o.put("picking", pk); o.put("ready", rd); o.put("incomplete", inc); o.put("delivered", dl);
+        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.meelano_wh_receive WHERE state=N'diff'")) {
+            try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("receive_diff", r.getLong(1)); }
+        }
+        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.meelano_delivery WHERE status=N'partial'")) {
+            try (ResultSet r = ps.executeQuery()) { if (r.next()) o.put("delivery_partial", r.getLong(1)); }
+        }
+        return o;
+    }
+
+    // ---------------------------------------------------------- critical stock --
+    /** Low/critical stock using the app's own verified threshold pattern (stock <= 5*mohvah). */
+    static JSONArray criticalStock(Connection c, int top) throws Exception {
+        JSONArray arr = new JSONArray();
+        String stock = MainActivity.atiranStockApply("i", "stx");
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) i.shka, ISNULL(i.naka,N'') naka, ISNULL(stx.stock_qty,0) stock, ISNULL(i.mohvah,0) mohvah "
+                        + "FROM dbo.inventory i " + stock + " "
+                        + "WHERE ISNULL(stx.stock_qty,0) <= 5*ISNULL(NULLIF(TRY_CONVERT(decimal(19,3),i.mohvah),0),1) "
+                        + "ORDER BY ISNULL(stx.stock_qty,0)")) {
+            ps.setInt(1, top);
+            try (ResultSet r = ps.executeQuery()) {
+                while (r.next()) {
+                    arr.put(new JSONObject().put("shka", r.getLong("shka")).put("name", str(r, "naka"))
+                            .put("stock", num(r, "stock")).put("critical", num(r, "stock") < 0));
+                }
+            }
+        }
+        return arr;
+    }
+
+    // ------------------------------------------------------------- task board --
+    static JSONArray taskBoard(Connection c, int top) throws Exception {
+        JSONArray arr = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) t.id, t.shfacfo, t.shka, ISNULL(i.naka,N'') naka, t.requested, t.picked, t.state, ISNULL(t.assignee_name,N'') an "
+                        + "FROM dbo.meelano_wh_task t LEFT JOIN dbo.inventory i ON i.shka=t.shka ORDER BY t.id DESC")) {
+            ps.setInt(1, top);
+            try (ResultSet r = ps.executeQuery()) {
+                while (r.next()) {
+                    arr.put(new JSONObject().put("id", r.getLong("id")).put("shfacfo", r.getLong("shfacfo"))
+                            .put("name", str(r, "naka")).put("requested", num(r, "requested")).put("picked", num(r, "picked"))
+                            .put("state", str(r, "state")).put("assignee", str(r, "an")));
+                }
+            }
+        }
+        return arr;
+    }
+
+    // ---------------------------------------------------------- delivery list --
+    static JSONArray deliveryList(Connection c, int top) throws Exception {
+        JSONArray arr = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) d.id, d.shfacfo, ISNULL(d.customer,N'') cus, d.status, ISNULL(d.assignee_name,N'') an "
+                        + "FROM dbo.meelano_delivery d ORDER BY d.id DESC")) {
+            ps.setInt(1, top);
+            try (ResultSet r = ps.executeQuery()) {
+                while (r.next()) {
+                    arr.put(new JSONObject().put("id", r.getLong("id")).put("shfacfo", r.getLong("shfacfo"))
+                            .put("customer", str(r, "cus")).put("status", str(r, "status")).put("assignee", str(r, "an")));
+                }
+            }
+        }
+        return arr;
+    }
+
+    // ------------------------------------------------------------------ search --
+    static JSONObject search(Connection c, String q, int top) throws Exception {
+        JSONObject out = new JSONObject();
+        String like = "%" + q + "%";
+        JSONArray prods = new JSONArray();
+        String stock = MainActivity.atiranStockApply("i", "stx");
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) i.shka, ISNULL(i.naka,N'') naka, ISNULL(stx.stock_qty,0) stock FROM dbo.inventory i " + stock + " "
+                        + "WHERE i.naka LIKE ? OR TRY_CONVERT(nvarchar(30),i.shka) LIKE ? ORDER BY i.naka")) {
+            ps.setInt(1, top); ps.setString(2, like); ps.setString(3, like);
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) prods.put(new JSONObject()
+                    .put("shka", r.getLong("shka")).put("name", str(r, "naka")).put("stock", num(r, "stock"))); }
+        }
+        JSONArray invs = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) s.shfacfo, s.[date] FROM dbo.sailfact s WHERE s.active='t' AND TRY_CONVERT(nvarchar(30),s.shfacfo) LIKE ? ORDER BY s.shfacfo DESC")) {
+            ps.setInt(1, top); ps.setString(2, like);
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) invs.put(new JSONObject()
+                    .put("shfacfo", r.getLong("shfacfo")).put("date", str(r, "date"))); }
+        }
+        JSONArray custs = new JSONArray();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (?) SHMO, ISNULL(MONAME,N'') moname FROM dbo.CUSTOMERS WHERE MONAME LIKE ? ORDER BY MONAME")) {
+            ps.setInt(1, top); ps.setString(2, like);
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) custs.put(new JSONObject()
+                    .put("shmo", r.getLong("SHMO")).put("name", str(r, "moname"))); }
+        }
+        return out.put("products", prods).put("invoices", invs).put("customers", custs);
+    }
 }

@@ -25,7 +25,7 @@ VERIFIED = {
  'customers': {'shmo','moname','man','rdf_masir'},
  'buyfact': {'shmo'},
  'subbuyfact': set(),
- 'meelano_delivery': {'id','shfacfo','rdf__','status','assignee','assignee_name','delivered_at','receiver_name','signature','created_at','updated_at'},
+ 'meelano_delivery': {'id','shfacfo','rdf__','status','assignee','assignee_name','customer','delivered_at','receiver_name','signature','created_at','updated_at'},
  'meelano_delivery_item': {'id','delivery_id','shka','name','qty','state','reason'},
  'meelano_delivery_log': {'id','delivery_id','action','actor'},
  'meelano_wh_task': {'id','shfacfo','rdf__','shka','requested','picked','state','assignee','assignee_name','reason','started_at','done_at','created_by','created_at','updated_at'},
