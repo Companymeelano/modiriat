@@ -19,6 +19,10 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 
 /**
@@ -69,6 +73,10 @@ public class MeelanoWarehouseActivity extends Activity {
         refresh.setText("بروزرسانی");
         refresh.setOnClickListener(v -> load());
         actions.addView(refresh);
+        Button export = new Button(this);
+        export.setText("خروجی CSV");
+        export.setOnClickListener(v -> exportCsv());
+        actions.addView(export);
         root.addView(actions);
 
         LinearLayout searchRow = new LinearLayout(this);
@@ -115,6 +123,31 @@ public class MeelanoWarehouseActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    private void exportCsv() {
+        status.setText("در حال ساخت خروجی CSV…");
+        new Thread(() -> {
+            try (Connection c = MainActivity.backgroundConnection(this)) {
+                String inv = MeelanoWarehouse.inventoryCsv(c);
+                String sales = MeelanoWarehouse.salesCsv(c);
+                File dir = getExternalFilesDir(null);
+                if (dir == null) dir = getFilesDir();
+                File f1 = new File(dir, "atiran-inventory.csv");
+                File f2 = new File(dir, "atiran-sales.csv");
+                write(f1, inv); write(f2, sales);
+                final String path = f1.getAbsolutePath();
+                main.post(() -> status.setText("خروجی ذخیره شد: " + path));
+            } catch (Exception e) {
+                main.post(() -> status.setText("خروجی CSV با مشکل مواجه شد."));
+            }
+        }).start();
+    }
+
+    private static void write(File f, String content) throws Exception {
+        try (OutputStreamWriter w = new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)) {
+            w.write(content);
+        }
     }
 
     private void doSearch(String q) {

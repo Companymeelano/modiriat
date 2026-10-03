@@ -540,4 +540,42 @@ final class MeelanoWarehouse {
         }
         return out.put("products", prods).put("invoices", invs).put("customers", custs);
     }
+
+    // ------------------------------------------------------------- CSV export --
+    /** Persian/UTF-8 (BOM) CSV of current stock, Excel-compatible. */
+    static String inventoryCsv(Connection c) throws Exception {
+        StringBuilder sb = new StringBuilder("﻿کد,نام,موجودی,بسته\n");
+        String stock = MainActivity.atiranStockApply("i", "stx");
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery(
+                "SELECT i.shka, ISNULL(i.naka,N'') naka, ISNULL(stx.stock_qty,0) stock, ISNULL(i.mohvah,0) mohvah "
+                        + "FROM dbo.inventory i " + stock + " ORDER BY i.naka")) {
+            while (r.next()) sb.append(r.getLong("shka")).append(',').append(csv(r.getString("naka"))).append(',')
+                    .append(r.getDouble("stock")).append(',').append(r.getDouble("mohvah")).append('\n');
+        }
+        return sb.toString();
+    }
+
+    /** CSV of sales invoices with derived warehouse stage. */
+    static String salesCsv(Connection c) throws Exception {
+        StringBuilder sb = new StringBuilder("﻿شماره,تاریخ,مشتری,وضعیت\n");
+        JSONArray st = invoiceStages(c, 5000);
+        for (int i = 0; i < st.length(); i++) {
+            JSONObject o = st.optJSONObject(i); if (o == null) continue;
+            sb.append(o.optLong("shfacfo")).append(',').append(csv(o.optString("date"))).append(',')
+              .append(csv(o.optString("customer"))).append(',').append(csv(stageFa(o.optString("stage")))).append('\n');
+        }
+        return sb.toString();
+    }
+
+    private static String stageFa(String s) {
+        switch (s) { case "new": return "جدید"; case "picking": return "برداشت"; case "ready": return "آماده تحویل";
+            case "incomplete": return "ناقص"; case "delivered": return "تحویل‌شده"; default: return s; }
+    }
+
+    private static String csv(String v) {
+        if (v == null) return "";
+        boolean need = v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0;
+        String e = v.replace("\"", "\"\"");
+        return need ? "\"" + e + "\"" : e;
+    }
 }
