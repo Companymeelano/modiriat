@@ -7,7 +7,7 @@
  "sections": {
   "home_dashboard": {
    "statements": 9,
-   "ms": 2342,
+   "ms": 1929,
    "values": {
     "kpi_counts_one_statement": [
      [
@@ -106,7 +106,7 @@
   },
   "manager_reports": {
    "statements": 14,
-   "ms": 3679,
+   "ms": 2993,
    "values": {
     "sales_today": [
      [
@@ -227,7 +227,7 @@
   },
   "management_intelligence": {
    "statements": 9,
-   "ms": 2551,
+   "ms": 2128,
    "values": {
     "cockpit_sales_30d_with_prev": [
      [
@@ -410,7 +410,7 @@
   },
   "sales_supervision": {
    "statements": 6,
-   "ms": 1567,
+   "ms": 1307,
    "values": {
     "visitor_performance": [
      [
@@ -488,8 +488,8 @@
    "notes": []
   },
   "visit_object": {
-   "statements": 10,
-   "ms": 2767,
+   "statements": 16,
+   "ms": 3673,
    "values": {
     "objects_named_visit": [
      [
@@ -516,6 +516,56 @@
       "0"
      ]
     ],
+    "visit_schema": [
+     [
+      "Hamrah"
+     ]
+    ],
+    "visit_columns_typed": [
+     [
+      "VisitID:bigint(8),VisRdf:int(4),Shmo:int(4),Dura"
+     ]
+    ],
+    "baze_columns_typed": [
+     [
+      "rdf:int,name:varchar,sta:char,end_:char,Active:b"
+     ]
+    ],
+    "vis_goals_all_columns": [
+     [
+      "rdf,baze_rdf,vis_rdf,CustomerGroupRdf,mab,ted,Ac"
+     ]
+    ],
+    "vis_goals_sample": [
+     [
+      "4",
+      "2",
+      "10000000000.00"
+     ],
+     [
+      "4",
+      "1",
+      "10000000000.00"
+     ],
+     [
+      "9",
+      "2",
+      "10000000000.00"
+     ],
+     [
+      "9",
+      "1",
+      "10000000000.00"
+     ]
+    ],
+    "baze_sample": [
+     [
+      "1 شهريور 1405"
+     ],
+     [
+      "2 مهر 1405"
+     ]
+    ],
     "vis_goals_columns": [
      [
       "rdf:int,baze_rdf:int,vis_rdf:int,CustomerGroupRd"
@@ -538,7 +588,7 @@
   },
   "extra_schema": {
    "statements": 3,
-   "ms": 765,
+   "ms": 655,
    "values": {
     "putchk_rows": [
      [
@@ -613,7 +663,7 @@
   "p1a": "1403/07/13",
   "p1b": "1404/07/11"
  },
- "total_statements": 62,
- "total_ms": 13671,
+ "total_statements": 68,
+ "total_ms": 12685,
  "roundtrip_ms_reference": 192
 }

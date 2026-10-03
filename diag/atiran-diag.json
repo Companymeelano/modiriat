@@ -3,92 +3,92 @@
  "sections": {
   "timings": {
    "server_today": {
-    "ms": 241,
+    "ms": 205,
     "rows": 1,
     "error": null
    },
    "stock_fn": {
-    "ms": 240,
+    "ms": 211,
     "rows": 1,
     "error": null
    },
    "old_range_1m": {
-    "ms": 490,
+    "ms": 430,
     "rows": 1,
     "error": null
    },
    "new_range_1m": {
-    "ms": 251,
+    "ms": 224,
     "rows": 1,
     "error": null
    },
    "old_range_1m_sum": {
-    "ms": 254,
-    "rows": 1,
-    "error": null
-   },
-   "new_range_1m_sum": {
-    "ms": 250,
-    "rows": 1,
-    "error": null
-   },
-   "old_dedupe_source": {
-    "ms": 270,
-    "rows": 1,
-    "error": null
-   },
-   "new_plain_agg": {
-    "ms": 250,
-    "rows": 1,
-    "error": null
-   },
-   "dup_check": {
-    "ms": 250,
-    "rows": 1,
-    "error": null
-   },
-   "latest_anchor_app": {
-    "ms": 263,
-    "rows": 1,
-    "error": null
-   },
-   "latest_anchor_typed": {
-    "ms": 257,
-    "rows": 1,
-    "error": null
-   },
-   "home_customers_debt": {
     "ms": 249,
     "rows": 1,
     "error": null
    },
+   "new_range_1m_sum": {
+    "ms": 218,
+    "rows": 1,
+    "error": null
+   },
+   "old_dedupe_source": {
+    "ms": 220,
+    "rows": 1,
+    "error": null
+   },
+   "new_plain_agg": {
+    "ms": 219,
+    "rows": 1,
+    "error": null
+   },
+   "dup_check": {
+    "ms": 217,
+    "rows": 1,
+    "error": null
+   },
+   "latest_anchor_app": {
+    "ms": 220,
+    "rows": 1,
+    "error": null
+   },
+   "latest_anchor_typed": {
+    "ms": 219,
+    "rows": 1,
+    "error": null
+   },
+   "home_customers_debt": {
+    "ms": 204,
+    "rows": 1,
+    "error": null
+   },
    "home_sales_today_old": {
-    "ms": 256,
+    "ms": 219,
     "rows": 1,
     "error": null
    },
    "visitors_rows": {
-    "ms": 272,
+    "ms": 208,
     "rows": 1,
     "error": null
    },
    "sys_users_rows": {
-    "ms": 241,
+    "ms": 208,
     "rows": 1,
     "error": null
    },
    "inventory_rows": {
-    "ms": 239,
+    "ms": 210,
     "rows": 1,
     "error": null
    },
    "ka_act_rows": {
-    "ms": 250,
+    "ms": 239,
     "rows": 1,
     "error": null
    },
    "buyfact_rows": {
-    "ms": 238,
+    "ms": 229,
     "rows": 1,
     "error": null
    }
@@ -150,7 +150,7 @@
   "1",
   "1"
  ],
- "roundtrip_ms": 240,
+ "roundtrip_ms": 206,
  "tables": {
   "sailfact": {
    "exists": true,
