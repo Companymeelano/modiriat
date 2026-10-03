@@ -12,7 +12,7 @@ import java.util.List;
 import static ir.meelano.android.finance.FinDb.count;
 import static ir.meelano.android.finance.FinDb.select;
 import static ir.meelano.android.finance.FinDb.sum;
-import static ir.meelano.android.finance.FinDb.text;
+import static ir.meelano.android.finance.FinDb.scalarText;
 import static ir.meelano.android.finance.FinDb.value;
 
 /**
@@ -82,7 +82,7 @@ public final class FinQueries {
     /** ✔ the database's own Jalali "today"; the device date is only a fallback when offline. */
     public static String serverToday(Connection c) {
         try {
-            String v = text(c, "SELECT CONVERT(char(10), dbo.ReturnDateServer()) AS v");
+            String v = scalarText(c, "SELECT CONVERT(char(10), dbo.ReturnDateServer()) AS v");
             return v == null || v.isEmpty() ? FinFmt.todayLocal() : v;
         } catch (Exception e) {
             return FinFmt.todayLocal();
@@ -742,8 +742,8 @@ public final class FinQueries {
         o.put("outMonth", sum(c, "SELECT ISNULL(SUM(BES),0) AS v" + live + " AND DATE>=? AND DATE<=?", MeelanoJalali.monthStart(today), today));
         o.put("opening", sum(c, "SELECT ISNULL(SUM(BED),0) AS v FROM dbo.COW WITH (NOLOCK) WHERE act_id=71"));
         o.put("rows", count(c, "SELECT COUNT(*) AS v" + live));
-        o.put("lastDate", text(c, "SELECT MAX(DATE) AS v" + live));
-        o.put("firstDate", text(c, "SELECT MIN(DATE) AS v" + live));
+        o.put("lastDate", scalarText(c, "SELECT MAX(DATE) AS v" + live));
+        o.put("firstDate", scalarText(c, "SELECT MIN(DATE) AS v" + live));
         o.put("byKind", select(c, "SELECT act_id, COUNT(*) AS n, ISNULL(SUM(BED),0) AS in_amount, ISNULL(SUM(BES),0) AS out_amount, "
                 + "MIN(LEFT(ISNULL(DIS,N''),40)) AS sample" + live + " GROUP BY act_id ORDER BY n DESC"));
         return o;

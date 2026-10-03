@@ -4,7 +4,7 @@ import java.util.Calendar;
 import java.util.Locale;
 
 /** Persian (Jalali) calendar arithmetic for Atiran's "1405/07/06" dates (day numbers, +/- days, month names). */
-final class MeelanoJalali {
+public final class MeelanoJalali {
     private MeelanoJalali() { }
 
     private static final int[] BREAKS = {-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178};

@@ -7,6 +7,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
@@ -68,6 +69,7 @@ public class AtiranFinanceActivity extends Activity {
     private boolean showingLogin;
 
     private final Handler main = new Handler(Looper.getMainLooper());
+    private Object backCallback;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -276,6 +278,7 @@ public class AtiranFinanceActivity extends Activity {
         renderHeader("… در حال اتصال", true);
         renderNav();
         showTab(TAB_HOME, true);
+        updateBackCallback();
         loadServerDate();
         probeConnection();
     }
@@ -306,7 +309,7 @@ public class AtiranFinanceActivity extends Activity {
 
         LinearLayout meta = ui.row();
         meta.setPadding(0, ui.dp(8), 0, 0);
-        meta.addView(ui.chip("تاریخ سرور: " + fa(serverToday == null ? "…" : serverToday), dateColor()), ui.lp(-2, -2));
+        meta.addView(ui.chip("تاریخ سرور: " + FinFmt.faNumber(serverToday == null ? "…" : serverToday), dateColor()), ui.lp(-2, -2));
         meta.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
         meta.addView(ui.chip("بازه: " + FinFmt.periodLabel(periodKey), ui.goldAccent), ui.lp(-2, -2));
         View filler = ui.spacer(1);
@@ -356,6 +359,7 @@ public class AtiranFinanceActivity extends Activity {
         tab = target;
         if (resetStack) stack.clear();
         renderNav();
+        updateBackCallback();
         switch (target) {
             case TAB_MONEY: push(new FinScreenSales(this), false); break;
             case TAB_CHECKS: push(new FinScreenCheques(this), false); break;
@@ -373,6 +377,7 @@ public class AtiranFinanceActivity extends Activity {
     private void push(FinScreen screen, boolean animate) {
         stack.push(screen);
         current = screen;
+        updateBackCallback();
         View v = screen.build();
         contentHost.removeAllViews();
         contentHost.addView(v, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -393,6 +398,28 @@ public class AtiranFinanceActivity extends Activity {
         } else {
             finish();
         }
+        updateBackCallback();
+    }
+
+    /**
+     * Android 13+ (and required from targetSdk 36) delivers Back through OnBackInvokedCallback; the
+     * callback is registered only while there is somewhere to go back to, so on the home screen the
+     * system plays its own "back to home" animation. The same pattern is used by MainActivity.
+     */
+    private void updateBackCallback() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        try {
+            boolean needed = !showingLogin && (stack.size() > 1 || !TAB_HOME.equals(tab));
+            android.window.OnBackInvokedDispatcher d = getOnBackInvokedDispatcher();
+            if (needed && backCallback == null) {
+                android.window.OnBackInvokedCallback cb = this::back;
+                d.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, cb);
+                backCallback = cb;
+            } else if (!needed && backCallback != null) {
+                d.unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backCallback);
+                backCallback = null;
+            }
+        } catch (Throwable ignored) { }
     }
 
     @Override public void onBackPressed() {

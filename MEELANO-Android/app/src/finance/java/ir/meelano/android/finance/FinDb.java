@@ -493,7 +493,7 @@ public final class FinDb {
         return (int) Math.round(sum(c, sql, args));
     }
 
-    public static String text(Connection c, String sql, Object... args) throws SQLException {
+    public static String scalarText(Connection c, String sql, Object... args) throws SQLException {
         Object v = value(c, sql, args);
         return v == null || v == JSONObject.NULL ? "" : String.valueOf(v);
     }

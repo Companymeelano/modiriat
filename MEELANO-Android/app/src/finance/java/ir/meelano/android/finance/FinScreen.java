@@ -198,6 +198,8 @@ public abstract class FinScreen {
         return r;
     }
 
+    protected View kv(String key, String value) { return kv(key, value, ui.textColor); }
+
     protected View kvMoney(String key, double amount) {
         return kv(key, money(amount) + " " + FinFmt.CURRENCY, amount < 0 ? FinUi.DANGER : ui.textColor);
     }
