@@ -1,5 +1,10 @@
-10-03 18:40:35.982  8241  8285 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
-10-03 18:40:35.982  8241  8285 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
-10-03 18:40:36.138   557   579 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +3s220ms
-10-03 18:40:42.539   557  1500 D CoreBackPreview: Window{b634b93 u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
-10-03 18:40:42.554   557  1078 W InputManager-JNI: Input channel object 'b634b93 ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-03 19:30:37.115   561  1004 D CoreBackPreview: Window{99d46f u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@8fcfe05, mPriority=-1, mIsAnimationCallback=false}
+10-03 19:30:37.181  1192  1233 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.manager.debug/ir.meelano.android.MainActivity}
+10-03 19:30:37.207  1192  1233 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.store.debug/ir.meelano.android.MainActivity}
+10-03 19:30:37.288  1192  1233 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.visitor.debug/ir.meelano.android.MainActivity}
+10-03 19:30:37.299  1192  1233 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.staff.debug/ir.meelano.android.MainActivity}
+10-03 19:30:38.351  8347  8398 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
+10-03 19:30:38.351  8347  8398 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
+10-03 19:30:38.375   561   581 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +3s772ms
+10-03 19:30:44.915   561  1646 D CoreBackPreview: Window{99d46f u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
+10-03 19:30:44.952   561  1646 W InputManager-JNI: Input channel object '99d46f ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
