@@ -162,8 +162,10 @@ done
 
 # ---------------------------------------------------------------- large font + narrow screen pass
 tap_text "خانه" || true; sleep 2
+# Small-phone pass: 720x1480 px at 340 dpi is ~339dp x 696dp — a real compact phone. (360x740 px at
+# 340dpi would be a 169dp-wide screen, which no device has, and would only produce noise.)
 adb shell settings put system font_scale 1.30
-adb shell wm size 360x740
+adb shell wm size 720x1480
 adb shell wm density 340
 adb shell am force-stop "$PKG"
 adb shell am start -S -W -n "$PKG/$ACT" >/dev/null
