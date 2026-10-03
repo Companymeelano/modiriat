@@ -1,13 +1,18 @@
-/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py:128: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-  out = {"ok": True, "generated_utc": datetime.datetime.utcnow().isoformat() + "Z",
-/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py:584: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-  datetime.datetime.utcnow().isoformat() + "Z", "errors": tb.splitlines()[-6:]}
 connecting to live Atiran server (host/db/user hidden, read-only)
+objects: 490 tables, 141 views, 248 procedures, 284 functions
+probing 34 finance tables individually
+date probe columns: 74
+status domains: 63
+freshness tables: 7
+sample dumps: 34
+schema json written: docs/finance/AtiranFinancialSchema.json (1674443 bytes)
 FATAL: Traceback (most recent call last):
-  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 577, in cli
+  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 579, in cli
     main()
-  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 207, in main
-    out[key][o["name"]] = {"schema": o.get("schema_name"), "rows": o.get("rows_est"),
-    ~~~^^^^^
-KeyError: 'functions'
+  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 462, in main
+    write_markdown(out, MD)
+  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 553, in write_markdown
+    add("| `%s` | %s | %s |" % (k, v.get("rows_est"), v.get("rows_exact", v.get("count_error", "—"))))
+                                   ^^^^^
+AttributeError: 'list' object has no attribute 'get'
 

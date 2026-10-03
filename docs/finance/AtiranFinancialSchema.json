@@ -1,13 +1,13 @@
 {
  "ok": false,
- "fatal": "'functions'",
- "generated_utc": "2026-10-03T21:55:53.098204Z",
+ "fatal": "'list' object has no attribute 'get'",
+ "generated_utc": "2026-10-03T21:57:36.254650Z",
  "errors": [
-  "  File \"/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py\", line 577, in cli",
-  "    main()",
-  "  File \"/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py\", line 207, in main",
-  "    out[key][o[\"name\"]] = {\"schema\": o.get(\"schema_name\"), \"rows\": o.get(\"rows_est\"),",
-  "    ~~~^^^^^",
-  "KeyError: 'functions'"
+  "  File \"/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py\", line 462, in main",
+  "    write_markdown(out, MD)",
+  "  File \"/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py\", line 553, in write_markdown",
+  "    add(\"| `%s` | %s | %s |\" % (k, v.get(\"rows_est\"), v.get(\"rows_exact\", v.get(\"count_error\", \"—\"))))",
+  "                                   ^^^^^",
+  "AttributeError: 'list' object has no attribute 'get'"
  ]
 }
