@@ -1,15 +1,15 @@
 == AnalyticsLive ==
 app build: MeelanoSql + ManagerAnalytics + MeelanoJalali, jTDS 1.3.1
 server: 37.143.147.19:1433/Atiran2
-first connection (login + TCP): 1062 ms
-cold fetchParallel(2)  [first dashboard load]    5373 ms   errors=0
-warm fetch(conn,2)      [old sequential path]    6844 ms   errors=0
-warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
+first connection (login + TCP): 1490 ms
+cold fetchParallel(2)  [first dashboard load]    6517 ms   errors=0
+warm fetch(conn,2)      [old sequential path]    8485 ms   errors=0
+warm fetchParallel(2)   [shipped path]           2003 ms   errors=0
 
-================ fetchParallel(range=0)  1608 ms ================
+================ fetchParallel(range=0)  2170 ms ================
 -- no section errors --
 -- section timings (ms) --
-   {"checkBuckets":178,"visitors":579,"feed":782,"purchases":410,"trend":408,"receivables":186,"debtors":389,"customers":593,"aging":193,"credit":403,"sales":207,"products":416}
+   {"checkBuckets":468,"visitors":1498,"feed":963,"purchases":244,"trend":518,"receivables":493,"debtors":494,"customers":732,"aging":270,"credit":572,"sales":251,"products":551}
 -- figures --
   sales: total=9.9983787279E10 docs=842 parties=292 paid=5580000.0 prev=1.07147766E10 date=1405/07/11
   purchases: total=7.2225693817E10 docs=54 prev=1.33E8
@@ -287,20 +287,20 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
       "type": "check"
     }
   ],
-  "syncAt": 1791054696688,
+  "syncAt": 1791055010657,
   "timings": {
-    "checkBuckets": 178,
-    "visitors": 579,
-    "feed": 782,
-    "purchases": 410,
-    "trend": 408,
-    "receivables": 186,
-    "debtors": 389,
-    "customers": 593,
-    "aging": 193,
-    "credit": 403,
-    "sales": 207,
-    "products": 416
+    "checkBuckets": 468,
+    "visitors": 1498,
+    "feed": 963,
+    "purchases": 244,
+    "trend": 518,
+    "receivables": 493,
+    "debtors": 494,
+    "customers": 732,
+    "aging": 270,
+    "credit": 572,
+    "sales": 251,
+    "products": 551
   },
   "receivables": {
     "total": 8.930419291E10,
@@ -616,10 +616,10 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
   "errors": []
 }
 
-================ fetchParallel(range=1)  1653 ms ================
+================ fetchParallel(range=1)  2468 ms ================
 -- no section errors --
 -- section timings (ms) --
-   {"checkBuckets":183,"visitors":1130,"feed":421,"purchases":394,"trend":207,"receivables":181,"debtors":393,"customers":1231,"aging":210,"credit":260,"sales":413,"products":820}
+   {"checkBuckets":358,"visitors":1079,"feed":1057,"purchases":523,"trend":261,"receivables":250,"debtors":520,"customers":1148,"aging":276,"credit":271,"sales":523,"products":1154}
 -- figures --
   sales: total=2.76569422E10 docs=229 parties=144 paid=2280000.0 prev=3.4153373399E10 date=1405/07/11
   purchases: total=3.7783327632E10 docs=19 prev=1.0172229633E10
@@ -897,20 +897,20 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
       "type": "check"
     }
   ],
-  "syncAt": 1791054698308,
+  "syncAt": 1791055012838,
   "timings": {
-    "checkBuckets": 183,
-    "visitors": 1130,
-    "feed": 421,
-    "purchases": 394,
-    "trend": 207,
-    "receivables": 181,
-    "debtors": 393,
-    "customers": 1231,
-    "aging": 210,
-    "credit": 260,
-    "sales": 413,
-    "products": 820
+    "checkBuckets": 358,
+    "visitors": 1079,
+    "feed": 1057,
+    "purchases": 523,
+    "trend": 261,
+    "receivables": 250,
+    "debtors": 520,
+    "customers": 1148,
+    "aging": 276,
+    "credit": 271,
+    "sales": 523,
+    "products": 1154
   },
   "receivables": {
     "total": 8.930419291E10,
@@ -1226,10 +1226,10 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
   "errors": []
 }
 
-================ fetchParallel(range=2)  1900 ms ================
+================ fetchParallel(range=2)  1548 ms ================
 -- no section errors --
 -- section timings (ms) --
-   {"checkBuckets":183,"visitors":580,"feed":915,"purchases":410,"trend":205,"receivables":204,"debtors":836,"customers":780,"aging":463,"credit":321,"sales":207,"products":417}
+   {"checkBuckets":234,"visitors":802,"feed":510,"purchases":512,"trend":249,"receivables":251,"debtors":489,"customers":740,"aging":480,"credit":307,"sales":280,"products":524}
 -- figures --
   sales: total=9.9983787279E10 docs=842 parties=292 paid=5580000.0 prev=1.07147766E10 date=1405/07/11
   purchases: total=7.2225693817E10 docs=54 prev=1.33E8
@@ -1507,20 +1507,20 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
       "type": "check"
     }
   ],
-  "syncAt": 1791054699966,
+  "syncAt": 1791055015310,
   "timings": {
-    "checkBuckets": 183,
-    "visitors": 580,
-    "feed": 915,
-    "purchases": 410,
-    "trend": 205,
-    "receivables": 204,
-    "debtors": 836,
-    "customers": 780,
-    "aging": 463,
-    "credit": 321,
-    "sales": 207,
-    "products": 417
+    "checkBuckets": 234,
+    "visitors": 802,
+    "feed": 510,
+    "purchases": 512,
+    "trend": 249,
+    "receivables": 251,
+    "debtors": 489,
+    "customers": 740,
+    "aging": 480,
+    "credit": 307,
+    "sales": 280,
+    "products": 524
   },
   "receivables": {
     "total": 8.930419291E10,
@@ -1836,10 +1836,10 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
   "errors": []
 }
 
-================ fetchParallel(range=3)  1540 ms ================
+================ fetchParallel(range=3)  1848 ms ================
 -- no section errors --
 -- section timings (ms) --
-   {"checkBuckets":201,"visitors":935,"feed":398,"purchases":364,"trend":423,"receivables":365,"debtors":387,"customers":773,"aging":189,"credit":217,"sales":420,"products":934}
+   {"checkBuckets":273,"visitors":959,"feed":525,"purchases":481,"trend":286,"receivables":245,"debtors":524,"customers":1034,"aging":248,"credit":273,"sales":531,"products":1021}
 -- figures --
   sales: total=1.10698563879E11 docs=970 parties=310 paid=1.201E7 prev=0.0 date=1405/07/11
   purchases: total=7.2358693817E10 docs=56 prev=0.0
@@ -2084,20 +2084,20 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
       "type": "check"
     }
   ],
-  "syncAt": 1791054701870,
+  "syncAt": 1791055016861,
   "timings": {
-    "checkBuckets": 201,
-    "visitors": 935,
-    "feed": 398,
-    "purchases": 364,
-    "trend": 423,
-    "receivables": 365,
-    "debtors": 387,
-    "customers": 773,
-    "aging": 189,
-    "credit": 217,
-    "sales": 420,
-    "products": 934
+    "checkBuckets": 273,
+    "visitors": 959,
+    "feed": 525,
+    "purchases": 481,
+    "trend": 286,
+    "receivables": 245,
+    "debtors": 524,
+    "customers": 1034,
+    "aging": 248,
+    "credit": 273,
+    "sales": 531,
+    "products": 1021
   },
   "receivables": {
     "total": 8.930419291E10,
@@ -2415,17 +2415,17 @@ warm fetchParallel(2)   [shipped path]           1560 ms   errors=0
 
 ================ jTDS statement-length probe ================
   base statement: 1385 chars / 2770 utf16 bytes
-  len=4000 chars (8000 bytes)  plain: 369ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 408ms ERR The multi-part identifier "x.Deleted" could not be bound.
-  len=6000 chars (12000 bytes)  plain: 831ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 818ms ERR The multi-part identifier "x.Deleted" could not be bound.
-  len=8000 chars (16000 bytes)  plain: 827ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 724ms ERR The multi-part identifier "x.Deleted" could not be bound.
-  len=12000 chars (24000 bytes)  plain: 761ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 758ms ERR The multi-part identifier "x.Deleted" could not be bound.
-  len=16000 chars (32000 bytes)  plain: 758ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 815ms ERR The multi-part identifier "x.Deleted" could not be bound.
-  len=20000 chars (40000 bytes)  plain: 857ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 808ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=4000 chars (8000 bytes)  plain: 521ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 530ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=6000 chars (12000 bytes)  plain: 502ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 529ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=8000 chars (16000 bytes)  plain: 632ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 541ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=12000 chars (24000 bytes)  plain: 532ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 578ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=16000 chars (32000 bytes)  plain: 595ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 519ms ERR The multi-part identifier "x.Deleted" could not be bound.
+  len=20000 chars (40000 bytes)  plain: 571ms ERR The multi-part identifier "x.Deleted" could not be bound.   |   with params: 617ms ERR The multi-part identifier "x.Deleted" could not be bound.
 
 ================ parenthesis guard ================
   SELECT COUNT_BIG(1) FROM dbo.[sailfact] h WHERE (1=1) AND (2=2)  ->  OK 1168
   SELECT COUNT_BIG(1) FROM dbo.[sailfact] h WHERE (1=1 AND (2=2)  ->  ERR MeelanoSql: دستور SQL تولیدشده پرانتز نامتوازن دارد (1 پرانتز بسته‌نشده) :: SELECT COUNT_BIG(1) FROM dbo.[sailfact] h WHERE (1=1 AND (2=2)
   SELECT N')' , N'(' FROM dbo.[sailfact] h  ->  OK )
 
-MeelanoSql.stats = اتصال‌های ساخته‌شده: 4 • بازاستفاده: 72 • اتصال مجدد: 0 • خطا: 0 • آخرین اتصال: 957ms
+MeelanoSql.stats = اتصال‌های ساخته‌شده: 4 • بازاستفاده: 72 • اتصال مجدد: 0 • خطا: 0 • آخرین اتصال: 1229ms
 ANYERR=0
