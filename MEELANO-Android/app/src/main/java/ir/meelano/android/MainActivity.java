@@ -478,6 +478,17 @@ public class MainActivity extends Activity {
             if (s == null) { selfTestLog("STEP login FAIL " + (loginError == null ? "" : loginError.getMessage())); selfTestLog("DONE"); return; }
             session = s; sessionLoginName = user; prefs.edit().putString(KEY_LAST_USER, user).apply();
             selfTestLog("STEP login OK visitorId=" + s.visitorId + " userId=" + s.userId + " role=" + s.accessRole);
+            // Debug self-test runs only (maybeStartDbSelfTest returns early on release builds).
+            // Log the exact generated SQL of the adaptive builders so a DB-backed e2e run can
+            // capture the real failing statement behind any "STEP … FAIL" line.
+            dbDiagLog = true;
+            // Read-only DB diagnostic: runs the dashboard SELECT queries and logs the exact
+            // generated SQL + any SQL error, then stops. It performs NO writes.
+            if ("1".equals(stringOr(intent.getStringExtra("meelano_db_diag"), ""))) {
+                runDbDiagnostic();
+                selfTestLog("DONE");
+                return;
+            }
             if (STORE_EDITION) { selfTestStore(s, user, customer, itemSpec, intent.getStringExtra("meelano_selftest_reject")); selfTestLog("DONE"); return; }
             if (STAFF_EDITION) { selfTestStaff(s, user, intent.getStringExtra("meelano_selftest_reject"), intent.getStringExtra("meelano_selftest_peer")); selfTestLog("DONE"); return; }
             selfTestStep("products", () -> queryProducts("", "all"));
@@ -521,6 +532,18 @@ public class MainActivity extends Activity {
     }
 
     /** Store app: only store staff may log in, reports, final sales invoice (sent twice) and GPS attendance. */
+    /**
+     * Read-only database diagnostic. Executes only the dashboard SELECT builders and logs the
+     * exact generated SQL (via DIAGSQL) plus any SQL Server error per dashboard. It never
+     * inserts, updates or deletes — safe to run against the production database.
+     */
+    private void runDbDiagnostic() {
+        try { JSONObject d = queryStoreData(); selfTestLog("STEP diag_store OK keys=" + d.length()); }
+        catch (Throwable ex) { selfTestLog("STEP diag_store FAIL " + ex.getClass().getSimpleName() + ": " + ex.getMessage()); }
+        try { JSONObject d = queryStaffData(); selfTestLog("STEP diag_staff OK keys=" + d.length()); }
+        catch (Throwable ex) { selfTestLog("STEP diag_staff FAIL " + ex.getClass().getSimpleName() + ": " + ex.getMessage()); }
+    }
+
     private void selfTestStore(UserSession s, String user, String customer, String itemSpec, String reject) {
         if (reject != null && reject.contains(":")) {
             try {
@@ -16898,14 +16921,25 @@ public class MainActivity extends Activity {
         return join(parts, ",");
     }
 
+    // Read-only diagnostic flag. When true (debug builds launched with meelano_db_diag=1),
+    // the adaptive SQL builders log the exact generated statement so a DB-backed e2e run can
+    // capture the real failing SQL. Never enabled in release, never writes to the database.
+    private boolean dbDiagLog = false;
+
     private String dedupeFactorSource(String table, Set<String> cols, String numberCol, String alias, String innerWhere) {
         String a = alias == null || alias.trim().isEmpty() ? "h" : alias.trim();
         String where = innerWhere == null || innerWhere.trim().isEmpty() ? "" : innerWhere.trim();
-        if (numberCol == null || numberCol.trim().isEmpty()) return "dbo.[" + table + "] " + a + (where.isEmpty() ? "" : " " + where.replace("x.", a + "."));
+        if (numberCol == null || numberCol.trim().isEmpty()) {
+            String simple = "dbo.[" + table + "] " + a + (where.isEmpty() ? "" : " " + where.replace("x.", a + "."));
+            if (dbDiagLog) selfTestLog("DIAGSQL[" + table + "/" + a + "] " + simple);
+            return simple;
+        }
         String numberExpr = "NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),x.[" + numberCol + "]))),N'')";
         String rowExpr = factorUniqueRowExpr(cols, "x");
         String partition = "COALESCE(" + numberExpr + "," + rowExpr + ")";
-        return "(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY " + partition + " ORDER BY " + factorLatestOrder(cols, "x") + ") AS _meelano_rn FROM dbo.[" + table + "] x " + where + ") mx WHERE mx._meelano_rn=1) " + a;
+        String built = "(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY " + partition + " ORDER BY " + factorLatestOrder(cols, "x") + ") AS _meelano_rn FROM dbo.[" + table + "] x " + where + ") mx WHERE mx._meelano_rn=1) " + a;
+        if (dbDiagLog) selfTestLog("DIAGSQL[" + table + "/" + a + "] " + built);
+        return built;
     }
 
     private String factorUniqueRowExpr(Set<String> cols, String alias) {
