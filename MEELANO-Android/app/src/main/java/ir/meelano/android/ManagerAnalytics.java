@@ -651,7 +651,14 @@ final class ManagerAnalytics {
         JSONObject out = new JSONObject();
         JSONArray perVisitor = new JSONArray();
         JSONArray recent = new JSONArray();
-        if (!tableExists(c, "Visit")) { out.put("perVisitor", perVisitor); out.put("recent", recent); return out; }
+        if (!tableExists(c, "Visit")) {
+            // The live Atiran2 database has no Visit table (verified by the CI probe), so this page must
+            // say so instead of looking like a broken query.
+            out.put("perVisitor", perVisitor); out.put("recent", recent);
+            out.put("available", false);
+            out.put("note", "در این نسخهٔ آتیران جدول Visit وجود ندارد؛ ثبت ویزیت میدانی روی سرور فعال نیست. دادهٔ ویزیتورها از sailfact و vis_goals خوانده می‌شود.");
+            return out;
+        }
         Set<String> v = columns(c, "Visit");
         String vVis = resolve(v, "VisRdf", "vis_rdf", "VisitRdf");
         String vDate = resolve(v, "DateCreated", "Created");

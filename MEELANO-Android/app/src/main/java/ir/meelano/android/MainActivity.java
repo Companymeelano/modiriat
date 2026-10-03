@@ -240,7 +240,9 @@ public class MainActivity extends Activity {
     private int HERO_END = Color.rgb(15, 19, 28);
     private int ON_PRIMARY = Color.rgb(20, 16, 10);
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    // Two workers: while one page is still reading, the next page the user opens can already start.
+    // (A single worker was the reason a slow «خانه» load made every other section look dead.)
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final ExecutorService preloadExecutor = Executors.newFixedThreadPool(3);
     private final NumberFormat numberFormat = NumberFormat.getInstance(new Locale("fa", "IR"));
     private SharedPreferences prefs;
@@ -451,7 +453,7 @@ public class MainActivity extends Activity {
     // report to logcat (tag MEELANO_SELFTEST). Without meelano_test_db nothing happens, so the
     // production server can never be used by this test. Release builds ignore all of it.
     // ---------------------------------------------------------------------------------------------
-    private volatile String debugDbHost = null;
+    private static volatile String debugDbHost = null;   // read by the static pooled-connection kit
 
     private void selfTestLog(String msg) { android.util.Log.i("MEELANO_SELFTEST", msg == null ? "" : msg.replace('\n', ' ')); }
 
@@ -4512,6 +4514,9 @@ public class MainActivity extends Activity {
                 });
             } catch (Exception e) {
                 if (prefs != null) prefs.edit().putString(KEY_LAST_CONNECTION_ERROR, nowText() + " • " + shortError(e)).apply();
+                // A failed page almost always means the pooled socket died (network switch, VPN, server
+                // restart). Drop the pool so «تلاش دوباره» logs in again instead of reusing a dead socket.
+                if (looksLikeConnectionLoss(e)) MeelanoSql.invalidateAll(shortError(e));
                 runOnUiThread(() -> {
                     setConnectionStatus("offline");
                     deliverToRequestPage(requestPage, () -> callback.fail(e));
@@ -4939,7 +4944,6 @@ public class MainActivity extends Activity {
                 if (i > 0) counts.append(", ");
                 if (SAFE_TABLES.contains(targets[i][1])) {
                     counts.append("(SELECT COUNT_BIG(1) FROM dbo.[").append(targets[i][1]).append("] WITH (NOLOCK))");
-                    readers.add(targets[i][1]);
                 } else {
                     counts.append("CAST(-1 AS bigint)");
                 }
@@ -11690,9 +11694,11 @@ public class MainActivity extends Activity {
 
     // =============================== Phase 4+: smart categorized manager reports ===============================
     private void loadManagerReports() {
-        content.removeAllViews();
-        addHero("گزارش‌های مدیریت", "تحلیل دسته‌بندی‌شدهٔ فروش، خرید، چک‌ها، مشتریان و پرسنل — ارقام مستقیم از آتیران.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_manager_reports", "گزارش‌های مدیریت", raw -> renderManagerReports(new JSONObject(raw)))) {
+            content.removeAllViews();
+            addHero("گزارش‌های مدیریت", "تحلیل دسته‌بندی‌شدهٔ فروش، خرید، چک‌ها، مشتریان و پرسنل — ارقام مستقیم از آتیران.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(this::queryManagerReports, new DbCallback() {
             @Override public void ok(String body) { try { managerReportsCacheJson = body; prefs.edit().putString("cache_manager_reports", body).apply(); renderManagerReports(new JSONObject(body)); } catch (Exception e) { showPageError("گزارش‌ها", e, () -> loadManagerReports()); } }
             @Override public void fail(Exception e) {
@@ -12092,7 +12098,8 @@ public class MainActivity extends Activity {
         JSONArray perVisitor = m.optJSONArray("perVisitor");
         JSONArray recent = m.optJSONArray("recent");
         if ((perVisitor == null || perVisitor.length() == 0) && (recent == null || recent.length() == 0)) {
-            addEmptyTo(content, "ویزیتی در جدول Visit ثبت نشده یا ستون‌های آن تأیید نشد.");
+            String note = m.optString("note", "");
+            addEmptyTo(content, note.isEmpty() ? "ویزیتی در جدول Visit ثبت نشده یا ستون‌های آن تأیید نشد." : note);
             addDeveloperCredit(content);
             return;
         }
@@ -12437,9 +12444,11 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerCockpit() {
-        content.removeAllViews();
-        addHero("اتاق فروش", "فروش در برابر خرید و بازهٔ قبل + ترکیب روز و کالا — همه از رکوردهای واقعی sailfact/buyfact.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_mgr_cockpit", "اتاق فروش", raw -> renderManagerCockpit(safeJson(raw)))) {
+            content.removeAllViews();
+            addHero("اتاق فروش", "فروش در برابر خرید و بازهٔ قبل + ترکیب روز و کالا — همه از رکوردهای واقعی sailfact/buyfact.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.cockpit(c, managerReportRange).toString(); } }, new DbCallback() {
             @Override public void ok(String body) { prefs.edit().putString("cache_mgr_cockpit", body).apply(); renderManagerCockpit(safeJson(body)); }
             @Override public void fail(Exception e) {
@@ -12524,9 +12533,11 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerCollection() {
-        content.removeAllViews();
-        addHero("مرکز وصول", "سن‌یابی واقعی مطالبات از فاکتورهای تسویه‌نشده (tasvieh='f' + t_date) — بدون برآورد.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_mgr_collection", "مرکز وصول", raw -> renderManagerCollection(safeArr(raw)))) {
+            content.removeAllViews();
+            addHero("مرکز وصول", "سن‌یابی واقعی مطالبات از فاکتورهای تسویه‌نشده (tasvieh='f' + t_date) — بدون برآورد.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.collection(c).toString(); } }, new DbCallback() {
             @Override public void ok(String body) { prefs.edit().putString("cache_mgr_collection", body).apply(); renderManagerCollection(safeArr(body)); }
             @Override public void fail(Exception e) {
@@ -12563,9 +12574,11 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerVisits() {
-        content.removeAllViews();
-        addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_mgr_visits", "عملکرد ویزیتور", raw -> renderManagerVisits(safeJson(raw)))) {
+            content.removeAllViews();
+            addHero("عملکرد ویزیتور", "فروش/سفارش/مشتری هر ویزیتور از sailfact + هدف واقعی از vis_goals.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { JSONObject o = new JSONObject(); o.put("visitors", ManagerAnalytics.visitorGoals(c, managerReportRange)); try { o.put("routes", ManagerAnalytics.routeGoals(c)); } catch (Exception ignored) { } return o.toString(); } }, new DbCallback() {
             @Override public void ok(String body) { prefs.edit().putString("cache_mgr_visits", body).apply(); renderManagerVisits(safeJson(body)); }
             @Override public void fail(Exception e) {
@@ -12616,9 +12629,11 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerProducts() {
-        content.removeAllViews();
-        addHero("هوش کالا", "کالای طلا / موجودی صفر / بدون فروش بازه — موجودی از دفتر واقعی ka_act.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_mgr_products", "هوش کالا", raw -> renderManagerProducts(safeJson(raw)))) {
+            content.removeAllViews();
+            addHero("هوش کالا", "کالای طلا / موجودی صفر / بدون فروش بازه — موجودی از دفتر واقعی ka_act.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.productRadar(c, managerReportRange).toString(); } }, new DbCallback() {
             @Override public void ok(String body) { prefs.edit().putString("cache_mgr_products", body).apply(); renderManagerProducts(safeJson(body)); }
             @Override public void fail(Exception e) {
@@ -12663,9 +12678,11 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerExecutive() {
-        content.removeAllViews();
-        addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_manager_exec", "داشبورد اجرایی", raw -> renderManagerExecutive(safeJson(raw)))) {
+            content.removeAllViews();
+            addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.fetch(c, managerReportRange).toString(); } }, new DbCallback() {
             @Override public void ok(String body) { managerExecCacheJson = body; prefs.edit().putString("cache_manager_exec", body).apply(); renderManagerExecutive(safeJson(body)); }
             @Override public void fail(Exception e) {
@@ -12822,6 +12839,23 @@ public class MainActivity extends Activity {
         row.setOnClickListener(v -> { managerDrillKind = drillKind; showApp("mgr_drill"); });
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, dp(6), 0, 0);
         parent.addView(row, lp);
+    }
+
+    private interface CachedRender { void render(String rawJson) throws Exception; }
+
+    /**
+     * Paints the last saved copy of a manager page immediately and lets the fresh query replace it when
+     * it arrives. On a slow mobile link the previous behaviour was: blank skeleton -> «اتصال برقرار نشد».
+     * Now the user sees real (slightly older) Atiran numbers within one frame and they update in place.
+     */
+    private boolean renderCacheFirst(String prefKey, String banner, CachedRender renderer) {
+        try {
+            String cached = prefs == null ? "" : prefs.getString(prefKey, "");
+            if (cached == null || cached.trim().isEmpty()) return false;
+            renderer.render(cached);
+            addCacheBanner(banner, "آخرین دادهٔ ذخیره‌شده نمایش داده می‌شود؛ نسخهٔ تازه از آتیران در حال دریافت است…");
+            return true;
+        } catch (Exception ignored) { return false; }
     }
 
     private void addActivityFeedCard(JSONArray feed) {
@@ -21949,6 +21983,16 @@ public class MainActivity extends Activity {
     private String limitText(String text, int max) {
         if (text == null) return "";
         return text.length() <= max ? text : text.substring(0, max) + "…";
+    }
+
+    /** True when the failure came from the socket/session rather than from the statement itself. */
+    private boolean looksLikeConnectionLoss(Throwable e) {
+        if (e == null) return false;
+        String m = (String.valueOf(e.getMessage()) + " " + e.getClass().getName()).toLowerCase(Locale.US);
+        return m.contains("connection reset") || m.contains("socket") || m.contains("broken pipe")
+                || m.contains("timed out") || m.contains("timeout") || m.contains("connection is closed")
+                || m.contains("i/o error") || m.contains("network") || m.contains("unexpected end of stream")
+                || m.contains("unable to connect");
     }
 
     private String shortError(Exception ex) {
