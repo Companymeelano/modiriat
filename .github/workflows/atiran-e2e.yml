@@ -109,3 +109,23 @@ jobs:
           git add tools/atiran-e2e
           git commit -m "Atiran e2e result (encrypted) [skip ci]" || echo "No changes"
           for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
+
+      - name: Publish plaintext SQL diagnostics
+        if: always()
+        run: |
+          set -e
+          mkdir -p tools/atiran-e2e
+          {
+            echo "# Atiran e2e SQL diagnostics — DIAGSQL + failing STEP lines only"
+            for f in e2e/selftest.txt e2e/store-selftest.txt e2e/staff-selftest.txt; do
+              [ -f "$f" ] || continue
+              echo ""
+              echo "## $f"
+              grep -E "DIAGSQL|STEP .*FAIL|DONE" "$f" | sed 's/^.*MEELANO_SELFTEST[^:]*: *//' | cut -c1-3000 || true
+            done
+          } > tools/atiran-e2e/diag.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add tools/atiran-e2e/diag.txt
+          git commit -m "Atiran e2e SQL diagnostics (plaintext) [skip ci]" || echo "No changes"
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 6; done
