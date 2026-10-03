@@ -101,19 +101,24 @@ def main():
         r = q("""SELECT o.name tbl, c.name col FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id
                  WHERE o.type IN ('U','V') AND o.name IN ('Visit','cust_act','TellBook','Sys_Mandeh_Customer','sailfact_pish','vw_customer','visitors','vis_goals','sailfact','subsailfact','vis_baze')
                  ORDER BY o.name, c.column_id""")
-        per = {}
-        for row in r["rows"]:
-            per.setdefault(str(row[0]), []).append(str(row[1]))
-        for t in sorted(per):
-            print("::notice title=meta-%s::%s" % (t, ",".join(per[t])))
-        # table-name discovery for blocked features (visit plan / calendar / period names) — names only
-        n = q("""SELECT o.name FROM sys.objects o WHERE o.type IN ('U','V') AND (
-                    o.name LIKE '%baze%' OR o.name LIKE '%plan%' OR o.name LIKE '%barname%' OR o.name LIKE '%gharar%'
-                    OR o.name LIKE '%meet%' OR o.name LIKE '%taghvim%' OR o.name LIKE '%calendar%' OR o.name LIKE '%route%'
-                    OR o.name LIKE '%goal%' OR o.name LIKE '%hadaf%') ORDER BY o.name""")
-        names = [str(x[0]) for x in n["rows"]]
-        print("::notice title=meta-tablenames::%s" % ",".join(names))
-        return {t: len(v) for t, v in per.items()}
+        try:
+            per = {}
+            for row in r["rows"]:
+                per.setdefault(str(row[0]), []).append(str(row[1]))
+            for t in sorted(per):
+                cols = ",".join(per[t])
+                for i in range(0, len(cols), 3500):
+                    print("::notice title=meta-%s::%s" % (t, cols[i:i + 3500]))
+            n = q("""SELECT o.name FROM sys.objects o WHERE o.type IN ('U','V') AND (
+                        o.name LIKE '%baze%' OR o.name LIKE '%plan%' OR o.name LIKE '%barname%' OR o.name LIKE '%gharar%'
+                        OR o.name LIKE '%meet%' OR o.name LIKE '%taghvim%' OR o.name LIKE '%calendar%' OR o.name LIKE '%route%'
+                        OR o.name LIKE '%goal%' OR o.name LIKE '%hadaf%') ORDER BY o.name""")
+            names = [str(x[0]) for x in n["rows"]]
+            print("::notice title=meta-tablenames::%s" % ",".join(names))
+            return {t: len(v) for t, v in per.items()}
+        except Exception as ex:
+            print("::notice title=meta-error::%s %s" % (type(ex).__name__, str(ex)[:180].replace("\n", " ")))
+            raise
     safe("visit_meta_announce", announce_meta)
 
     safe("keys", lambda: q("""
