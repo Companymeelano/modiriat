@@ -1,8 +1,4 @@
-10-03 18:55:40.417   557  1001 D CoreBackPreview: Window{dfbfef6 u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@78a13cd, mPriority=-1, mIsAnimationCallback=false}
-10-03 18:55:40.420  1203  1255 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.visitor.debug/ir.meelano.android.MainActivity}
-10-03 18:55:40.460  1203  1255 I Launcher.IconCache: Database bulk icon loading failed, using fallback bulk icon loading for: ComponentInfo{ir.meelano.staff.debug/ir.meelano.android.MainActivity}
-10-03 18:55:41.681  7727  7753 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
-10-03 18:55:41.684  7727  7753 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
-10-03 18:55:41.688   557   580 I ActivityTaskManager: Displayed ir.meelano.staff.debug/ir.meelano.android.MainActivity for user 0: +2s888ms
-10-03 18:55:48.248   557  1728 D CoreBackPreview: Window{dfbfef6 u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback null
-10-03 18:55:48.273   557  1001 W InputManager-JNI: Input channel object 'dfbfef6 ir.meelano.staff.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-03 22:12:15.229  7779  7803 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
+10-03 22:12:15.230  7779  7803 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
+10-03 22:12:15.246   562   582 I ActivityTaskManager: Displayed ir.meelano.staff.debug/ir.meelano.android.MainActivity for user 0: +2s741ms
+10-03 22:12:21.780   562  1182 W InputManager-JNI: Input channel object '2aad0a ir.meelano.staff.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
