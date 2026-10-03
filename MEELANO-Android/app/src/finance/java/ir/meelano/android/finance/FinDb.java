@@ -105,9 +105,11 @@ public final class FinDb {
             out.put("ms", System.currentTimeMillis() - started);
             lastError = "";
         } catch (Exception e) {
-            out.put("ok", false);
-            out.put("error", safeMessage(e));
             lastError = safeMessage(e);
+            try {
+                out.put("ok", false);
+                out.put("error", lastError);
+            } catch (Exception ignored) { }
         }
         return out;
     }
@@ -165,7 +167,9 @@ public final class FinDb {
                             else if (v instanceof byte[]) row.put(name, "<binary>");
                             else row.put(name, String.valueOf(v).trim());
                         } catch (Exception ex) {
-                            row.put(name, String.valueOf(v));
+                            try {
+                                row.put(name, String.valueOf(v));
+                            } catch (Exception ignored) { }
                         }
                     }
                     rows.put(row);
@@ -462,7 +466,9 @@ public final class FinDb {
                             else if (v instanceof byte[]) row.put(name, "<binary>");
                             else row.put(name, String.valueOf(v).trim());
                         } catch (Exception ex) {
-                            row.put(name, String.valueOf(v));
+                            try {
+                                row.put(name, String.valueOf(v));
+                            } catch (Exception ignored) { }
                         }
                     }
                     rows.put(row);

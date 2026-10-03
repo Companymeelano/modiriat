@@ -1,5 +1,7 @@
 package ir.meelano.android.finance;
 
+import ir.meelano.android.MeelanoJalali;
+
 import java.util.Locale;
 
 /**
