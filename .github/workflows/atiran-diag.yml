@@ -34,13 +34,20 @@ jobs:
               print("tcp 1433 NOT reachable:", type(e).__name__)
           PY
       - name: Read-only diagnostic
+        continue-on-error: true
         run: |
           pip install --quiet python-tds
           mkdir -p diag
           python3 .github/scripts/atiran_diag.py "diag/atiran-diag.json" 2>&1 | tail -30
           test -s diag/atiran-diag.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-diag.json
+          python3 .github/scripts/atiran_check.py "diag/atiran-check.json" 2>&1 | tail -20
+          test -s diag/atiran-check.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-check.json
           python3 - <<'PY'
           import json
+          c = json.load(open("diag/atiran-check.json", encoding="utf-8"))
+          print("== blocks:", json.dumps(c.get("blocks", {}), ensure_ascii=False)[:3000])
+          print("== notes:", json.dumps({k: v for k, v in c.items() if k not in ("blocks", "errors")}, ensure_ascii=False)[:1500])
+          print("== check errors:", json.dumps(c.get("errors", []), ensure_ascii=False)[:1500])
           d = json.load(open("diag/atiran-diag.json", encoding="utf-8"))
           print("== sections:", sorted(d.get("sections", {}).keys()))
           print("== tables:", {k: (v.get("rows"), v.get("exists")) for k, v in sorted(d.get("tables", {}).items())})
@@ -53,7 +60,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git add -f diag/atiran-diag.json
+          git add -f diag/
           git commit -q -m "Atiran live diagnostic [skip ci]" || echo "no changes"
           for i in 1 2 3; do
             git pull -q --rebase origin "${GITHUB_REF_NAME}" || true
