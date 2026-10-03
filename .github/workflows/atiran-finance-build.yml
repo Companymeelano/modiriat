@@ -1,0 +1,86 @@
+name: Atiran Finance build
+
+# Fast feedback for the «آتیران مالی» (Atiran Finance) app: builds only the finance flavour
+# (debug + signed release) instead of all four editions, and publishes the APKs on this branch.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fin-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[fin-build]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0 build-tools;36.0.0'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build finance debug + release
+        working-directory: MEELANO-Android
+        run: |
+          gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g assembleFinanceDebug assembleFinanceRelease \
+            -Pandroid.injected.signing.store.file="$PWD/app/signing/meelano-install.p12" \
+            -Pandroid.injected.signing.store.password=derakhshan-install \
+            -Pandroid.injected.signing.key.alias=meelano \
+            -Pandroid.injected.signing.key.password=derakhshan-install 2>&1 | tee "$RUNNER_TEMP/fin-build.log"; exit ${PIPESTATUS[0]}
+
+      - name: Report compile errors
+        if: failure()
+        run: |
+          grep -E "error:|\.java:[0-9]+|FAILURE:|What went wrong|Execution failed" "$RUNNER_TEMP/fin-build.log" | head -40 | while IFS= read -r line; do
+            echo "::error title=Finance build::$(echo "$line" | cut -c1-260)"
+          done
+
+      - name: Collect APKs
+        if: success()
+        run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          mkdir -p apk-finance
+          cp MEELANO-Android/app/build/outputs/apk/finance/debug/*.apk apk-finance/AtiranFinance-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/finance/release/*.apk apk-finance/AtiranFinance-release.apk
+          cd apk-finance
+          for f in *.apk; do
+            echo "::notice title=apksigner $f::$(("$APKSIGNER" verify --verbose --print-certs "$f" | grep -E 'Verified using|Signer #1 certificate SHA-256' | tr '\n' ';'))"
+            sha256sum "$f"
+          done
+          ls -la
+
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: AtiranFinance-APK
+          path: |
+            apk-finance/*.apk
+
+      - name: Commit APKs to branch
+        if: success() && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -f apk-finance
+          git commit -q -m "Atiran Finance APK build [skip ci]" || echo "No changes"
+          for i in 1 2 3; do
+            git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
+            git push -q origin HEAD:${GITHUB_REF_NAME} && break
+            sleep 6
+          done

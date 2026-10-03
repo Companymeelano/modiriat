@@ -1,0 +1,160 @@
+package ir.meelano.android.finance;
+
+import android.content.Intent;
+import android.view.Gravity;
+import android.widget.LinearLayout;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+/**
+ * «بیشتر» — the module directory, the theme switcher, the activity log and the about box.
+ *
+ * Every entry is gated by the real finance permission of the signed-in role, so an operator without
+ * {@code finance_reconcile} simply does not see the reconciliation entry. The activity log reads the
+ * audit rows written by this app (meelano_fin_audit) and falls back to real Atiran receipts when the
+ * app itself has not recorded anything yet.
+ */
+public class FinScreenMore extends FinScreen {
+
+    public FinScreenMore(AtiranFinanceActivity host) { super(host); }
+
+    @Override public String title() { return "بیشتر"; }
+
+    @Override public String glyph() { return "⋯"; }
+
+    @Override protected String cacheKey() { return "more:" + host.today(); }
+
+    private LinearLayout body;
+
+    @Override protected void populate() {
+        LinearLayout head = ui.row();
+        head.addView(ui.text("همه بخش‌ها", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
+        head.addView(ui.chip(FinSession.roleLabelFor(FinSession.roleKey()), ui.goldAccent), ui.lp(-2, -2));
+        add(head);
+        body = ui.column();
+        add(body);
+    }
+
+    @Override protected void fetch() {
+        db.read(key(cacheKey()), 120_000L, c -> {
+            JSONObject payload = new JSONObject();
+            payload.put("today", FinQueries.serverToday(c));
+            payload.put("activity", FinQueries.activity(c, 30));
+            JSONArray a = new JSONArray();
+            a.put(payload);
+            return a;
+        }, this::render);
+    }
+
+    private void render(JSONObject env) {
+        body.removeAllViews();
+        if (env.optBoolean("stale", false)) {
+            LinearLayout st = staleTag(env);
+            if (st != null) body.addView(st, ui.lp(-1, -2));
+        }
+        JSONObject p = payload(env);
+
+        LinearLayout modules = section("☰", "بخش‌های مالی", "دسترسی بر پایه نقش واقعی از جدول دسترسی");
+        modules.addView(entry("💰", "فروش و وصول", "فروش، وصول، ترکیب نقد/چک/POS", "finance_sales",
+                v -> host.open(new FinScreenSales(host))), ui.lp(-1, -2));
+        modules.addView(entry("◫", "مرکز چک", "دریافتی، پرداختی، تقویم سررسید", "finance_checks",
+                v -> host.open(new FinScreenCheques(host))), ui.lp(-1, -2));
+        modules.addView(entry("⇄", "مطالبات و سنی‌بندی", "مانده مشتریان، Aging، پیگیری", "finance_receivables",
+                v -> host.open(new FinScreenReceivables(host))), ui.lp(-1, -2));
+        modules.addView(entry("▤", "بانک‌ها", "حساب‌ها، گردش، موجودی", "finance_banks",
+                v -> host.open(new FinScreenBanks(host))), ui.lp(-1, -2));
+        modules.addView(entry("≠", "مغایرت‌گیری بانکی", "Statement → Match → Resolve → Confirm", "finance_reconcile",
+                v -> host.open(new FinScreenRecon(host))), ui.lp(-1, -2));
+        modules.addView(entry("▣", "مرکز POS", "تراکنش‌ها، تسویه به بانک و اپراتور", "finance_pos",
+                v -> host.open(new FinScreenPos(host))), ui.lp(-1, -2));
+        modules.addView(entry("▩", "صندوق و تسویه", "دفتر صندوق، تحویل وجه، تفاوت‌ها", "finance_cash",
+                v -> host.open(new FinScreenCash(host))), ui.lp(-1, -2));
+        modules.addView(entry("☑", "گزارش و بستن روز", "گزارش روزانه و بستن روز کاری", "finance_daily_close",
+                v -> host.open(new FinScreenDaily(host))), ui.lp(-1, -2));
+        modules.addView(entry("⚠", "کارهای باز", "مغایرت قبض، POS و بانک بدون قبض", "finance_reports",
+                v -> host.open(new FinScreenProblems(host))), ui.lp(-1, -2));
+        body.addView(modules, ui.lp(-1, -2));
+
+        themes();
+        activity(p);
+        about();
+    }
+
+    private android.view.View entry(String glyph, String title, String sub, String permission, final android.view.View.OnClickListener tap) {
+        final boolean allowed = host.can(permission);
+        android.view.View.OnClickListener click = new android.view.View.OnClickListener() {
+            @Override public void onClick(android.view.View v) {
+                if (allowed) tap.onClick(v);
+                else host.toast("این بخش برای نقش شما مجاز نیست.");
+            }
+        };
+        return ui.listRow(glyph + "  " + title, allowed ? sub : "بدون دسترسی برای این نقش",
+                allowed ? "" : "محدود", allowed ? "" : "بدون دسترسی",
+                allowed ? ui.goldAccent : FinUi.WARNING, click);
+    }
+
+    private void themes() {
+        LinearLayout card = section("◐", "پوسته برنامه", "پوسته فعلی: " + host.ui().theme().labelFa);
+        LinearLayout row = ui.row();
+        for (FinTheme t : FinTheme.all()) {
+            boolean active = t.key.equals(host.ui().theme().key);
+            LinearLayout chip = ui.chip(t.labelFa, active ? ui.goldAccent : ui.textFaint);
+            chip.setOnClickListener(v -> {
+                FinTheme.set(host, t.key);
+                host.toast("پوسته «" + t.labelFa + "» فعال شد.");
+                host.reload();
+            });
+            LinearLayout.LayoutParams lp = ui.lp(-2, -2);
+            lp.leftMargin = ui.dp(4);
+            row.addView(chip, lp);
+        }
+        card.addView(row, ui.lp(-1, -2));
+        card.addView(ui.text("رنگ‌های معنایی (موفق/هشدار/خطا/مدیریت) در همه پوسته‌ها یکسان می‌مانند؛ فقط سطوح و رنگ تأکیدی تغییر می‌کند.",
+                11f, ui.textFaint, false), ui.lp(-1, -2));
+        body.addView(card, top(12));
+    }
+
+    private void activity(JSONObject p) {
+        JSONArray rows = arr(p, "activity");
+        LinearLayout card = section("↻", "فعالیت‌ها", rows.length() == 0 ? "بدون رکورد" : "آخرین رویدادهای ثبت‌شده");
+        if (rows.length() == 0) {
+            card.addView(stateText("فعالیتی ثبت نشده است.", ui.textDim));
+        } else {
+            for (int x = 0; x < rows.length() && x < 15; x++) {
+                JSONObject r = rows.optJSONObject(x);
+                if (r == null) continue;
+                card.addView(ui.listRow(s(r, "module", "—") + " · " + s(r, "action", ""),
+                        s(r, "at", "") + " · " + s(r, "username", "") + " · " + s(r, "reference", ""),
+                        d(r, "amount") == 0 ? "" : money(d(r, "amount")), "", ui.silver, null), ui.lp(-1, -2));
+            }
+        }
+        body.addView(card, top(12));
+    }
+
+    private void about() {
+        LinearLayout card = section("ℹ", "درباره «آتیران مالی»", FinSession.appVersion() + " — بسته ir.meelano.atiran.finance");
+        card.addView(kv("کاربر جاری", FinSession.displayOrUser()), ui.lp(-1, -2));
+        card.addView(kv("نقش", FinSession.roleLabelFor(FinSession.roleKey()) + (host.session() != null && host.session().roleFromDatabase ? " (از جدول دسترسی)" : " (پیش‌فرض)")), ui.lp(-1, -2));
+        card.addView(kv("منبع نقش", host.session() == null ? "—" : host.session().source), ui.lp(-1, -2));
+        card.addView(kv("اتصال", FinEnv.describe()), ui.lp(-1, -2));
+        card.addView(kv("تاریخ سرور", host.clockLabel()), ui.lp(-1, -2));
+        card.addView(kv("دستگاه", FinSession.deviceLabel()), ui.lp(-1, -2));
+        card.addView(ui.text("این نسخه فقط می‌خواند و می‌نویسد در جدول‌های اختصاصی خود (meelano_fin_*). هیچ مقدار مالی در جدول‌های اصلی آتیران تغییر نمی‌کند و هیچ سند مالی حذف نمی‌شود.",
+                11.5f, ui.textDim, false), ui.lp(-1, -2));
+
+        LinearLayout tools = ui.row();
+        tools.addView(ui.button("خروج از حساب", FinUi.DANGER, false, v -> {
+            FinSession.clear();
+            host.toast("از حساب خارج شدید.");
+            Intent i = new Intent(host, AtiranFinanceActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            host.startActivity(i);
+            host.finish();
+        }), ui.lp(0, -2, 1f));
+        LinearLayout.LayoutParams tp = ui.lp(-1, -2);
+        tp.topMargin = ui.dp(6);
+        card.addView(tools, tp);
+        body.addView(card, top(12));
+    }
+}

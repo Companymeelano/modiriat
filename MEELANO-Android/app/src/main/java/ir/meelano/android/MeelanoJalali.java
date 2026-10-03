@@ -8,7 +8,7 @@ final class MeelanoJalali {
     private MeelanoJalali() { }
 
     private static final int[] BREAKS = {-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178};
-    static final String[] MONTHS = {"فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"};
+    public static final String[] MONTHS = {"فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"};
 
     /** {leap offset, gregorian year, march day} of the Jalali year (jalaali-js algorithm). */
     private static int[] jalCal(int jy) {
@@ -51,15 +51,15 @@ final class MeelanoJalali {
     }
 
     /** Julian day number of a Gregorian date (same scale as toDay). */
-    static int gregorianDay(int gy, int gm, int gd) { return g2d(gy, gm, gd); }
+    public static int gregorianDay(int gy, int gm, int gd) { return g2d(gy, gm, gd); }
 
     /** Julian day number of a Jalali date. */
-    static int toDay(int jy, int jm, int jd) {
+    public static int toDay(int jy, int jm, int jd) {
         int[] r = jalCal(jy);
         return g2d(r[1], 3, r[2]) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1;
     }
 
-    static int[] fromDay(int jdn) {
+    public static int[] fromDay(int jdn) {
         int[] g = d2g(jdn);
         int gy = g[0];
         int jy = gy - 621;
@@ -77,7 +77,7 @@ final class MeelanoJalali {
     }
 
     /** Day number of "1405/07/06" (digits may be Persian); -1 when the text is not a date. */
-    static int parse(String text) {
+    public static int parse(String text) {
         if (text == null) return -1;
         StringBuilder b = new StringBuilder();
         for (char ch : text.trim().toCharArray()) {
@@ -94,30 +94,30 @@ final class MeelanoJalali {
         } catch (Exception e) { return -1; }
     }
 
-    static String format(int day) {
+    public static String format(int day) {
         int[] j = fromDay(day);
         return String.format(Locale.US, "%04d/%02d/%02d", j[0], j[1], j[2]);
     }
 
-    static int today() {
+    public static int today() {
         Calendar c = Calendar.getInstance();
         return g2d(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
     }
 
-    static String addDays(String date, int days) {
+    public static String addDays(String date, int days) {
         int d = parse(date);
         return d < 0 ? date : format(d + days);
     }
 
     /** "1405/07/01" for the month of the given date. */
-    static String monthStart(String date) {
+    public static String monthStart(String date) {
         int d = parse(date);
         if (d < 0) return date;
         int[] j = fromDay(d);
         return String.format(Locale.US, "%04d/%02d/01", j[0], j[1]);
     }
 
-    static String monthName(String date) {
+    public static String monthName(String date) {
         int d = parse(date);
         if (d < 0) return "";
         int[] j = fromDay(d);
@@ -125,7 +125,7 @@ final class MeelanoJalali {
     }
 
     /** Short label for charts: "۶ مهر". */
-    static String shortLabel(String date) {
+    public static String shortLabel(String date) {
         int d = parse(date);
         if (d < 0) return date == null ? "" : date;
         int[] j = fromDay(d);
@@ -134,7 +134,7 @@ final class MeelanoJalali {
 
     private static final String[] WEEKDAYS = {"شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"};
 
-    static String weekday(String date) {
+    public static String weekday(String date) {
         int d = parse(date);
         if (d < 0) return "";
         // Julian day 0 was a Monday; Saturday is the first day of the Persian week.

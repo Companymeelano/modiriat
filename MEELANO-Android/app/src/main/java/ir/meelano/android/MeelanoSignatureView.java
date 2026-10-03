@@ -13,7 +13,7 @@ import android.view.View;
 import java.io.ByteArrayOutputStream;
 
 /** Finger signature pad for the delivery receipt: smooth strokes, «clear», and a compact PNG with a white background. */
-final class MeelanoSignatureView extends View {
+public final class MeelanoSignatureView extends View {
     private final Path path = new Path();
     private final Paint ink = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint guide = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -23,7 +23,7 @@ final class MeelanoSignatureView extends View {
     private final int background;
     private Runnable onChange;
 
-    MeelanoSignatureView(Context ctx, int inkColor, int guideColor, int background) {
+    public MeelanoSignatureView(Context ctx, int inkColor, int guideColor, int background) {
         super(ctx);
         this.background = background;
         float d = ctx.getResources().getDisplayMetrics().density;
@@ -33,15 +33,15 @@ final class MeelanoSignatureView extends View {
         setContentDescription("محل امضای مشتری");
     }
 
-    void setOnChange(Runnable r) { onChange = r; }
+    public void setOnChange(Runnable r) { onChange = r; }
 
     /** A real signature: at least one stroke with enough length and size (not a single tap). */
-    boolean hasSignature() {
+    public boolean hasSignature() {
         float d = getResources().getDisplayMetrics().density;
         return strokes > 0 && travelled > 60 * d && (bounds.width() > 24 * d || bounds.height() > 24 * d);
     }
 
-    void clear() {
+    public void clear() {
         path.reset(); strokes = 0; travelled = 0; bounds.setEmpty();
         invalidate();
         if (onChange != null) onChange.run();
@@ -88,7 +88,7 @@ final class MeelanoSignatureView extends View {
     }
 
     /** PNG of the signature (dark ink on white, max 900 px wide) for the receipt row. */
-    byte[] toPng() {
+    public byte[] toPng() {
         int w = Math.max(1, getWidth()), h = Math.max(1, getHeight());
         float scale = w > 900 ? 900f / w : 1f;
         Bitmap bmp = Bitmap.createBitmap(Math.max(1, Math.round(w * scale)), Math.max(1, Math.round(h * scale)), Bitmap.Config.ARGB_8888);
