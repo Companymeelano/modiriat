@@ -464,7 +464,7 @@ final class ManagerAnalytics {
 
     // ============================ orchestrator ============================
     /** One connection, sequential validated queries, per-section error capture (never crashes the UI). */
-    static JSONObject fetch(Connection c, int range) {
+    static JSONObject fetch(Connection c, int range) throws Exception {
         JSONObject out = new JSONObject();
         JSONArray errors = new JSONArray();
         out.put("range", range);
