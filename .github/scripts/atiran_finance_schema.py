@@ -125,8 +125,9 @@ def main():
             json.dump(out, fh, ensure_ascii=False, indent=1, default=str)
     conn = pytds.connect(server=host, port=1433, database=db, user=user, password=pw,
                          login_timeout=30, timeout=180, autocommit=True)
-    out = {"ok": True, "generated_utc": datetime.datetime.utcnow().isoformat() + "Z",
-           "server": {}, "objects": {}, "tables": {}, "views": {}, "procedures": {},
+    out = {"ok": True, "generated_utc": datetime.datetime.now(datetime.timezone.utc)
+           .replace(tzinfo=None).isoformat() + "Z",
+           "server": {}, "objects": {}, "tables": {}, "views": {}, "procedures": {}, "functions": {},
            "column_index": {}, "date_probe": {}, "domain_probe": {}, "freshness": {},
            "seed_lookup": {}, "candidates": [], "errors": []}
 
@@ -207,8 +208,8 @@ def main():
             out[key][o["name"]] = {"schema": o.get("schema_name"), "rows": o.get("rows_est"),
                                    "created": o.get("created"), "modified": o.get("modified")}
             by_name[o["name"].lower()] = o
-    print("objects: %d tables, %d views, %d procedures" % (
-        len(out["tables"]), len(out["views"]), len(out["procedures"])))
+    print("objects: %d tables, %d views, %d procedures, %d functions" % (
+        len(out["tables"]), len(out["views"]), len(out["procedures"]), len(out["functions"])))
     dump(partial=True)
 
     # ---------------------------------------------------------------- seed lookup
@@ -342,6 +343,7 @@ def main():
     focus = [c["table"] for c in out["candidates"][:60]]
     focus += [n for n in SEED_NAMES if n in out["tables"]]
     focus = [t for t in dict.fromkeys(focus) if (out["tables"].get(t, {}).get("rows") or 0) > 0]
+    heavy = [t for t in focus if (out["tables"].get(t, {}).get("rows") or 0) > 2_000_000]
     out["probe_focus"] = focus
     print("probing %d finance tables individually" % len(focus))
 
@@ -581,7 +583,8 @@ def cli():
         print("FATAL: " + tb)
         try:
             cur = {"ok": False, "fatal": scrub(ex, []), "generated_utc":
-                   datetime.datetime.utcnow().isoformat() + "Z", "errors": tb.splitlines()[-6:]}
+                   datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z",
+                   "errors": tb.splitlines()[-6:]}
             with open(OUT, "w", encoding="utf-8") as fh:
                 json.dump(cur, fh, ensure_ascii=False, indent=1)
         except Exception:
