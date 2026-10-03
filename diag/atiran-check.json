@@ -1,0 +1,218 @@
+{
+ "blocks": {
+  "sales_today": {
+   "old_ms": 451,
+   "new_ms": 453,
+   "old_rows": 37,
+   "new_rows": 37,
+   "old_has_amount": true,
+   "new_has_amount": true,
+   "amount_delta_pct": 0.0
+  },
+  "sales_7d": {
+   "old_ms": 461,
+   "new_ms": 457,
+   "old_rows": 229,
+   "new_rows": 229,
+   "old_has_amount": true,
+   "new_has_amount": true,
+   "amount_delta_pct": 0.0
+  },
+  "sales_30d": {
+   "old_ms": 477,
+   "new_ms": 444,
+   "old_rows": 908,
+   "new_rows": 842,
+   "old_has_amount": true,
+   "new_has_amount": true,
+   "amount_delta_pct": -5.31
+  },
+  "sales_12m": {
+   "old_ms": 462,
+   "new_ms": 462,
+   "old_rows": 940,
+   "new_rows": 970,
+   "old_has_amount": true,
+   "new_has_amount": true,
+   "amount_delta_pct": 1.92
+  },
+  "purchases_30d": {
+   "old_ms": 458,
+   "new_ms": 454,
+   "old_rows": 54,
+   "new_rows": 54,
+   "old_has_amount": true,
+   "new_has_amount": true,
+   "amount_delta_pct": 0.41
+  },
+  "weekday_mix": {
+   "old_ms": 453,
+   "new_ms": 482,
+   "old_rows": 7,
+   "new_rows": null
+  },
+  "visitor_share": {
+   "old_ms": 233,
+   "new_ms": 234,
+   "old_rows": null,
+   "new_rows": 9
+  },
+  "check_buckets": {
+   "old_ms": 482,
+   "new_ms": 236,
+   "old_rows": null,
+   "new_rows": null
+  },
+  "aging_unpaid": {
+   "old_ms": 235,
+   "new_ms": 460,
+   "old_rows": 574,
+   "new_rows": 574
+  },
+  "debtors": {
+   "old_ms": 461,
+   "new_ms": 466,
+   "old_rows": 382,
+   "new_rows": 382,
+   "old_has_amount": true,
+   "new_has_amount": true,
+   "amount_delta_pct": 0.0
+  },
+  "customer_activity_30d": {
+   "old_ms": 456,
+   "new_ms": 457,
+   "old_rows": 306,
+   "new_rows": 296
+  },
+  "top_products_30d": {
+   "old_ms": 460,
+   "new_ms": 476,
+   "old_rows": 492,
+   "new_rows": 478
+  },
+  "product_profit_30d": {
+   "old_ms": 477,
+   "new_ms": 470,
+   "old_rows": 4820,
+   "new_rows": 4504
+  },
+  "stock_ledger_join": {
+   "old_ms": 488,
+   "new_ms": 454,
+   "old_rows": 1803,
+   "new_rows": 1803
+  },
+  "warehouses": {
+   "old_ms": 454,
+   "new_ms": 468,
+   "old_rows": 1803,
+   "new_rows": 1803
+  },
+  "visitor_goals": {
+   "old_ms": 451,
+   "new_ms": 258,
+   "old_rows": null,
+   "new_rows": 4
+  },
+  "credit_risk": {
+   "old_ms": 453,
+   "new_ms": 458,
+   "old_rows": 2724,
+   "new_rows": 2724
+  },
+  "activity_feed": {
+   "old_ms": 458,
+   "new_ms": 459,
+   "old_rows": 1096,
+   "new_rows": 1023
+  }
+ },
+ "errors": [
+  {
+   "sql": "SELECT COUNT(DISTINCT dbo.dif_date(x.[date])) FROM dbo.sailfact x WITH (NOLOCK) WHERE x.[d",
+   "err": "('An insufficient number of arguments were supplied for the procedure or function dbo.dif_date.', None)"
+  },
+  {
+   "sql": "SELECT COUNT_BIG(1) FROM dbo.sailfact x WITH (NOLOCK)\n              LEFT JOIN dbo.visitors",
+   "err": "(\"Invalid column name 'rdf'.\", None)"
+  },
+  {
+   "sql": "SELECT COUNT_BIG(1) FROM dbo.getchk WHERE TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[sarre",
+   "err": "(\"Invalid column name 'sarresid'.\", None)"
+  },
+  {
+   "sql": "SELECT COUNT_BIG(1) FROM dbo.getchk WHERE NULLIF(LTRIM(RTRIM([sarresid])),'')<'1405/07/11'",
+   "err": "(\"Invalid column name 'sarresid'. Invalid column name 'sarresid'.\", None)"
+  },
+  {
+   "sql": "SELECT TOP (3) CAST([sarresid] AS nvarchar(20)) FROM dbo.getchk ORDER BY Rdf_ DESC",
+   "err": "(\"Invalid column name 'sarresid'.\", None)"
+  },
+  {
+   "sql": "SELECT COUNT_BIG(1) FROM dbo.vis_goals g LEFT JOIN dbo.visitors v ON v.[rdf]=g.vis_rdf",
+   "err": "(\"Invalid column name 'rdf'.\", None)"
+  },
+  {
+   "sql": "SELECT COUNT_BIG(1) FROM dbo.[vw_customer] WITH (NOLOCK)",
+   "err": "(\"Invalid column name 'rdf_region'. Invalid column name 'shomare_masir'. Could not use view or function 'dbo.vw_customer' because of binding errors.\", None)"
+  }
+ ],
+ "today": "1405/07/11",
+ "boundaries": {
+  "from7": "1405/07/05",
+  "from30": "1405/06/13",
+  "from365": "1404/07/12"
+ },
+ "latest_sale_date": "1405/07/11",
+ "rows_lost_by_date_conversion": 37,
+ "invoice_no_total_vs_distinct": [
+  1168,
+  993
+ ],
+ "visitors_has_app_expected_key": false,
+ "check_sample_due_dates_shape": "other",
+ "inventory_price_filled": {
+  "pure_buy_price": 1684,
+  "buy_price": 1686
+ },
+ "open_period_row": {
+  "old": 1,
+  "new": 1
+ },
+ "required_objects": {
+  "Visit": {
+   "exists": false,
+   "rows": null
+  },
+  "MasirGoals": {
+   "exists": true,
+   "rows": 0
+  },
+  "vw_customer": {
+   "exists": true,
+   "rows": null
+  },
+  "VW_Forush_DarBazeZamani": {
+   "exists": true,
+   "rows": 3871
+  },
+  "ka_act": {
+   "exists": true,
+   "rows": 6359
+  },
+  "putchk": {
+   "exists": true,
+   "rows": 202
+  },
+  "sys_cus": {
+   "exists": true,
+   "rows": 2723
+  },
+  "cus_image": {
+   "exists": true,
+   "rows": 2724
+  }
+ },
+ "twelve_separate_queries_ms": 5359,
+ "one_batched_query_ms": 467
+}
