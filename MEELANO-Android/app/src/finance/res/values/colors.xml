@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Midnight Finance palette: obsidian surfaces, gold management highlights, semantic status colours. -->
+    <color name="fin_obsidian">#FF0B0F1A</color>
+    <color name="fin_obsidian_2">#FF121826</color>
+    <color name="fin_gold">#FFD4AF37</color>
+    <color name="fin_silver">#FFC9CFDA</color>
+    <color name="fin_success">#FF2E9E5B</color>
+    <color name="fin_warning">#FFE08A1E</color>
+    <color name="fin_danger">#FFD14343</color>
+    <color name="fin_info">#FF3B82F6</color>
+</resources>

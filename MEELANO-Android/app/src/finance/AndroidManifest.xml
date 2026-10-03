@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  «آتیران مالی» (Atiran Finance) — financial operations, treasury, receivables, cheques, POS,
+  cash, user settlement and bank reconciliation.
+
+  Independent installable app (ir.meelano.atiran.finance): the visitor/store/staff parts of the
+  shared code base are removed from this edition exactly the way the tax edition does it, and this
+  activity is the only launcher.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- The finance app is a desktop/office tool: location, microphone, boot jobs, notifications,
+         wifi state and biometric permissions of the shared manifest are removed, exactly the way the
+         tax edition removes them. Only the network is used, for the SQL Server connection. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove" />
+
+    <!-- This edition replaces the shared app icon, its round icon and its label, so the three
+         attributes are explicitly replaced instead of merged (the shared manifest declares them). -->
+    <application
+        android:name=".finance.FinApp"
+        android:icon="@mipmap/ic_fin_launcher"
+        android:label="@string/fin_app_name"
+        android:roundIcon="@mipmap/ic_fin_launcher_round"
+        tools:replace="android:icon,android:label,android:roundIcon">
+
+        <activity android:name=".MainActivity" tools:node="remove" />
+        <receiver android:name=".MeelanoWidgetProvider" tools:node="remove" />
+        <service android:name=".MeelanoDeliveryJob" tools:node="remove" />
+
+        <activity
+            android:name=".finance.AtiranFinanceActivity"
+            android:configChanges="keyboard|keyboardHidden|screenSize|uiMode"
+            android:exported="true"
+            android:label="@string/fin_app_name"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Debug-only self test used by CI to prove login + real data paths on a real database. -->
+        <activity
+            android:name=".finance.FinSelfTestActivity"
+            android:exported="false"
+            android:label="@string/fin_app_name" />
+    </application>
+</manifest>

@@ -1,0 +1,325 @@
+name: Build APK
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.MEELANO_KEYSTORE_BASE64 != '' }}
+    outputs:
+      version: ${{ steps.src.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Locate Android source
+        id: src
+        run: |
+          # A freshly uploaded source zip takes precedence over the folder.
+          ZIP=$(ls MEELANO-Android-*.zip 2>/dev/null | head -1 || true)
+          if [ -n "$ZIP" ]; then
+            echo "Using uploaded zip: $ZIP"; rm -rf MEELANO-Android; unzip -q -o "$ZIP"
+          fi
+          VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle | head -1)  # first = defaultConfig (edition flavours have their own versionName)
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building version $VERSION"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0 build-tools;36.0.0'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Prepare release keystore
+        env:
+          KS_B64: ${{ secrets.MEELANO_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.MEELANO_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.MEELANO_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.MEELANO_KEY_PASSWORD }}
+        run: |
+          KS="$RUNNER_TEMP/release.jks"
+          if [ "$HAS_SIGNING_KEY" = "true" ]; then
+            echo "$KS_B64" | base64 -d > "$KS"
+            echo "SIGN_STORE_PASS=$KS_PASS" >> "$GITHUB_ENV"
+            echo "SIGN_KEY_ALIAS=${KEY_ALIAS:-meelano}" >> "$GITHUB_ENV"
+            echo "SIGN_KEY_PASS=${KEY_PASS:-$KS_PASS}" >> "$GITHUB_ENV"
+            echo "::notice title=Signing::Release APK signed with the MEELANO release key from repository secrets."
+          else
+            # No private key in the secrets: sign with the fixed install key kept in the repository, so every
+            # release APK has the same signature and installs over the previous version.
+            echo "::notice title=Signing::Release APK signed with the fixed install key (MEELANO-Android/app/signing)."
+            cp MEELANO-Android/app/signing/meelano-install.p12 "$KS"
+            echo "SIGN_STORE_PASS=derakhshan-install" >> "$GITHUB_ENV"
+            echo "SIGN_KEY_ALIAS=meelano" >> "$GITHUB_ENV"
+            echo "SIGN_KEY_PASS=derakhshan-install" >> "$GITHUB_ENV"
+          fi
+          echo "SIGN_STORE_FILE=$KS" >> "$GITHUB_ENV"
+
+      - name: Build debug APK
+        working-directory: MEELANO-Android
+        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testStoreDebugUnitTest testTaxDebugUnitTest assembleDebug 2>&1 | tee "$RUNNER_TEMP/gradle-debug.log"; exit ${PIPESTATUS[0]}
+
+      - name: Report compile errors
+        if: failure()
+        run: |
+          grep -E "error:|\.java:[0-9]+" "$RUNNER_TEMP/gradle-debug.log" | head -20 | while IFS= read -r line; do
+            echo "::error title=Compile::${line}"
+          done
+          grep -E "Test > .* FAILED|AssertionError|ComparisonFailure|expected:<" "$RUNNER_TEMP/gradle-debug.log" | head -20 | while IFS= read -r line; do
+            echo "::error title=Unit test::${line}"
+          done
+          for x in MEELANO-Android/app/build/test-results/*/TEST-*.xml; do
+            [ -f "$x" ] || continue
+            python3 - "$x" <<'PY' || true
+          import sys, xml.etree.ElementTree as ET
+          for tc in ET.parse(sys.argv[1]).getroot().iter("testcase"):
+              for f in list(tc.findall("failure")) + list(tc.findall("error")):
+                  msg = (f.get("message") or f.text or "").replace("\n", " ")[:300]
+                  print("::error title=Test %s::%s" % (tc.get("name"), msg))
+          PY
+          done
+
+      - name: Moadian cross-check (openssl + python cryptography)
+        run: |
+          D=MEELANO-Android/app/build/moadian-crosscheck
+          R=MEELANO-Android/app/src/test/resources/moadian
+          ls -la "$D"
+          # 1) The CSR built by MeelanoTaxCrypto must verify and parse with OpenSSL.
+          openssl req -in "$D/test.csr" -noout -verify
+          SUBJ=$(openssl req -in "$D/test.csr" -noout -subject -nameopt RFC2253,utf8 | tr '\n' ' ')
+          echo "::notice title=CSR (openssl)::$SUBJ"
+          # 2) The JWE produced by Java must decrypt with python cryptography (RSA-OAEP-256 + A256GCM).
+          pip install --quiet cryptography
+          python3 - "$D" "$R" <<'PY'
+          import sys, base64, json
+          from cryptography.hazmat.primitives import serialization, hashes
+          from cryptography.hazmat.primitives.asymmetric import padding
+          from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+          d, r = sys.argv[1], sys.argv[2]
+          def b64u(s): return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+          key = serialization.load_pem_private_key(open(r + "/jwe_test_private_key.pem", "rb").read(), None)
+          h, ek, iv, ct, tag = open(d + "/java_jwe.txt").read().strip().split(".")
+          hdr = json.loads(b64u(h))
+          assert hdr == {"alg": "RSA-OAEP-256", "enc": "A256GCM", "kid": "kid-42"}, hdr
+          cek = key.decrypt(b64u(ek), padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+          assert len(cek) == 32
+          plain = AESGCM(cek).decrypt(b64u(iv), b64u(ct) + b64u(tag), h.encode("ascii"))
+          expected = open(d + "/java_jwe_plaintext.txt", "rb").read()
+          assert plain == expected, (plain, expected)
+          print("::notice title=JWE (python)::Java JWE decrypted by python cryptography: " + plain.decode("utf-8"))
+          PY
+
+      - name: Build signed release APK
+        working-directory: MEELANO-Android
+        run: |
+          gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g assembleRelease \
+            -Pandroid.injected.signing.store.file="$SIGN_STORE_FILE" \
+            -Pandroid.injected.signing.store.password="$SIGN_STORE_PASS" \
+            -Pandroid.injected.signing.key.alias="$SIGN_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$SIGN_KEY_PASS"
+
+      - name: Collect and verify APKs
+        run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          mkdir -p out
+          cp MEELANO-Android/app/build/outputs/apk/visitor/release/*.apk "out/MEELANO-v$APP_VERSION-release.apk"
+          cp MEELANO-Android/app/build/outputs/apk/visitor/debug/*.apk "out/MEELANO-v$APP_VERSION-debug.apk"
+          cp MEELANO-Android/app/build/outputs/apk/store/release/*.apk "out/MEELANO-Store-v$APP_VERSION-release.apk"
+          cp MEELANO-Android/app/build/outputs/apk/store/debug/*.apk "out/MEELANO-Store-v$APP_VERSION-debug.apk"
+          cp MEELANO-Android/app/build/outputs/apk/staff/release/*.apk "out/MEELANO-Staff-v$APP_VERSION-release.apk"
+          cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk "out/MEELANO-Staff-v$APP_VERSION-debug.apk"
+          cp MEELANO-Android/app/build/outputs/apk/tax/release/*.apk "out/MEELANO-Tax-v$APP_VERSION-release.apk"
+          cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk "out/MEELANO-Tax-v$APP_VERSION-debug.apk"
+          cp MEELANO-Android/app/build/outputs/apk/visitor/debug/*.apk app-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/store/debug/*.apk app-store-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk app-staff-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk app-tax-debug.apk
+          for f in out/*.apk; do
+            R=$("$APKSIGNER" verify --verbose --print-certs "$f" | grep -E "Verified using v[23] |certificate SHA-256" | tr '\n' ';')
+            echo "::notice title=apksigner $(basename "$f")::$R"
+          done
+          rm -f "$SIGN_STORE_FILE"
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MEELANO-APK
+          path: out/*.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk-for-screenshots
+          path: |
+            app-debug.apk
+            app-store-debug.apk
+            app-staff-debug.apk
+            app-tax-debug.apk
+          retention-days: 3
+
+      - name: Commit APK to branch
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p apk
+          cp out/*.apk apk/
+          # Small manifest read by the app's "new version" check (Settings → بروزرسانی برنامه).
+          CODE=$(grep -oP "versionCode\s+\K[0-9]+" MEELANO-Android/app/build.gradle | head -1)  # first = defaultConfig
+          printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-v%s-release.apk"}\n' \
+            "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest.json
+          printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Store-v%s-release.apk"}\n' \
+            "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-store.json
+          printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Staff-v%s-release.apk"}\n' \
+            "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-staff.json
+          printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Tax-v%s-release.apk"}\n' \
+            "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-tax.json
+          cat apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json
+          git commit -m "Build APK v$APP_VERSION [skip ci]" || echo "No changes"
+          for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APP_VERSION }}-build-${{ github.run_number }}
+          name: MEELANO Android v${{ env.APP_VERSION }} (build ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          files: out/*.apk
+
+  analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36 build-tools;35.0.0 build-tools;36.0.0'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: javac warnings (-Xlint:all)
+        working-directory: MEELANO-Android
+        run: |
+          gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g -Pmeelano.analysis compileVisitorDebugJavaWithJavac --rerun-tasks 2>&1 | tee "$RUNNER_TEMP/javac.log" || true
+
+      - name: Android Lint
+        working-directory: MEELANO-Android
+        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g lintVisitorDebug || true
+
+      - name: PMD (error-prone + multithreading + performance)
+        run: |
+          curl -sSL -o pmd.zip https://github.com/pmd/pmd/releases/download/pmd_releases%2F7.7.0/pmd-dist-7.7.0-bin.zip
+          unzip -q pmd.zip
+          ./pmd-bin-7.7.0/bin/pmd check -d MEELANO-Android/app/src/main/java \
+            -R category/java/errorprone.xml,category/java/multithreading.xml,category/java/performance.xml,category/java/bestpractices.xml \
+            -f text --no-progress --no-cache -r "$RUNNER_TEMP/pmd.txt" || true
+
+      - name: Commit analysis reports
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p docs/analysis
+          grep -E "warning:" "$RUNNER_TEMP/javac.log" | sed "s#^.*/MEELANO-Android/##" > docs/analysis/javac-warnings.txt || true
+          cp MEELANO-Android/app/build/reports/lint-results.txt docs/analysis/lint-results.txt 2>/dev/null || find MEELANO-Android/app/build/reports -name "lint-results*.txt" -exec cp {} docs/analysis/lint-results.txt \; || true
+          find MEELANO-Android/app/build/reports -name "lint-results*.xml" | head -1 | xargs -r -I{} cp {} docs/analysis/lint-results.xml
+          sed "s#^.*/MEELANO-Android/##" "$RUNNER_TEMP/pmd.txt" > docs/analysis/pmd.txt || true
+          wc -l docs/analysis/*
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add docs/analysis
+          git commit -m "Update static analysis reports [skip ci]" || echo "No changes"
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 7; done
+
+  screenshots:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: debug-apk-for-screenshots
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Capture screenshots on Android 15 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash .github/scripts/screenshots.sh shots && if [ "$UI_REVIEW" = "true" ]; then bash .github/scripts/ui-review.sh review; fi
+        env:
+          UI_REVIEW: ${{ contains(github.event.head_commit.message, '[ui-review]') }}
+
+      - name: Compress and commit screenshots
+        if: github.event_name == 'push'
+        run: |
+          pip install --quiet pillow
+          python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          os.makedirs("docs/screenshots", exist_ok=True)
+          for f in sorted(glob.glob("shots/*.png")):
+              im = Image.open(f).convert("RGB")
+              w, h = im.size
+              im = im.resize((540, int(h * 540 / w)), Image.LANCZOS)
+              out = "docs/screenshots/" + os.path.basename(f)[:-4] + ".jpg"
+              im.save(out, "JPEG", quality=82, optimize=True)
+              print(out, os.path.getsize(out))
+          PY
+          cp shots/logcat.txt docs/screenshots/logcat.txt || true
+          cp shots/checks.txt docs/screenshots/checks.txt || true
+          if [ -d review ]; then
+            rm -rf docs/ui-review-current && mkdir -p docs/ui-review-current/xml
+            python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          for f in sorted(glob.glob("review/*.png")):
+              im = Image.open(f).convert("RGB")
+              w, h = im.size
+              im = im.resize((432, int(h * 432 / w)), Image.LANCZOS)
+              im.save("docs/ui-review-current/" + os.path.basename(f)[:-4] + ".jpg", "JPEG", quality=80, optimize=True)
+          PY
+            cp review/xml/*.xml docs/ui-review-current/xml/ || true
+            cp review/env.txt review/logcat.txt docs/ui-review-current/ || true
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots docs/ui-review-current 2>/dev/null || git add docs/screenshots
+          git commit -m "Update design screenshots [skip ci]" || echo "No changes"
+          for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done

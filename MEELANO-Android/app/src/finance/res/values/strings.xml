@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fin_app_name">آتیران مالی</string>
+    <string name="fin_app_short">آتیران مالی</string>
+    <!-- Shared UI strings are resource based so the whole screen set can be translated. -->
+    <string name="fin_loading">در حال دریافت اطلاعات…</string>
+    <string name="fin_empty">موردی برای نمایش وجود ندارد.</string>
+    <string name="fin_error">دریافت اطلاعات با مشکل مواجه شد.</string>
+    <string name="fin_retry">تلاش دوباره</string>
+    <string name="fin_no_permission">برای این بخش مجوز ندارید.</string>
+    <string name="fin_offline">حالت آفلاین — آخرین داده ذخیره‌شده</string>
+    <string name="fin_login_title">ورود به آتیران مالی</string>
+    <string name="fin_username">نام کاربری</string>
+    <string name="fin_password">رمز عبور</string>
+    <string name="fin_login">ورود</string>
+</resources>

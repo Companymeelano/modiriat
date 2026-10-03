@@ -1,0 +1,12 @@
+validation json: docs/finance/AtiranFinanceValidation.json (25069 bytes), errors: 3
+  role_table: ("Invalid object name 'dbo.role'.", None)
+  user_role: ("Invalid object name 'dbo.UserRole'.", None)
+  pos_join: ('Cannot perform an aggregate function on an expression containing an aggregate or a subquery. Cannot perform an aggregate function on an expression containing an aggregate or a subquery. Cannot perform an aggregate function on an expression containing an aggregate or a subquery. Cannot perform an a
+clock                    [{"jalali_today": "1405/07/12", "gregorian_now": "2026-10-04", "time_now": "01:40:54"}]
+agree_receipt_total      [{"receipts": 812, "agreeing": 694, "mismatch": 118}]
+agree_customer_balance   [{"compared": 2724, "agreeing": 2724, "mismatch": 0, "negative_balance": 218}]
+agree_invoice_lines      [{"invoices": 1168, "agreeing": 458, "mismatch": 710}]
+getchk_by_status         [{"status_id": 5, "status_name": "‌خرج چك در پرداخت حسابداري", "n": 67, "returned": 0, "deposited": 0, "withdrawn": 67}, {"status_id": 8, "status_name": "اخذ چك از مشتري در خزانه داري", "n": 27, "returned": 0, "deposited": 0, "withdrawn": 27}, {"status_id": 1, "status_name": "دريافت در خريد و فروش", "n": 21, "returned": 0, "deposited": 0, "withdrawn": 13}, {"status_id": 6, "status_name": "خرج چك د
+getchk_due_windows       [{"all_checks": 118, "due_today": 0, "overdue": 29, "future": 89, "unreasonably_old": 0, "min_due": "1402/12/10", "max_due": "1405/09/12"}]
+pos_join                 []
+cow_summary              [{"rows_all": 77, "sum_bes": "<1e9", "sum_bed": "<1e9", "boxes": 4, "min_date": "1405/06/10", "max_date": "1405/07/11"}]

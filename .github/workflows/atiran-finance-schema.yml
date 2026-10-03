@@ -1,0 +1,86 @@
+name: Atiran finance schema
+
+# Runs ONLY when the commit message contains [finance-schema]. Connects to the real Atiran2
+# database with the app's own credentials, executes SELECT-only metadata discovery for the
+# «آتیران مالی» (Atiran Finance) product and commits:
+#   * docs/finance/AtiranFinancialSchema.json  (machine readable schema, masked)
+#   * docs/finance/FinancialSchemaMapping.md   (human readable mapping)
+# No customer name, amount, phone or free text is written: long strings are masked.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finance-schema-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  schema:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[finance-schema')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Network check (no data)
+        run: |
+          mkdir -p docs/finance
+          python3 - > docs/finance/probe-net.txt 2>&1 <<'PY'
+          import re, socket
+          s = open("MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java", encoding="utf-8").read()
+          m = re.search(r"int\[\] S_HOST = \{([^}]*)\}", s)
+          h = "".join(chr(int(x) ^ 73) for x in m.group(1).replace("\n", "").split(",") if x.strip())
+          print("host length:", len(h))
+          try:
+              socket.create_connection((h, 1433), timeout=20).close(); print("tcp 1433 reachable")
+          except Exception as e:
+              print("tcp 1433 NOT reachable:", type(e).__name__, e)
+          PY
+          cat docs/finance/probe-net.txt
+
+      - name: Discover financial schema (read-only)
+        continue-on-error: true
+        run: |
+          pip install --quiet python-tds
+          mkdir -p docs/finance
+          python3 .github/scripts/atiran_finance_schema.py \
+            docs/finance/AtiranFinancialSchema.json \
+            docs/finance/FinancialSchemaMapping.md > docs/finance/probe-log.txt 2>&1 || true
+          grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-log.txt | tail -70 | sed 's/[0-9]\{6,\}/<num>/g'
+
+      - name: Discover finance details (read-only)
+        continue-on-error: true
+        run: |
+          pip install --quiet python-tds
+          python3 .github/scripts/atiran_finance_detail.py docs/finance/AtiranFinanceDetail.json \
+            > docs/finance/probe-detail-log.txt 2>&1 || true
+          grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-detail-log.txt | tail -50 | sed 's/[0-9]\{6,\}/<num>/g'
+
+      - name: Validate finance semantics (read-only)
+        continue-on-error: true
+        run: |
+          python3 .github/scripts/atiran_finance_validate.py docs/finance/AtiranFinanceValidation.json \
+            > docs/finance/probe-validate-log.txt 2>&1 || true
+          grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-validate-log.txt | tail -40 | sed 's/[0-9]\{6,\}/<num>/g'
+
+      - name: Commit the schema mapping
+        run: |
+          test -s docs/finance/AtiranFinancialSchema.json || echo '{"ok":false}' > docs/finance/AtiranFinancialSchema.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          ls -la docs/finance/
+          head -c 400 docs/finance/probe-net.txt || true
+          git add -f docs/finance
+          git commit -q -m "Finance schema discovery [skip ci]" || echo "No changes"
+          for i in 1 2 3; do
+            git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
+            git push -q origin HEAD:${GITHUB_REF_NAME} && break
+            sleep 6
+          done
