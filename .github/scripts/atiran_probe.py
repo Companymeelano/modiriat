@@ -111,6 +111,25 @@ def main():
             # containing 'password' (case-insensitive) -> base64 the whole stream, chunked.
             import base64
             stream = "|".join("%s=%s" % (t, ",".join(per[t])) for t in sorted(per))
+            # global scan: any cost/price column anywhere (answers the "profit" question from the real DB)
+            try:
+                cc = q("""SELECT o.name+'.'+c.name FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id
+                          WHERE o.type IN ('U','V') AND (LOWER(c.name) LIKE '%gheymat%' OR LOWER(c.name) LIKE '%ghymat%'
+                          OR LOWER(c.name) LIKE '%price%' OR LOWER(c.name) LIKE '%cost%' OR LOWER(c.name) LIKE '%baha%'
+                          OR LOWER(c.name) LIKE '%kharid%' OR LOWER(c.name) LIKE '%buy%')""")
+                stream += "|COST_COLUMNS=" + ",".join(str(x[0]) for x in cc["rows"])
+            except Exception as ex:
+                stream += "|COST_COLUMNS_ERR=" + type(ex).__name__
+            # warehouse tables (anbar) + inventory ledger columns
+            try:
+                aw = q("""SELECT o.name tbl, c.name col FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id
+                          WHERE o.type IN ('U','V') AND (LOWER(o.name) LIKE '%anbar%' OR o.name IN ('inventory','ka_act','ka_group')) ORDER BY o.name, c.column_id""")
+                perw = {}
+                for row in aw["rows"]:
+                    perw.setdefault(str(row[0]), []).append(str(row[1]))
+                stream += "|" + "|".join("%s=%s" % (t, ",".join(perw[t])) for t in sorted(perw))
+            except Exception as ex:
+                stream += "|ANBAR_ERR=" + type(ex).__name__
             b = base64.b64encode(stream.encode("utf-8")).decode("ascii")
             part = 0
             for i in range(0, len(b), 3000):
