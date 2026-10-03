@@ -1,0 +1,117 @@
+{
+ "errors": [],
+ "boundaries": {
+  "today": "1405/07/11",
+  "f7": "1405/07/05",
+  "f30": "1405/06/13",
+  "f365": "1404/07/12",
+  "plus7": "1405/07/18"
+ },
+ "sailfact_rows": "1168",
+ "sailfact_distinct_number": "993",
+ "sailfact_distinct_number_rdf": "1168",
+ "sailfact_distinct_sysid": "1",
+ "sailfact_active": [
+  "t:970",
+  "f:198"
+ ],
+ "sailfact_deleted": [
+  "0:1168"
+ ],
+ "sailfact_status": [
+  "1:1168"
+ ],
+ "sailfact_ismodify": [
+  "f:993",
+  "t:175"
+ ],
+ "sailfact_tasvieh": [
+  "t:594",
+  "f:574"
+ ],
+ "sailfact_dup_flags": [
+  "0/f/s1/mt:175",
+  "0/t/s1/mf:152",
+  "0/f/s1/mf:1"
+ ],
+ "sailfact_clean_rows": "970",
+ "sailfact_clean_distinct_number": "970",
+ "getchk_sardate_top": [
+  "1405/07/20:7",
+  "1405/08/08:6",
+  "1405/07/08:5",
+  "1405/07/25:5",
+  "1405/08/20:5"
+ ],
+ "getchk_status": [
+  "5:67",
+  "8:27",
+  "1:21",
+  "6:3"
+ ],
+ "getchk_missing_sardate": "0",
+ "getchk_buckets_new_over_soon_ok_total_and_over_amount_positive": [
+  "29",
+  "4",
+  "85",
+  "118",
+  "24061650000"
+ ],
+ "putchk_columns_head": [
+  "rdf",
+  "putdate",
+  "sardate",
+  "shputchk",
+  "bankrdf",
+  "putchkmab",
+  "shmo",
+  "putchkdis"
+ ],
+ "putchk_rows": "202",
+ "ka_act_ids": [
+  "20:3871",
+  "47:1803",
+  "11:211",
+  "25:114",
+  "17:92",
+  "85:70",
+  "27:67",
+  "18:49",
+  "86:42",
+  "132:32",
+  "21:4",
+  "26:4"
+ ],
+ "stock_apply_20_items": {
+  "ms": 196,
+  "rows": 20
+ },
+ "batched_dashboard_kpis": {
+  "ms": 202,
+  "rows": 1
+ },
+ "batched_manager_reports": {
+  "ms": 204,
+  "rows": 1
+ },
+ "batched_daily_items": {
+  "ms": 243,
+  "rows": 8
+ },
+ "batched_trend_7": {
+  "ms": 209,
+  "rows": 6
+ },
+ "batched_top_debtors": {
+  "ms": 236,
+  "rows": 8
+ },
+ "batched_checks_breakdown": {
+  "ms": 195,
+  "rows": 4
+ },
+ "batched_visitor_share": {
+  "ms": 215,
+  "rows": 6
+ }
+}

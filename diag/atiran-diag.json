@@ -3,92 +3,92 @@
  "sections": {
   "timings": {
    "server_today": {
-    "ms": 213,
-    "rows": 1,
-    "error": null
-   },
-   "stock_fn": {
-    "ms": 221,
-    "rows": 1,
-    "error": null
-   },
-   "old_range_1m": {
-    "ms": 460,
-    "rows": 1,
-    "error": null
-   },
-   "new_range_1m": {
-    "ms": 216,
-    "rows": 1,
-    "error": null
-   },
-   "old_range_1m_sum": {
-    "ms": 232,
-    "rows": 1,
-    "error": null
-   },
-   "new_range_1m_sum": {
-    "ms": 227,
-    "rows": 1,
-    "error": null
-   },
-   "old_dedupe_source": {
-    "ms": 226,
-    "rows": 1,
-    "error": null
-   },
-   "new_plain_agg": {
-    "ms": 227,
-    "rows": 1,
-    "error": null
-   },
-   "dup_check": {
-    "ms": 227,
-    "rows": 1,
-    "error": null
-   },
-   "latest_anchor_app": {
-    "ms": 225,
-    "rows": 1,
-    "error": null
-   },
-   "latest_anchor_typed": {
-    "ms": 229,
-    "rows": 1,
-    "error": null
-   },
-   "home_customers_debt": {
     "ms": 236,
     "rows": 1,
     "error": null
    },
-   "home_sales_today_old": {
-    "ms": 276,
+   "stock_fn": {
+    "ms": 185,
     "rows": 1,
     "error": null
    },
-   "visitors_rows": {
-    "ms": 216,
+   "old_range_1m": {
+    "ms": 383,
     "rows": 1,
     "error": null
    },
-   "sys_users_rows": {
+   "new_range_1m": {
+    "ms": 190,
+    "rows": 1,
+    "error": null
+   },
+   "old_range_1m_sum": {
+    "ms": 192,
+    "rows": 1,
+    "error": null
+   },
+   "new_range_1m_sum": {
+    "ms": 193,
+    "rows": 1,
+    "error": null
+   },
+   "old_dedupe_source": {
+    "ms": 197,
+    "rows": 1,
+    "error": null
+   },
+   "new_plain_agg": {
+    "ms": 194,
+    "rows": 1,
+    "error": null
+   },
+   "dup_check": {
+    "ms": 202,
+    "rows": 1,
+    "error": null
+   },
+   "latest_anchor_app": {
     "ms": 212,
     "rows": 1,
     "error": null
    },
+   "latest_anchor_typed": {
+    "ms": 197,
+    "rows": 1,
+    "error": null
+   },
+   "home_customers_debt": {
+    "ms": 199,
+    "rows": 1,
+    "error": null
+   },
+   "home_sales_today_old": {
+    "ms": 198,
+    "rows": 1,
+    "error": null
+   },
+   "visitors_rows": {
+    "ms": 181,
+    "rows": 1,
+    "error": null
+   },
+   "sys_users_rows": {
+    "ms": 180,
+    "rows": 1,
+    "error": null
+   },
    "inventory_rows": {
-    "ms": 214,
+    "ms": 200,
     "rows": 1,
     "error": null
    },
    "ka_act_rows": {
-    "ms": 217,
+    "ms": 216,
     "rows": 1,
     "error": null
    },
    "buyfact_rows": {
-    "ms": 213,
+    "ms": 197,
     "rows": 1,
     "error": null
    }
@@ -150,7 +150,7 @@
   "1",
   "1"
  ],
- "roundtrip_ms": 215,
+ "roundtrip_ms": 192,
  "tables": {
   "sailfact": {
    "exists": true,
