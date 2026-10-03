@@ -177,6 +177,12 @@ p.code('Release (signed):\nhttps://github.com/Companymeelano/modiriat/releases/d
 p.bullet('اندازه: release 2,528,032 بایت / debug 2,847,725 بایت؛ امضا با apksigner (v2/v3) در CI تأیید شد.')
 p.bullet('applicationId: ir.meelano.atiran.warehouse — جدا از نسخه‌های دیگر نصب می‌شود.')
 
+# ---------- 15 code review fixes ----------
+p.heading('۱۵) بازبینی کد و رفع اشکال (نرم‌افزاری + گرافیکی)', 1)
+p.bullet('نرم‌افزاری: رندر دو کوئری مردهٔ فروش/موجودی؛ drill-down لمسی (فاکتور→اقلام+کسری، کالا→گردش ka_act)؛ دکمهٔ Retry در خطا و جستجو.')
+p.bullet('گرافیکی: تبدیل پدینگ/مارجین به dp()؛ پس‌زمینه روشن + کارت سفید برای تضاد مستقل از تم؛ ارتفاع لمسی ۴۸dp و ردیف وزنی؛ fillViewport.')
+p.bullet('تأیید: بیلد CI با UI ارتقایافته موفق (کامپایل همه flavorها + آزمون واحد + release امضاشده)؛ گارد اسکیمای OK.')
+
 # ---------- 12 fingerprints ----------
 p.heading('۱۲) نسخه و اثرانگشت SHA-256', 1)
 files = [
