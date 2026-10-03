@@ -86,12 +86,19 @@ WHERE c.object_id=OBJECT_ID(N'dbo.buyfact') ORDER BY c.column_id;
 | اتصال jTDS | DriverManager + hidden() | MainActivity:4378+ |
 | آیکون‌های مفهومی | MeelanoIcons | همان |
 
-## ۶) معماری پیشنهادی ماژول انبار (بدون تخریب)
+## ۶) ماژول انبار — پیاده‌سازی این جلسه (بدون تخریب)
 
-- افزودن productFlavor پنجم `warehouse` با applicationId `ir.meelano.atiran.warehouse` (مطابق الگوی فعلی visitor/store/staff/tax) تا جدا نصب شود.
-- بستهٔ جدید `ir.meelano.android.warehouse` با زیربسته‌های `data/domain/presentation/scanner/...` (بند ۱۵۷) — ولی پیاده‌سازی با همان سبک جاوا/View فعلی تا کامپایل بدون AndroidX ممکن بماند.
-- جدول‌های جدید با پیشوند `meelano_wh_` مطابق الگوی موجود: `meelano_wh_task` (برداشت/کنترل)، `meelano_wh_receive`، `meelano_wh_count`، `meelano_wh_audit`. این‌ها دادهٔ عملیاتی انبار را نگه می‌دارند بدون لمس اسناد حسابداری آتیران (بند ۱۴۳).
-- Scanner: چون AndroidX/ML Kit ممکن نیست، از `zxing:core` (وابستگی خالص، بدون AndroidX) + Camera1 برای دیکد استفاده شود؛ در غیر این‌صورت ورود دستی barcode. (نیازمند ساخت واقعی برای تأیید.)
+پیاده‌سازی واقعی (نه طرح) با همان سبک جاوا/View و بدون AndroidX انجام شد:
+
+- `MeelanoWarehouse.java` — لایهٔ داده: داشبورد KPI، فهرست/جزئیات فاکتور فروش با کسری، موجودی و گردش از دفتر `ka_act`، خرید خواندنی، و عملیات‌های تراکنشی `startTask/confirmTask` + ممیزی. فقط ستون‌های معتبر.
+- `MeelanoWarehouseActivity.java` — صفحهٔ RTL «آتیران انبار» برای اسما حمدانی (View برنامه‌ای، بدون AndroidX).
+- `AndroidManifest.xml` — ثبت `MeelanoWarehouseActivity`.
+- `app/build.gradle` — flavor پنجم `warehouse` با applicationId `ir.meelano.atiran.warehouse` و version 1.0.0/1.
+- `app/src/warehouse/res/values/{edition,strings,colors}.xml` — بول نسخه، نام «آتیران انبار»، پالت obsidian/gold.
+- `main/res/values/edition.xml` + `MainActivity` — بول `meelano_warehouse_edition` و ریدایرکت به صفحهٔ انبار در نسخهٔ انبار.
+- موجودی از `MainActivity.atiranStockApply` (نه بازپیاده‌سازی)؛ جدول‌های `meelano_wh_*` مطابق §۶٫۵ نگاشت.
+- گارد اجرایی `tools/warehouse/check_schema_usage.py`: فقط ستون‌های معتبر؛ خروجی روی کد واقعی OK و روی تزریق `mojodi` خطا می‌دهد.
+- Scanner: به‌دلیل نبود AndroidX/ML Kit، در گام بعد روی ماشین واقعی با `zxing:core`+Camera1 یا ورود دستی barcode اضافه شود.
 
 ## ۷) جریان کاری (Workflow) منطبق بر دادهٔ واقعی
 

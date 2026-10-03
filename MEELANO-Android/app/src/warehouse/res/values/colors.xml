@@ -1,0 +1,8 @@
+<resources>
+    <!-- «آتیران انبار»: startup palette matches the obsidian/gold warehouse icon. -->
+    <color name="meelano_navy">#0D1015</color>
+    <color name="meelano_surface">#12161C</color>
+    <color name="meelano_gold">#B88C29</color>
+    <color name="meelano_gold_light">#D8B36A</color>
+    <color name="white">#FFFFFF</color>
+</resources>

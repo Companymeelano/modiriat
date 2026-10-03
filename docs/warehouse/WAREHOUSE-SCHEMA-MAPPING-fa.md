@@ -73,6 +73,22 @@
 | `meelano_prefactors`, `meelano_prefactor_items` | پیش‌فاکتور | [SQL-PROD] |
 | `meelano_attendance`, `meelano_hr_*` | پرسنل/حضورغیاب | [SQL-PROD] |
 
+## ۶٫۵) جدول‌های عملیاتی ماژول انبار (ساخته‌شده در این جلسه)
+
+ماژول انبار (`MeelanoWarehouse.java`) فقط این جدول‌های متعلق‌به‌برنامه را می‌نویسد و اسناد حسابداری
+آتیران را تغییر نمی‌دهد. همهٔ ستون‌های آن‌ها در `check_schema_usage.py` به‌عنوان مجاز ثبت شده‌اند:
+
+| شیء | نقش | ستون‌ها |
+|---|---|---|
+| `meelano_wh_task` | برداشت/پیکینگ هر ردیف فاکتور | id, shfacfo, rdf__, shka, requested, picked, state, assignee, assignee_name, reason, started_at, done_at, created_by, created_at, updated_at |
+| `meelano_wh_receive` | دریافت خرید + مغایرت (بدون اصلاح خودکار موجودی) | id, buy_shmo, shka, expected, received, diff(PERSISTED), state, note, review_state, reviewed_by, reviewed_at |
+| `meelano_wh_count` | شمارش/انبارگردانی (کورها اختیاری) | id, shka, system_qty, actual_qty, diff(PERSISTED), blind, state, counted_by, approved_by |
+| `meelano_wh_audit` | ممیزی who/what/when/before/after | id, actor, actor_name, action, ref_table, ref_id, before_val, after_val, note, created_at |
+
+**موجودی:** ماژول انبار موجودی را بازپیاده‌سازی نمی‌کند؛ دقیقاً از `MainActivity.atiranStockApply(inv, alias)`
+(دفتر `ka_act` با همان علامت‌های `dbo.UpdateMojodiInventory`، لیست خروج `20,22,5,19,18,48,26,85,133`) استفاده می‌کند
+تا اعداد انبار با اعداد حسابداری برابر بماند.
+
 ## ۷) اشیا ناشناخته (Unknown — استفاده نشود)
 
 `mojodi`, `minstock`, `minimum`, `expiry`, `batch`(به‌عنوان Lot معتبر), `lot`, `location/bin/shelf/rack` به‌عنوان ساختار انبارگردانی، `vw_customer` (در کاوش بکاپ غیبت کاذب داشت), `CheckTypes` (غیبت کاذب). برای هرکدام پیش از استفاده باید `sys.columns` خوانده شود.

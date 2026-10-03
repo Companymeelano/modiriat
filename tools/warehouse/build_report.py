@@ -131,11 +131,27 @@ p.table(['آزمون', 'روش', 'نتیجه'],
  ['UI/RTL/تم', 'بازبینی ایستا', 'فقط بررسی کد']],
  [0.35, 0.40, 0.25], rtl_cols=[0, 1, 2])
 
+# ---------- 11 implementation ----------
+p.heading('۱۱) پیاده‌سازی ماژول انبار (این جلسه)', 1)
+p.table(['فایل', 'نقش'],
+ [['MeelanoWarehouse.java', 'لایهٔ داده: داشبورد، فروش+کسری، موجودی/گردش ka_act، خرید خواندنی، startTask/confirmTask+audit'],
+  ['MeelanoWarehouseActivity.java', 'صفحهٔ RTL «آتیران انبار» (View، بدون AndroidX)'],
+  ['AndroidManifest.xml', 'ثبت MeelanoWarehouseActivity'],
+  ['app/build.gradle', 'flavor warehouse با applicationId ir.meelano.atiran.warehouse، نسخه 1.0.0/1'],
+  ['src/warehouse/res/values/*', 'بول نسخه + نام «آتیران انبار» + پالت obsidian/gold'],
+  ['check_schema_usage.py', 'گارد «فقط ستون معتبر» — روی کد واقعی OK، روی تزریق mojodi خطا']],
+ [0.40, 0.60], rtl_cols=[0, 1])
+p.bullet('موجودی از MainActivity.atiranStockApply (کااکت با علامت‌های UpdateMojodiInventory) نه بازپیاده‌سازی.')
+p.bullet('اسکنر در گام بعد روی ماشین واقعی با zxing:core+Camera1 یا ورود دستی barcode.')
+
 # ---------- 12 fingerprints ----------
 p.heading('۱۲) نسخه و اثرانگشت SHA-256', 1)
 files = [
  ('docs/warehouse/WAREHOUSE-SCHEMA-MAPPING-fa.md',), ('docs/warehouse/ATIRAN-WAREHOUSE-REPORT-fa.md',),
- ('tools/warehouse/persian_pdf.py',), ('tools/warehouse/build_report.py',),
+ ('tools/warehouse/persian_pdf.py',), ('tools/warehouse/build_report.py',), ('tools/warehouse/check_schema_usage.py',),
+ ('MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouse.java',),
+ ('MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoWarehouseActivity.java',),
+ ('MEELANO-Android/app/build.gradle',), ('MEELANO-Android/app/src/main/AndroidManifest.xml',),
  ('tools/icon/atiran-warehouse-icon-1024.png',),
 ]
 rows = []

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">آتیران انبار</string>
+    <string name="web_url_hint">ورود پرسنل انبار</string>
+    <string name="android_subtitle">مرکز عملیات انبار و تحویل</string>
+</resources>
