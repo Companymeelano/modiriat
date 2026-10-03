@@ -12427,6 +12427,21 @@ public class MainActivity extends Activity {
             double mx = 1; for (int i = 0; i < periods.length(); i++) { JSONObject o = periods.optJSONObject(i); if (o != null) mx = Math.max(mx, o.optDouble("value", 0)); }
             for (int i = 0; i < periods.length(); i++) { JSONObject o = periods.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, INFO); }
         }
+        JSONArray profit = m.optJSONArray("profit");
+        if (profit != null && profit.length() > 0) {
+            LinearLayout c = addReportCard("سود واقعی کالاها (فروش − بهای خرید inventory)", "₪", SUCCESS);
+            double mx = 1; for (int i = 0; i < profit.length(); i++) { JSONObject o = profit.optJSONObject(i); if (o != null) mx = Math.max(mx, Math.abs(o.optDouble("profit", 0))); }
+            for (int i = 0; i < profit.length(); i++) { JSONObject o = profit.optJSONObject(i); if (o != null) { double pv2 = o.optDouble("profit", 0); addBarLine(c, o.optString("name", "—"), money(Math.round(pv2)), Math.abs(pv2), mx, pv2 >= 0 ? SUCCESS : DANGER); } }
+        }
+        JSONArray whs = m.optJSONArray("warehouses");
+        if (whs != null && whs.length() > 0) {
+            LinearLayout c = addReportCard("انبارها (anbars / inventory_anbars)", "⌂", INFO);
+            for (int i = 0; i < whs.length(); i++) {
+                JSONObject o = whs.optJSONObject(i); if (o == null) continue;
+                String keeper = o.optString("keeper", "");
+                addReportLine(c, o.optString("name", "—") + (keeper.isEmpty() ? "" : " • انباردار: " + keeper), formatNumber(o.optLong("items", 0)) + " قلم", TEXT);
+            }
+        }
         JSONArray top = m.optJSONArray("top");
         if (top != null && top.length() > 0) {
             LinearLayout c = addReportCard("ترکیب کالا — پرفروش‌های بازه", "◈", navAccent("products"));

@@ -33,7 +33,8 @@
 
 ## ۳) وضعیت متادیتا — به‌روزرسانی probe (CI run 37090109252)
 - **تأییدشده با probe واقعی:** `Visit(VisitID,VisRdf,Shmo,Duration,DateCreated,TimeCreated,SaveLat,SaveLng,…)` → صفحهٔ «ویزیت میدانی» فعال شد. `vis_goals(rdf,baze_rdf,vis_rdf,mab,ted,Active,…)` → ستون هدف **mab** است و ستون «تحقق» وجود ندارد ⇒ تحقق = فروش واقعی ویزیتور (بدون دادهٔ ساختگی). `vw_customer(Lng,Lat,last_fact_date,…)`، `cust_act(act_bed,act_bes,date,…)`، `Sys_Mandeh_Customer(Etebar,Mandeh,…)`، `TellBook`، `sailfact_pish(gainall,taeed,Rejected,…)` نیز تأیید شدند.
-- **سود تفصیلی — قطعی شد (probe b64)**: لیست کامل ستون‌های sailfact/subsailfact دریافت شد؛ ستون بهای تمام‌شده وجود ندارد (VAHPRICE/JOZPRICE قیمت فروش‌اند) → سیاست قطعی: فقط «حاشیه ناخالص فروش−خرید».
+- **سود تفصیلی — آزاد شد (اسکن سراسری probe)**: ستون‌های بهای خرید واقعی در `inventory` تأیید شد (`pure_buy_price`, `buy_price`, `inventory_price`, `ProductionPrice`) و `ka_act.gain` نیز وجود دارد. پیاده‌سازی: سود کالا = `subsailfact.LINESUM − TEDVAH × inventory.buy_price` (همان الگوی اثبات‌شدهٔ loadMonthlyProfit) — کارت «سود واقعی کالاها» در اتاق فروش.
+- **انبارها — آزاد شد (probe)**: `anbars(rdf_anbar,name,anbardar,…)` و `inventory_anbars(rdf_anbars,shka,mojkavah,…)` و `ka_act.RdfAnbar` تأیید شد → کارت انبارها در اتاق فروش.
 - **`baze(rdf,name,sta,end_,Active)` تأیید شد** → هدف دوره‌ای ویزیتور فعال شد (vis_goals.baze_rdf ⋈ بازهٔ پوشش‌دهندهٔ آخرین تاریخ فروش).
 - **برنامهٔ ویزیت/تقویم: جدولی وجود ندارد** (جستجوی plan/barname/gharar/meet/taghvim/calendar در probe) → Planned-vs-Actual و تقویم زمانی همچنان مسدود و صادقانه غیرفعال.
 - **تاریخ ساخت مشتری (New)**: ستون created در CUSTOMERS تأیید نشده → دستهٔ «جدید» از درخواست‌های مشتری میلو (meelano_customer_requests) می‌آید نه حدس.

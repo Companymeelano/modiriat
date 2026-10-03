@@ -532,6 +532,8 @@ final class ManagerAnalytics {
         }
         out.put("byDay", byDay);
         try { out.put("periods", periodSales(c)); } catch (Exception ignored) { }
+        try { out.put("profit", productProfit(c, range)); } catch (Exception ignored) { }
+        try { out.put("warehouses", warehouses(c)); } catch (Exception ignored) { }
         return out;
     }
 
@@ -732,6 +734,54 @@ final class ManagerAnalytics {
         String sql = "SELECT TOP (12) TRY_CONVERT(nvarchar(150),[" + label + "]), ISNULL(" + sqlNumberExpr(null, value, "decimal(19,2)") + ",0) FROM dbo.VW_Forush_DarBazeZamani ORDER BY 2 DESC";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", r.getString(1) == null ? "—" : r.getString(1)); o.put("value", r.getDouble(2)); arr.put(o); } }
+        }
+        return arr;
+    }
+
+    /** Real per-product profit: LINESUM − TEDVAH × inventory buy price (same proven column candidates as the production loadMonthlyProfit). */
+    static JSONArray productProfit(Connection c, int range) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> sub = columns(c, "subsailfact"), sail = columns(c, "sailfact"), inv = columns(c, "inventory");
+        String sNum = resolve(sail, "shfacfo");
+        String dNum = resolve(sub, "shfacfo");
+        String shka = resolve(sub, "SHKA");
+        String linesum = resolve(sub, "LINESUM");
+        String tedvah = resolve(sub, "TEDVAH");
+        String name = resolve(inv, "naka");
+        String cost = resolve(inv, "pure_buy_price", "BuyPrice", "buy_price", "LastBuyPrice");
+        if (sNum == null || dNum == null || shka == null || linesum == null || tedvah == null || name == null || cost == null) return arr;
+        String sDate = resolve(sail, "date");
+        String latest = sDate == null ? "" : latestDate(c, "sailfact", sDate);
+        String inner = (sDate != null && !latest.isEmpty() ? "WHERE " + rangeCondition(sail, sDate, latest, range, "x") : "WHERE 1=1") + activeAnd(sail, "x");
+        String source = dedupeFactorSource("sailfact", sail, sNum, "h", inner);
+        String profitExpr = "ISNULL(" + sqlNumberExpr("d", linesum, "decimal(19,2)") + ",0) - ISNULL(" + sqlNumberExpr("d", tedvah, "decimal(19,4)") + ",0)*ISNULL(" + sqlNumberExpr("i", cost, "decimal(19,4)") + ",0)";
+        String sql = "SELECT TOP (10) COALESCE(TRY_CONVERT(nvarchar(150),i.[" + name + "]),N'بدون نام'), ISNULL(SUM(" + profitExpr + "),0) FROM " + source +
+                " JOIN dbo.subsailfact d ON TRY_CONVERT(nvarchar(100),d.[" + dNum + "])=TRY_CONVERT(nvarchar(100),h.[" + sNum + "])" +
+                " LEFT JOIN dbo.inventory i ON TRY_CONVERT(nvarchar(100),i.[shka])=TRY_CONVERT(nvarchar(100),d.[" + shka + "])" +
+                " WHERE 1=1" + activeAnd(sub, "d") +
+                " GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),i.[" + name + "]),N'بدون نام') ORDER BY 2 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", r.getString(1) == null ? "—" : r.getString(1)); o.put("profit", r.getDouble(2)); arr.put(o); } }
+        }
+        return arr;
+    }
+
+    /** Warehouses from the real anbars table + per-warehouse item counts from inventory_anbars (columns confirmed by CI probe). */
+    static JSONArray warehouses(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        if (!tableExists(c, "anbars") || !tableExists(c, "inventory_anbars")) return arr;
+        Set<String> an = columns(c, "anbars"), ia = columns(c, "inventory_anbars");
+        String aKey = resolve(an, "rdf_anbar");
+        String aName = resolve(an, "name");
+        String aKeeper = resolve(an, "anbardar");
+        String iRef = resolve(ia, "rdf_anbars");
+        String iShka = resolve(ia, "shka");
+        if (aKey == null || aName == null || iRef == null || iShka == null) return arr;
+        String sql = "SELECT TRY_CONVERT(nvarchar(150),a.[" + aName + "]), " + (aKeeper == null ? "CAST(NULL AS nvarchar(120))" : "TRY_CONVERT(nvarchar(120),a.[" + aKeeper + "])") + ", COUNT_BIG(ia.[" + iShka + "]) FROM dbo.anbars a" +
+                " LEFT JOIN dbo.inventory_anbars ia ON TRY_CONVERT(nvarchar(100),ia.[" + iRef + "])=TRY_CONVERT(nvarchar(100),a.[" + aKey + "])" +
+                " GROUP BY TRY_CONVERT(nvarchar(150),a.[" + aName + "]), " + (aKeeper == null ? "CAST(NULL AS nvarchar(120))" : "TRY_CONVERT(nvarchar(120),a.[" + aKeeper + "])") + " ORDER BY 3 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", r.getString(1) == null ? "—" : r.getString(1)); o.put("keeper", r.getString(2) == null ? "" : r.getString(2)); o.put("items", r.getLong(3)); arr.put(o); } }
         }
         return arr;
     }
