@@ -268,7 +268,7 @@ def restore_and_collect(output_path: Path) -> None:
         "SELECT OBJECT_SCHEMA_NAME(d.referencing_id) AS referencing_schema, "
         "OBJECT_NAME(d.referencing_id) AS referencing_object, "
         "d.referenced_server_name, d.referenced_database_name, d.referenced_schema_name, "
-        "d.referenced_entity_name, d.referenced_minor_name, d.is_schema_bound_reference "
+        "d.referenced_entity_name, d.referenced_minor_id, d.is_schema_bound_reference "
         "FROM sys.sql_expression_dependencies AS d "
         "JOIN sys.objects AS o ON o.object_id = d.referencing_id "
         "WHERE o.is_ms_shipped = 0 "
