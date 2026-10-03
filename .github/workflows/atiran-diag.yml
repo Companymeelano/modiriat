@@ -42,8 +42,12 @@ jobs:
           test -s diag/atiran-diag.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-diag.json
           python3 .github/scripts/atiran_check.py "diag/atiran-check.json" 2>&1 | tail -20
           test -s diag/atiran-check.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-check.json
+          python3 .github/scripts/atiran_check2.py "diag/atiran-check2.json" 2>&1 | tail -10
+          test -s diag/atiran-check2.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-check2.json
           python3 - <<'PY'
           import json
+          c2 = json.load(open("diag/atiran-check2.json", encoding="utf-8"))
+          print("== check2:", json.dumps({k: v for k, v in c2.items() if k not in ("errors",)}, ensure_ascii=False)[:2500])
           c = json.load(open("diag/atiran-check.json", encoding="utf-8"))
           print("== blocks:", json.dumps(c.get("blocks", {}), ensure_ascii=False)[:3000])
           print("== notes:", json.dumps({k: v for k, v in c.items() if k not in ("blocks", "errors")}, ensure_ascii=False)[:1500])
