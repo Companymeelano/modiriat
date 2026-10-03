@@ -4120,12 +4120,7 @@ public class MainActivity extends Activity {
         LinearLayout copy = new LinearLayout(this);
         copy.setOrientation(LinearLayout.VERTICAL);
         copy.setPadding(dp(11), 0, dp(8), 0);
-        TextView badge = text(STORE_EDITION ? "فروشگاه • فاکتور قطعی و گزارش" : "حالت ویزیت • فقط فروش میدانی", 9.2f, onColorFor(accent), Typeface.BOLD);
-        badge.setGravity(Gravity.CENTER);
-        badge.setSingleLine(true);
-        badge.setPadding(dp(8), dp(3), dp(8), dp(3));
-        badge.setBackground(luxuryButtonBg(accent, true, 999));
-        copy.addView(badge, new LinearLayout.LayoutParams(-2, dp(27)));
+        // Declutter: the visit-mode / edition explainer badge was removed from the home hero.
         TextView h = text(visitorSectionHeadline(title), 21.5f, TEXT, Typeface.BOLD);
         h.setMaxLines(2);
         LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2); hp.setMargins(0, dp(4), 0, 0);
@@ -25851,7 +25846,7 @@ public class MainActivity extends Activity {
 
         addStoreQuickTiles(new VisitorToolSpec[]{
                 new VisitorToolSpec("مشتریان", "لیست کامل", "♙", navAccent("customers"), () -> showApp("customers"), true),
-                new VisitorToolSpec("کالاها", "قیمت و موجودی", "◈", navAccent("showcase"), () -> showApp("showcase"), true),
+                new VisitorToolSpec("کالاها", "قیمت و موجودی", "◈", navAccent("showcase"), () -> showApp("products"), true),
                 new VisitorToolSpec("بدهکاران", "به تفکیک ویزیتور", "↗", DANGER, () -> openStoreReports("debtors"), true),
                 new VisitorToolSpec("سررسید گذشته", "پیگیری وصول", "◷", WARNING, () -> openStoreReports("overdue"), true),
                 new VisitorToolSpec("حضور و مرخصی", "ورود، خروج، مرخصی", "◷", navAccent("attendance"), () -> showApp("attendance"), true),
@@ -26119,7 +26114,7 @@ public class MainActivity extends Activity {
             row.addView(donut, new LinearLayout.LayoutParams(dp(130), dp(130)));
             LinearLayout legend = new LinearLayout(this); legend.setOrientation(LinearLayout.VERTICAL); legend.setPadding(dp(8), 0, 0, 0);
             for (MeelanoCharts.Point p : pts) { TextView t = text("● " + p.label + ": " + formatNumber(p.value), 12, p.color, Typeface.BOLD); legend.addView(t, new LinearLayout.LayoutParams(-1, -2)); }
-            Button all = secondaryButton(withIcon("◈", "لیست همه کالاها")); all.setOnClickListener(v -> showApp("showcase"));
+            Button all = secondaryButton(withIcon("◈", "لیست همه کالاها")); all.setOnClickListener(v -> showApp("products"));
             LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, dp(44)); ap.setMargins(0, dp(8), 0, 0); legend.addView(all, ap);
             row.addView(legend, new LinearLayout.LayoutParams(0, -2, 1f));
             c.addView(row, new LinearLayout.LayoutParams(-1, -2));
@@ -26277,7 +26272,7 @@ public class MainActivity extends Activity {
                 new VisitorToolSpec("فاکتور جدید", "ثبت قطعی در آتیران", "⊕", navAccent("cart"), () -> showApp("cart"), true),
                 new VisitorToolSpec("دریافت وجه", "نقد، کارت، چک، حواله", "☷", SUCCESS, () -> openStoreReceipt(null), true),
                 new VisitorToolSpec("مشتریان", "لیست کامل", "♙", navAccent("customers"), () -> showApp("customers"), true),
-                new VisitorToolSpec("کالاها", "قیمت و موجودی", "◈", navAccent("showcase"), () -> showApp("showcase"), true),
+                new VisitorToolSpec("کالاها", "قیمت و موجودی", "◈", navAccent("showcase"), () -> showApp("products"), true),
                 new VisitorToolSpec("کدخوان", "جستجوی کالا", "⌕", navAccent("visitor_more"), () -> showBarcodeSearchDialog(), true)
         });
         addVisitorMoreGroup("من", "پنل من، حضور، مرخصی و تنظیمات", new VisitorToolSpec[]{
