@@ -12156,12 +12156,20 @@ public class MainActivity extends Activity {
 
     // =============================== Field visit intelligence (real Visit table) ===============================
     private void loadManagerField() {
-        content.removeAllViews();
-        addHero("ویزیت میدانی", "تعداد و مدت ویزیت‌های ثبت‌شده از جدول Visit — بدون GPS جعلی.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_mgr_field", "ویزیت میدانی", raw -> renderManagerField(safeJson(raw)))) {
+            content.removeAllViews();
+            addHero("ویزیت میدانی", "تعداد و مدت ویزیت‌های ثبت‌شده از آتیران — بدون GPS جعلی.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.fieldVisits(c, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerField(safeJson(body)); }
-            @Override public void fail(Exception e) { showPageError("ویزیت میدانی", e, () -> loadManagerField()); }
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_field", body).apply(); renderManagerField(safeJson(body)); }
+            @Override public void fail(Exception e) {
+                if (renderCachedOnly("cache_mgr_field", raw -> renderManagerField(safeJson(raw)))) {
+                    addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود.");
+                    return;
+                }
+                showPageError("ویزیت میدانی", e, () -> loadManagerField());
+            }
         });
     }
 
@@ -12239,12 +12247,20 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerCredit() {
-        content.removeAllViews();
-        addHero("اعتبار مشتریان", "مانده در برابر حد اعتبار از Sys_Mandeh_Customer — بدون برآورد.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        if (!renderCacheFirst("cache_mgr_credit", "اعتبار مشتریان", raw -> renderManagerCredit(safeArr(raw)))) {
+            content.removeAllViews();
+            addHero("اعتبار مشتریان", "مانده در برابر حد اعتبار از Sys_Mandeh_Customer — بدون برآورد.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.creditRisk(c).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerCredit(safeArr(body)); }
-            @Override public void fail(Exception e) { showPageError("اعتبار مشتریان", e, () -> loadManagerCredit()); }
+            @Override public void ok(String body) { prefs.edit().putString("cache_mgr_credit", body).apply(); renderManagerCredit(safeArr(body)); }
+            @Override public void fail(Exception e) {
+                if (renderCachedOnly("cache_mgr_credit", raw -> renderManagerCredit(safeArr(raw)))) {
+                    addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود.");
+                    return;
+                }
+                showPageError("اعتبار مشتریان", e, () -> loadManagerCredit());
+            }
         });
     }
 
@@ -12931,6 +12947,16 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) { return false; }
     }
 
+    /** Paints the stored copy without the «در حال دریافت» banner — used after a failed refresh. */
+    private boolean renderCachedOnly(String prefKey, CachedRender renderer) {
+        try {
+            String cached = prefs == null ? "" : prefs.getString(prefKey, "");
+            if (cached == null || cached.trim().isEmpty()) return false;
+            renderer.render(cached);
+            return true;
+        } catch (Exception ignored) { return false; }
+    }
+
     private void addActivityFeedCard(JSONArray feed) {
         if (feed == null || feed.length() == 0) return;
         LinearLayout c = addReportCard("فعالیت‌های اخیر", "◷", INFO);
@@ -12943,14 +12969,24 @@ public class MainActivity extends Activity {
     }
 
     private void loadManagerDrill() {
-        content.removeAllViews();
         String title = "sales".equals(managerDrillKind) ? "اسناد فروش بازه" : "checks".equals(managerDrillKind) ? "چک‌های دریافتی" : "debtors".equals(managerDrillKind) ? "بدهکاران اولویت‌دار" : "visitors".equals(managerDrillKind) ? "عملکرد ویزیتورها" : "کالاهای پرفروش";
-        addHero(title, "جزئیات واقعی رکوردها از آتیران — بدون داده ساختگی.");
-        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        // One cache per drill kind: opening the same KPI again paints instantly instead of flashing a skeleton.
+        String key = "cache_mgr_drill_" + managerDrillKind + "_" + managerReportRange;
+        if (!renderCacheFirst(key, title, raw -> renderManagerDrill(title, safeArr(raw)))) {
+            content.removeAllViews();
+            addHero(title, "جزئیات واقعی رکوردها از آتیران — بدون داده ساختگی.");
+            content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        }
         final String kind = managerDrillKind;
         runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.drill(c, kind, managerReportRange).toString(); } }, new DbCallback() {
-            @Override public void ok(String body) { renderManagerDrill(title, safeArr(body)); }
-            @Override public void fail(Exception e) { showPageError(title, e, () -> loadManagerDrill()); }
+            @Override public void ok(String body) { prefs.edit().putString(key, body).apply(); renderManagerDrill(title, safeArr(body)); }
+            @Override public void fail(Exception e) {
+                if (renderCachedOnly(key, raw -> renderManagerDrill(title, safeArr(raw)))) {
+                    addCacheBanner("حالت آفلاین", "اتصال برقرار نشد؛ آخرین داده ذخیره‌شده نمایش داده می‌شود.");
+                    return;
+                }
+                showPageError(title, e, () -> loadManagerDrill());
+            }
         });
     }
 
