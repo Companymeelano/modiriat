@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Restore the repository backup into an ephemeral local SQL Server and export catalog metadata only.
+"""Restore the repository backup into an ephemeral SQL Server and inspect schema/access-control sources.
 
-This script intentionally does not SELECT business rows, execute application procedures, or mutate
-restored database contents. Its JSON output is encrypted by the dedicated GitHub Actions workflow.
+This script does not SELECT business rows or personal account rows, execute application procedures,
+or mutate restored database contents after restore. Its JSON output is encrypted by GitHub Actions.
 """
 from __future__ import annotations
 
@@ -163,7 +163,7 @@ def restore_and_collect(output_path: Path) -> None:
     CURRENT_STAGE = "collect SQL catalog metadata only"
     connection = connect(DATABASE, tries=10)
     cursor = connection.cursor()
-    # Every statement below reads SQL Server catalog/system metadata only. No user-table rows are read.
+    # This catalog section reads SQL Server system metadata only; it does not read business rows.
     server_rows = query(
         cursor,
         "SELECT DB_NAME() AS database_name, "
@@ -326,6 +326,19 @@ def restore_and_collect(output_path: Path) -> None:
         ),
     }
 
+    CURRENT_STAGE = "read access-control module source definitions without executing them"
+    authorization_logic_sources = query(
+        cursor,
+        "SELECT s.name AS schema_name, o.name AS object_name, o.type_desc, m.definition "
+        "FROM sys.sql_modules AS m "
+        "JOIN sys.objects AS o ON o.object_id = m.object_id "
+        "JOIN sys.schemas AS s ON s.schema_id = o.schema_id "
+        "WHERE (s.name = N'EMS' AND o.name = N'GetUser') "
+        "OR (s.name = N'dbo' AND o.name IN (N'get_role_id', N'ProcMenuPermission', N'vw_MenuInfo')) "
+        "OR (s.name = N'security' AND o.name = N'FormAndFieldPermissions') "
+        "ORDER BY s.name, o.name",
+    )
+
     roles = query(
         cursor,
         "SELECT name AS role_name, type_desc, is_fixed_role, authentication_type_desc "
@@ -344,9 +357,10 @@ def restore_and_collect(output_path: Path) -> None:
 
     snapshot = {
         "inspection": {
-            "scope": "sql_catalog_and_non_personal_acl_reference_data",
+            "scope": "sql_catalog_non_personal_acl_configuration_and_selected_server_code",
             "business_rows_read": False,
-            "personal_accounts_or_credentials_read": False,
+            "user_account_rows_read": False,
+            "stored_password_hashes_read": False,
             "application_procedures_executed": False,
             "database_contents_modified_after_restore": False,
             "source_file": "14050603.zip",
@@ -365,6 +379,7 @@ def restore_and_collect(output_path: Path) -> None:
         "database_roles": roles,
         "role_permissions": role_permissions,
         "acl_reference_data": acl_reference,
+        "authorization_logic_sources": authorization_logic_sources,
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2, default=json_value), encoding="utf-8")

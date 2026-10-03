@@ -1,4 +1,4 @@
-name: Atiran Finance schema (backup, metadata only)
+name: Atiran Finance schema & access map (isolated backup)
 
 on:
   push:
@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Restore backup and read catalog plus non-personal ACL reference data
+      - name: Restore backup and read catalog, non-personal ACL config, selected server code
         run: |
           set -euo pipefail
           python -m pip install --quiet python-tds
@@ -86,7 +86,7 @@ jobs:
             -pkeyopt rsa_oaep_md:sha256 \
             -pkeyopt rsa_mgf1_md:sha256 \
             -in "$KEY" -out "$OUT/schema.key.enc"
-          printf 'Encrypted SQL catalog metadata only. Source archive SHA-256: %s.\n' \
+          printf 'Encrypted catalog + non-personal ACL reference/config + selected SQL definitions; no business or user-account rows. Source archive SHA-256: %s.\n' \
             '71d23aba0547ff69310d046e5f447529edf0d661165f185b2da3845e3487d925' > "$OUT/README.txt"
           rm -f "$KEY" "$RUNNER_TEMP/schema.json"
 
