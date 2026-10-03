@@ -30,7 +30,7 @@ jobs:
           if [ -n "$ZIP" ]; then
             echo "Using uploaded zip: $ZIP"; rm -rf MEELANO-Android; unzip -q -o "$ZIP"
           fi
-          VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle)
+          VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle | head -1)
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Building version $VERSION"
@@ -148,6 +148,8 @@ jobs:
           cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk "out/MEELANO-Staff-v$APP_VERSION-debug.apk"
           cp MEELANO-Android/app/build/outputs/apk/tax/release/*.apk "out/MEELANO-Tax-v$APP_VERSION-release.apk"
           cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk "out/MEELANO-Tax-v$APP_VERSION-debug.apk"
+          cp MEELANO-Android/app/build/outputs/apk/warehouse/release/*.apk "out/AtiranWarehouse-release.apk"
+          cp MEELANO-Android/app/build/outputs/apk/warehouse/debug/*.apk "out/AtiranWarehouse-debug.apk"
           cp MEELANO-Android/app/build/outputs/apk/visitor/debug/*.apk app-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/store/debug/*.apk app-store-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk app-staff-debug.apk
@@ -180,7 +182,7 @@ jobs:
           mkdir -p apk
           cp out/*.apk apk/
           # Small manifest read by the app's "new version" check (Settings → بروزرسانی برنامه).
-          CODE=$(grep -oP "versionCode\s+\K[0-9]+" MEELANO-Android/app/build.gradle)
+          CODE=$(grep -oP "versionCode\s+\K[0-9]+" MEELANO-Android/app/build.gradle | head -1)
           printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-v%s-release.apk"}\n' \
             "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest.json
           printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Store-v%s-release.apk"}\n' \
@@ -189,10 +191,12 @@ jobs:
             "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-staff.json
           printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Tax-v%s-release.apk"}\n' \
             "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-tax.json
-          cat apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json
+          printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/AtiranWarehouse-release.apk"}\n' \
+            "1" "1.0.0" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > apk/latest-warehouse.json
+          cat apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-warehouse.json
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git add apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json
+          git add apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-warehouse.json
           git commit -m "Build APK v$APP_VERSION [skip ci]" || echo "No changes"
           for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
 
