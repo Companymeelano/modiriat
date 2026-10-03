@@ -1,7 +1,7 @@
 name: Atiran end-to-end test
 
 # Runs only when the commit message contains [atiran-e2e].
-# Restores the Atiran2 backup (14050603.zip on main) into a private SQL Server container on the runner,
+# Restores the Atiran2 backup (Atiran2.zip on main) into a private SQL Server container on the runner,
 # runs the real app (debug self-test) on an emulator against that copy, and checks the result with
 # Atiran's own procedures. The live Atiran server is never contacted. Results are committed encrypted.
 on:
@@ -22,7 +22,7 @@ jobs:
       - name: Get the Atiran backup from main
         run: |
           git fetch --depth=1 origin main
-          git show origin/main:14050603.zip > "$RUNNER_TEMP/atiran.zip"
+          git show origin/main:Atiran2.zip > "$RUNNER_TEMP/atiran.zip"
           unzip -o -q "$RUNNER_TEMP/atiran.zip" -d "$RUNNER_TEMP/bak"
           ls -la "$RUNNER_TEMP/bak"
 
@@ -32,7 +32,7 @@ jobs:
           E2E="E2e7$(openssl rand -hex 6)"; echo "::add-mask::$E2E"; echo "E2E_PASS=$E2E" >> "$GITHUB_ENV"
           docker run -d --name mssql -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=$SA" -e MSSQL_COLLATION=Arabic_CI_AS -e MSSQL_PID=Developer -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
           docker exec -u 0 mssql mkdir -p /var/opt/mssql/backup
-          docker cp "$RUNNER_TEMP/bak/14050603" mssql:/var/opt/mssql/backup/Atiran2.bak
+          docker cp "$RUNNER_TEMP/bak/Atiran2" mssql:/var/opt/mssql/backup/Atiran2.bak
           docker exec -u 0 mssql chown -R mssql /var/opt/mssql/backup
 
       - uses: actions/setup-python@v5
