@@ -3,92 +3,92 @@
  "sections": {
   "timings": {
    "server_today": {
-    "ms": 214,
+    "ms": 250,
     "rows": 1,
     "error": null
    },
    "stock_fn": {
-    "ms": 173,
+    "ms": 194,
     "rows": 1,
     "error": null
    },
    "old_range_1m": {
-    "ms": 385,
+    "ms": 404,
     "rows": 1,
     "error": null
    },
    "new_range_1m": {
-    "ms": 192,
+    "ms": 213,
     "rows": 1,
     "error": null
    },
    "old_range_1m_sum": {
-    "ms": 188,
+    "ms": 209,
     "rows": 1,
     "error": null
    },
    "new_range_1m_sum": {
-    "ms": 203,
+    "ms": 209,
     "rows": 1,
     "error": null
    },
    "old_dedupe_source": {
-    "ms": 178,
+    "ms": 209,
     "rows": 1,
     "error": null
    },
    "new_plain_agg": {
-    "ms": 191,
+    "ms": 208,
     "rows": 1,
     "error": null
    },
    "dup_check": {
-    "ms": 188,
+    "ms": 204,
     "rows": 1,
     "error": null
    },
    "latest_anchor_app": {
-    "ms": 188,
+    "ms": 208,
     "rows": 1,
     "error": null
    },
    "latest_anchor_typed": {
-    "ms": 178,
+    "ms": 210,
     "rows": 1,
     "error": null
    },
    "home_customers_debt": {
-    "ms": 188,
+    "ms": 208,
     "rows": 1,
     "error": null
    },
    "home_sales_today_old": {
-    "ms": 175,
+    "ms": 191,
     "rows": 1,
     "error": null
    },
    "visitors_rows": {
-    "ms": 191,
+    "ms": 199,
     "rows": 1,
     "error": null
    },
    "sys_users_rows": {
-    "ms": 174,
+    "ms": 195,
     "rows": 1,
     "error": null
    },
    "inventory_rows": {
-    "ms": 191,
+    "ms": 195,
     "rows": 1,
     "error": null
    },
    "ka_act_rows": {
-    "ms": 179,
+    "ms": 206,
     "rows": 1,
     "error": null
    },
    "buyfact_rows": {
-    "ms": 181,
+    "ms": 190,
     "rows": 1,
     "error": null
    }
@@ -150,7 +150,7 @@
   "1",
   "1"
  ],
- "roundtrip_ms": 274,
+ "roundtrip_ms": 323,
  "tables": {
   "sailfact": {
    "exists": true,

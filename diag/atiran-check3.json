@@ -5,7 +5,7 @@
  "sections": {
   "home_dashboard": {
    "statements": 9,
-   "ms": 1772,
+   "ms": 1900,
    "values": {
     "kpi_counts_one_statement": [
      [
@@ -104,7 +104,7 @@
   },
   "manager_reports": {
    "statements": 14,
-   "ms": 2792,
+   "ms": 2914,
    "values": {
     "sales_today": [
      [
@@ -225,7 +225,7 @@
   },
   "management_intelligence": {
    "statements": 9,
-   "ms": 2088,
+   "ms": 2091,
    "values": {
     "cockpit_sales_30d_with_prev": [
      [
@@ -408,7 +408,7 @@
   },
   "sales_supervision": {
    "statements": 6,
-   "ms": 1204,
+   "ms": 1244,
    "values": {
     "visitor_performance": [
      [
@@ -499,6 +499,6 @@
   "p1b": "1404/07/11"
  },
  "total_statements": 47,
- "total_ms": 7856,
+ "total_ms": 8149,
  "roundtrip_ms_reference": 192
 }
