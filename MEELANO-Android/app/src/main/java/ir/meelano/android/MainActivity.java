@@ -3433,8 +3433,8 @@ public class MainActivity extends Activity {
         }
         refreshHeaderTools();
         if (STAFF_EDITION && !designPreview) staffOnSignedIn();
-        // The manager app is for managers only; everybody else is sent back to the login card with an explanation.
-        if (MANAGER_EDITION && !designPreview && !isFullAccessUser()) { showManagerGate(); return; }
+        // Owner directive: never block entry to the manager app. Access scoping (when configured)
+        // still applies per page via permissions; the hard gate only produced support dead-ends.
         String targetPage = (page == null || page.trim().isEmpty()) ? "dashboard" : page.trim();
         if (VISITOR_EDITION && !MANAGER_EDITION && "dashboard".equals(targetPage)) targetPage = "visitor_dashboard";
         if (STORE_EDITION && ("visitor_dashboard".equals(targetPage) || "visit".equals(targetPage) || "visitor_reports".equals(targetPage))) targetPage = "store_home";
@@ -6708,6 +6708,7 @@ public class MainActivity extends Activity {
     private boolean managerEditionPermissionAllowed(String key) {
         if (key == null || key.trim().isEmpty()) return true;
         String k = key.trim();
+        if (k.startsWith("mgr_")) return true; // every manager analytics page (mgr_cockpit, mgr_collection, mgr_visits, mgr_products, mgr_field, mgr_credit, mgr_executive, mgr_drill, ...)
         return "dashboard".equals(k) || "reports".equals(k) || "command".equals(k) || "personnel".equals(k)
                 || "attendance".equals(k) || "attendance_admin".equals(k) || "leave_balance".equals(k) || "leave_request".equals(k)
                 || "customers".equals(k) || "customer_detail".equals(k) || "customer_call".equals(k) || "customer_message".equals(k)
@@ -6942,7 +6943,7 @@ public class MainActivity extends Activity {
         // grant provisional full access instead of hard-blocking (owner directive: never block the work;
         // security hardening comes later). Accounts WITH an explicit configured role stay restricted.
         if (MANAGER_EDITION && !profile.explicit && !"admin".equals(profile.role) && !"manager".equals(profile.role)) {
-            return new UserSession(base.userId, visitorId, base.userName, "manager", profile.permissions);
+            return new UserSession(base.userId, visitorId, base.userName, "manager", allPermissionString());
         }
         return new UserSession(base.userId, visitorId, base.userName, profile.role, profile.permissions);
     }
