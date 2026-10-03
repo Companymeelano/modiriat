@@ -116,11 +116,15 @@ def main():
         c = (alias + "." if alias else "") + col
         return "LEFT(LTRIM(RTRIM(%s)),10)>='%s' AND LEFT(LTRIM(RTRIM(%s)),10)<='%s'" % (c, lo, c, hi)
 
-    def tf(src, alias):
+    def tf(src, alias, where):
+        """The app's dedupe sub-select: one row per shfacfo, the active/modified copy wins."""
         return ("(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY COALESCE(NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),x.shfacfo))),N''),"
                 "N'__row__'+COALESCE(TRY_CONVERT(nvarchar(120),x.rdf__),CONVERT(nvarchar(36),NEWID()))) "
                 "ORDER BY CASE WHEN x.active='t' THEN 1 ELSE 0 END DESC, LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30),x.[date]))),10) DESC, TRY_CONVERT(bigint,x.rdf__) DESC) _rn "
-                "FROM dbo.%s x WITH (NOLOCK) WHERE %s) mx WHERE mx._rn=1) %s" % (src, alias))
+                "FROM dbo." + src + " x WITH (NOLOCK) WHERE " + where + ") mx WHERE mx._rn=1) " + alias)
+
+    def sail_where(lo, hi):
+        return window("[date]", lo, hi) + " AND x.active='t' AND ISNULL(x.Deleted,0)=0"
 
     # ================================================================ 1) خانه / داشبورد
     box = section("home_dashboard")
@@ -129,15 +133,13 @@ def main():
                   (SELECT COUNT_BIG(1) FROM dbo.sailfact WITH (NOLOCK)), (SELECT COUNT_BIG(1) FROM dbo.sailfact_pish WITH (NOLOCK)),
                   (SELECT COUNT_BIG(1) FROM dbo.getchk WITH (NOLOCK)), (SELECT COUNT_BIG(1) FROM dbo.putchk WITH (NOLOCK)),
                   (SELECT COUNT_BIG(1) FROM dbo.visitors WITH (NOLOCK)), (SELECT COUNT_BIG(1) FROM dbo.vis_goals WITH (NOLOCK))""")
-    dedupe = "WHERE " + window("[date]", today, today) + " AND x.active='t' AND ISNULL(x.Deleted,0)=0"
     run(box, "sales_today",
         """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1), COUNT(DISTINCT h.shmo),
                   ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[MabDaryaftFactor])),0), ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[tafif])),0),
-                  ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[tax])),0) FROM %s""" % tf("sailfact", "h").replace("FROM dbo.sailfact x WITH (NOLOCK) WHERE", "FROM dbo.sailfact x WITH (NOLOCK) WHERE"))
+                  ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[tax])),0) FROM """ + tf("sailfact", "h", sail_where(today, today)))
     run(box, "sales_trend_7_days",
-        """SELECT LEFT(LTRIM(RTRIM(h.[date])),10) d, ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM %s
-           GROUP BY LEFT(LTRIM(RTRIM(h.[date])),10) ORDER BY 1 DESC""" % tf("sailfact", "h").replace(
-            window("[date]", today, today), window("[date]", b["d7"], today)))
+        """SELECT LEFT(LTRIM(RTRIM(h.[date])),10) d, ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM """ + tf("sailfact", "h", sail_where(b["d7"], today)) +
+        " GROUP BY LEFT(LTRIM(RTRIM(h.[date])),10) ORDER BY 1 DESC")
     run(box, "check_buckets_new",
         """SELECT CASE WHEN LEFT(LTRIM(RTRIM(sardate)),10)<'%s' THEN N'over' WHEN LEFT(LTRIM(RTRIM(sardate)),10)<='%s' THEN N'soon' ELSE N'ok' END b,
                   COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),getchkmab)),0) FROM dbo.getchk WITH (NOLOCK)
@@ -158,17 +160,17 @@ def main():
     for label, lo, hi, plo, phi in [("today", today, today, today, today), ("d7", b["d7"], today, b["d7"], b["d7"]),
                                     ("d30", b["d30"], today, b["p30a"], b["p30b"]), ("y1", b["y1"], today, b["p1a"], b["p1b"])]:
         run(box, "sales_" + label,
-            """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1), COUNT(DISTINCT h.shmo) FROM %s""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", lo, hi)))
+            """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1), COUNT(DISTINCT h.shmo) FROM """ + tf("sailfact", "h", sail_where(lo, hi)))
         run(box, "sales_prev_" + label,
-            """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM %s""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", plo, phi)))
+            """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM """ + tf("sailfact", "h", sail_where(plo, phi)))
         if label != "today":
             run(box, "purchases_" + label,
                 """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),[all])),0), COUNT_BIG(1) FROM dbo.buyfact WITH (NOLOCK)
                    WHERE %s AND active='t'""" % window("[DATE]", lo, hi, ""))
     run(box, "visitor_share_new_key",
-        """SELECT TOP (8) ISNULL(v.vis_name,N'none'), ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1) FROM %s
-           LEFT JOIN dbo.visitors v WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),v.vis_rdf)=TRY_CONVERT(nvarchar(100),h.vis_rdf)
-           GROUP BY ISNULL(v.vis_name,N'none') ORDER BY 2 DESC""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", b["d30"], today)))
+        """SELECT TOP (8) ISNULL(v.vis_name,N'none'), ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1) FROM """ + tf("sailfact", "h", sail_where(b["d30"], today)) +
+        """ LEFT JOIN dbo.visitors v WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),v.vis_rdf)=TRY_CONVERT(nvarchar(100),h.vis_rdf)
+           GROUP BY ISNULL(v.vis_name,N'none') ORDER BY 2 DESC""")
     run(box, "visitor_share_old_key_returns_no_names",
         """SELECT COUNT_BIG(1) FROM dbo.sailfact s WITH (NOLOCK) LEFT JOIN dbo.visitors v WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),v.rdf)=TRY_CONVERT(nvarchar(100),s.vis_rdf)""")
     run(box, "rows_lost_by_try_convert_date",
@@ -177,10 +179,10 @@ def main():
     # ================================================================ 3) هوش مدیریتی (اتاق فروش / وصول / کالا)
     box = section("management_intelligence")
     run(box, "cockpit_sales_30d_with_prev",
-        """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM %s""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", b["d30"], today)))
+        """SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM """ + tf("sailfact", "h", sail_where(b["d30"], today)))
     run(box, "cockpit_weekday_mix_days",
-        """SELECT LEFT(LTRIM(RTRIM(h.[date])),10) d, ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM %s
-           GROUP BY LEFT(LTRIM(RTRIM(h.[date])),10) ORDER BY 1 DESC""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", b["d30"], today)))
+        """SELECT LEFT(LTRIM(RTRIM(h.[date])),10) d, ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0) FROM """ + tf("sailfact", "h", sail_where(b["d30"], today)) +
+        " GROUP BY LEFT(LTRIM(RTRIM(h.[date])),10) ORDER BY 1 DESC")
     run(box, "collection_aging",
         """WITH x AS (SELECT CASE WHEN dbo.dif_date_alan([t_date]) >= 0 THEN N'current' WHEN -dbo.dif_date_alan([t_date]) <= 30 THEN N'1-30'
                     WHEN -dbo.dif_date_alan([t_date]) <= 60 THEN N'31-60' WHEN -dbo.dif_date_alan([t_date]) <= 90 THEN N'61-90'
@@ -189,10 +191,10 @@ def main():
                 FROM dbo.sailfact WITH (NOLOCK) WHERE [tasvieh]='f' AND NULLIF([t_date],'') IS NOT NULL AND active='t')
            SELECT bucket, ISNULL(SUM(CASE WHEN amount>0 THEN amount ELSE 0 END),0), COUNT_BIG(CASE WHEN amount>0 THEN 1 END) FROM x GROUP BY bucket ORDER BY 2 DESC""")
     run(box, "product_profit_top",
-        """SELECT TOP (10) COALESCE(TRY_CONVERT(nvarchar(150),i.naka),N'?'), ISNULL(SUM(ISNULL(TRY_CONVERT(decimal(19,2),d.LINESUM),0) - ISNULL(TRY_CONVERT(decimal(19,4),d.TEDVAH),0)*ISNULL(TRY_CONVERT(decimal(19,4),i.buy_price),0)),0)
-           FROM %s JOIN dbo.subsailfact d WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),d.shfacfo)=TRY_CONVERT(nvarchar(100),h.shfacfo)
-           LEFT JOIN dbo.inventory i WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),i.shka)=TRY_CONVERT(nvarchar(100),d.SHKA)
-           WHERE d.active='t' GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),i.naka),N'?') ORDER BY 2 DESC""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", b["d30"], today)))
+        """SELECT TOP (10) COALESCE(TRY_CONVERT(nvarchar(150),i.naka),N'?'), ISNULL(SUM(ISNULL(TRY_CONVERT(decimal(19,2),d.LINESUM),0) - ISNULL(TRY_CONVERT(decimal(19,4),d.TEDVAH),0)*ISNULL(TRY_CONVERT(decimal(19,4),i.buy_price),0)),0) FROM """ + tf("sailfact", "h", sail_where(b["d30"], today)) +
+        """ JOIN dbo.subsailfact d WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),d.shfacfo)=TRY_CONVERT(nvarchar(100),h.shfacfo)
+            LEFT JOIN dbo.inventory i WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),i.shka)=TRY_CONVERT(nvarchar(100),d.SHKA)
+            WHERE d.active='t' GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),i.naka),N'?') ORDER BY 2 DESC""")
     run(box, "top_products_30d",
         """SELECT TOP (8) CAST(MAX(d.naka) AS nvarchar(120)), ISNULL(SUM(TRY_CONVERT(decimal(19,2),d.LINESUM)),0)
            FROM dbo.subsailfact d WITH (NOLOCK) JOIN dbo.sailfact s WITH (NOLOCK) ON s.shfacfo=d.shfacfo
@@ -213,9 +215,11 @@ def main():
     # ================================================================ 4) نظارت بر فروش (ویزیتور/مسیر/مشتری)
     box = section("sales_supervision")
     run(box, "visitor_performance",
-        """SELECT TOP (10) ISNULL(v.vis_name,N'none'), ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1) FROM %s
-           LEFT JOIN dbo.visitors v WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),v.vis_rdf)=TRY_CONVERT(nvarchar(100),h.vis_rdf)
-           GROUP BY ISNULL(v.vis_name,N'none') ORDER BY 2 DESC""" % tf("sailfact", "h").replace(window("[date]", today, today), window("[date]", b["d30"], today)))
+        """SELECT TOP (10) ISNULL(v.vis_name,N'none'), ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1) FROM """ + tf("sailfact", "h", sail_where(b["d30"], today)) +
+        """ LEFT JOIN dbo.visitors v WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),v.vis_rdf)=TRY_CONVERT(nvarchar(100),h.vis_rdf)
+           GROUP BY ISNULL(v.vis_name,N'none') ORDER BY 2 DESC""")
+
+
     run(box, "visitor_goals_rows",
         """SELECT COUNT_BIG(1) FROM dbo.vis_goals WITH (NOLOCK)""")
     run(box, "customer_categories_active_30d",
@@ -242,4 +246,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        import traceback
+        tb = traceback.format_exc()
+        print(tb)
+        try:
+            json.dump({"fatal": tb[-3000:], "errors": [], "sections": {}}, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        except Exception:
+            pass

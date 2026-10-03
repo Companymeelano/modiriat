@@ -45,6 +45,7 @@ jobs:
           python3 .github/scripts/atiran_check2.py "diag/atiran-check2.json" 2>&1 | tail -10
           test -s diag/atiran-check2.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-check2.json
           python3 .github/scripts/atiran_check3.py "diag/atiran-check3.json" 2>&1 | tail -60
+          test -s diag/atiran-check3.json || echo '{"ok":false,"fatal":"no output"}' > diag/atiran-check3.json
           python3 - <<'PY'
           import json
           c3 = json.load(open("diag/atiran-check3.json", encoding="utf-8"))
