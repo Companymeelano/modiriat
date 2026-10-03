@@ -44,7 +44,14 @@ jobs:
           cp "$APP/MeelanoSql.java" "$APP/ManagerAnalytics.java" "$APP/MeelanoJalali.java" build/src/ir/meelano/android/
           cp tools/analytics-live/AnalyticsLive.java build/src/ir/meelano/android/
           python3 tools/analytics-live/make_stub.py "$APP/MainActivity.java" build/src/ir/meelano/android/MainActivity.java
-          javac -encoding UTF-8 -nowarn -cp lib/jtds.jar:lib/json.jar -d build/classes build/src/ir/meelano/android/*.java
+          set +e
+          javac -encoding UTF-8 -nowarn -cp lib/jtds.jar:lib/json.jar -d build/classes build/src/ir/meelano/android/*.java > build/javac.log 2>&1
+          RC=$?
+          set -e
+          echo "javac exit=$RC"; cat build/javac.log
+          echo "javac exit=$RC" >> diag/analytics-live.txt 2>/dev/null || { mkdir -p diag; echo "javac exit=$RC" > diag/analytics-live.txt; }
+          sed -n '1,120p' build/javac.log >> diag/analytics-live.txt
+          [ "$RC" = "0" ] || exit 1
           echo "compiled:"; ls build/classes/ir/meelano/android/
 
       - name: Run the shipped data layer against the production server

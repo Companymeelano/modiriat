@@ -858,12 +858,12 @@ final class ManagerAnalytics {
     }
 
     /** One dashboard section, bound to the connection it runs on. */
-    private interface Section { Object run(Connection c) throws Exception; }
+    private interface ConnSection { Object run(Connection c) throws Exception; }
 
     private static final class Job {
         final String key;
-        final Section body;
-        Job(String key, Section body) { this.key = key; this.body = body; }
+        final ConnSection body;
+        Job(String key, ConnSection body) { this.key = key; this.body = body; }
     }
 
     /** The twelve sections of the executive dashboard, in render order. */
