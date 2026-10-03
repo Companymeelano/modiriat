@@ -1,6 +1,6 @@
 {
  "ok": true,
- "generated_utc": "2026-10-03T21:59:19.526999Z",
+ "generated_utc": "2026-10-03T22:02:25.585837Z",
  "server": {
   "db_name": "Atiran2",
   "version": "12.0.2000.8",
@@ -9,9 +9,9 @@
   "updateability": "READ_WRITE",
   "recovery": "FULL",
   "compat_level": "120",
-  "server_time": "2026-10-04 01:29:22",
-  "utc_time": "2026-10-03 21:59:22",
-  "tz_offset": "2026-10-03T21:59:22.5951893Z",
+  "server_time": "2026-10-04 01:32:28",
+  "utc_time": "2026-10-03 22:02:28",
+  "tz_offset": "2026-10-03T22:02:28.3508654Z",
   "login_name": "dbo",
   "login_full": "AdminAn",
   "table_count": 493,
@@ -82750,7 +82750,7 @@
  },
  "freshness": {
   "_server_now": {
-   "now_v": "2026-10-04 01:30:01"
+   "now_v": "2026-10-04 01:32:58"
   },
   "sailfact": {
    "rows_est": 1168,

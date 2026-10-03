@@ -1,0 +1,1458 @@
+{
+ "ok": true,
+ "generated_utc": "2026-10-03T22:03:06.012503Z",
+ "errors": [
+  "cols_dar: not all arguments converted during string formatting",
+  "cols_darDescriptionType: not all arguments converted during string formatting",
+  "cols_ban_act: not all arguments converted during string formatting",
+  "cols_COW: not all arguments converted during string formatting",
+  "cols_cust_act: not all arguments converted during string formatting",
+  "cols_sailfact: not all arguments converted during string formatting",
+  "cols_subsailfact: not all arguments converted during string formatting",
+  "cols_SalefactTasvieh: not all arguments converted during string formatting",
+  "cols_DirectTasvieh: not all arguments converted during string formatting",
+  "cols_getchk: not all arguments converted during string formatting",
+  "cols_putchk: not all arguments converted during string formatting",
+  "cols_CheckTypes: not all arguments converted during string formatting",
+  "cols_getcheckhistorystatus: not all arguments converted during string formatting",
+  "cols_chkbatch: not all arguments converted during string formatting",
+  "cols_checks: not all arguments converted during string formatting",
+  "cols_PosDetails: not all arguments converted during string formatting",
+  "cols_TerminalPos: not all arguments converted during string formatting",
+  "cols_TerminalCompanyPos: not all arguments converted during string formatting",
+  "cols_BankPos: not all arguments converted during string formatting",
+  "cols_UserPos: not all arguments converted during string formatting",
+  "cols_BANK: not all arguments converted during string formatting",
+  "cols_CUSTOMERS: not all arguments converted during string formatting",
+  "cols_Sys_Mandeh_Customer: not all arguments converted during string formatting",
+  "cols_visitors: not all arguments converted during string formatting",
+  "cols_sys_users: not all arguments converted during string formatting",
+  "cols_overal_setting: not all arguments converted during string formatting",
+  "cols_ka_act: not all arguments converted during string formatting",
+  "cols_anbars: not all arguments converted during string formatting",
+  "cols_inventory: not all arguments converted during string formatting",
+  "dom_ban_act.p: (\"Invalid column name 'p'. Invalid column name 'p'.\", None)",
+  "dom_ban_act.Active: (\"Invalid column name 'Active'. Invalid column name 'Active'.\", None)",
+  "dom_COW.p: (\"Invalid column name 'p'. Invalid column name 'p'.\", None)",
+  "dom_salefacttasvieh.type: (\"Invalid column name 'type'. Invalid column name 'type'.\", None)",
+  "dom_checks.type: (\"Invalid column name 'type'. Invalid column name 'type'.\", None)",
+  "dom_checks.status: (\"Invalid column name 'status'. Invalid column name 'status'.\", None)",
+  "code_act_kind: (\"Invalid object name 'dbo.act_kind'.\", None)",
+  "code_daftar: (\"Invalid object name 'dbo.daftar'.\", None)",
+  "pos: (\"Invalid object name 'dbo.TerminalCompanyPos'.\", None)",
+  "treasury: (\"Conversion failed when converting the varchar value 't' to data type int.\", None)",
+  "checks: (\"Incorrect syntax near '?'. Incorrect syntax near the keyword 'with'. If this statement is a common table expression, an xmlnamespaces clause or a change tracking context clause, the previous statement must be terminated with a semicolon.\", None)",
+  "definitions: not all arguments converted during string formatting",
+  "money: not all arguments converted during string formatting"
+ ],
+ "tables": {},
+ "domains": {
+  "cust_act.act_id": [
+   {
+    "v": 0,
+    "n": 2724
+   },
+   {
+    "v": 55,
+    "n": 993
+   },
+   {
+    "v": 20,
+    "n": 993
+   },
+   {
+    "v": 1,
+    "n": 857
+   },
+   {
+    "v": 9,
+    "n": 129
+   },
+   {
+    "v": 3,
+    "n": 70
+   },
+   {
+    "v": 44,
+    "n": 67
+   },
+   {
+    "v": 11,
+    "n": 56
+   },
+   {
+    "v": 118,
+    "n": 50
+   },
+   {
+    "v": 27,
+    "n": 50
+   },
+   {
+    "v": 100,
+    "n": 47
+   },
+   {
+    "v": 10,
+    "n": 32
+   },
+   {
+    "v": 17,
+    "n": 23
+   },
+   {
+    "v": 114,
+    "n": 23
+   },
+   {
+    "v": 2,
+    "n": 12
+   },
+   {
+    "v": 54,
+    "n": 12
+   }
+  ],
+  "cust_act.isActive": [
+   {
+    "v": true,
+    "n": 3449
+   },
+   {
+    "v": null,
+    "n": 2723
+   },
+   {
+    "v": false,
+    "n": 4
+   }
+  ],
+  "cust_act.ShowInReport": [
+   {
+    "v": true,
+    "n": 6158
+   },
+   {
+    "v": false,
+    "n": 18
+   }
+  ],
+  "dar.p": [
+   {
+    "v": 0,
+    "n": 908
+   },
+   {
+    "v": 1,
+    "n": 155
+   }
+  ],
+  "dar.Active": [
+   {
+    "v": true,
+    "n": 938
+   },
+   {
+    "v": false,
+    "n": 125
+   }
+  ],
+  "dar.darDescriptionTypeID": [
+   {
+    "v": 1,
+    "n": 908
+   },
+   {
+    "v": 2,
+    "n": 155
+   }
+  ],
+  "ban_act.act_id": [
+   {
+    "v": 8,
+    "n": 830
+   },
+   {
+    "v": 78,
+    "n": 131
+   },
+   {
+    "v": 9,
+    "n": 129
+   },
+   {
+    "v": 80,
+    "n": 108
+   },
+   {
+    "v": 77,
+    "n": 19
+   },
+   {
+    "v": 76,
+    "n": 8
+   },
+   {
+    "v": 50,
+    "n": 6
+   },
+   {
+    "v": 75,
+    "n": 1
+   }
+  ],
+  "COW.act_id": [
+   {
+    "v": 62,
+    "n": 31
+   },
+   {
+    "v": 1,
+    "n": 27
+   },
+   {
+    "v": 2,
+    "n": 12
+   },
+   {
+    "v": 50,
+    "n": 6
+   },
+   {
+    "v": 71,
+    "n": 1
+   }
+  ],
+  "sailfact.Status": [
+   {
+    "v": 1,
+    "n": 1168
+   }
+  ],
+  "sailfact.active": [
+   {
+    "v": "t",
+    "n": 970
+   },
+   {
+    "v": "f",
+    "n": 198
+   }
+  ],
+  "sailfact.tasvieh": [
+   {
+    "v": "t",
+    "n": 594
+   },
+   {
+    "v": "f",
+    "n": 574
+   }
+  ],
+  "sailfact.nahve_namayesh_daryaft": [
+   {
+    "v": 0,
+    "n": 1168
+   }
+  ],
+  "getchk.chk_satus": [
+   {
+    "v": 5,
+    "n": 67
+   },
+   {
+    "v": 8,
+    "n": 27
+   },
+   {
+    "v": 1,
+    "n": 21
+   },
+   {
+    "v": 6,
+    "n": 3
+   }
+  ],
+  "getchk.soo": [
+   {
+    "v": 0,
+    "n": 118
+   }
+  ],
+  "getchk.back": [
+   {
+    "v": "f",
+    "n": 118
+   }
+  ],
+  "getchk.our_bankrdf": [
+   {
+    "v": 0,
+    "n": 118
+   }
+  ],
+  "getchk.CheckTypeID": [
+   {
+    "v": 1,
+    "n": 114
+   },
+   {
+    "v": 2,
+    "n": 4
+   }
+  ],
+  "getchk.ghno": [
+   {
+    "v": 0,
+    "n": 18
+   },
+   {
+    "v": 105,
+    "n": 7
+   },
+   {
+    "v": 313,
+    "n": 6
+   },
+   {
+    "v": 93,
+    "n": 5
+   },
+   {
+    "v": 318,
+    "n": 5
+   },
+   {
+    "v": 481,
+    "n": 4
+   },
+   {
+    "v": 154,
+    "n": 3
+   },
+   {
+    "v": 62,
+    "n": 3
+   },
+   {
+    "v": 96,
+    "n": 3
+   },
+   {
+    "v": 484,
+    "n": 3
+   },
+   {
+    "v": 593,
+    "n": 3
+   },
+   {
+    "v": 611,
+    "n": 3
+   },
+   {
+    "v": 85,
+    "n": 2
+   },
+   {
+    "v": 64,
+    "n": 2
+   },
+   {
+    "v": 63,
+    "n": 2
+   },
+   {
+    "v": 95,
+    "n": 2
+   }
+  ],
+  "getchk.kharj_mod": [
+   {
+    "v": 2,
+    "n": 94
+   },
+   {
+    "v": 0,
+    "n": 24
+   }
+  ],
+  "getchk.mod": [
+   {
+    "v": 1,
+    "n": 100
+   },
+   {
+    "v": 7,
+    "n": 18
+   }
+  ],
+  "putchk.putchk_status": [
+   {
+    "v": 0,
+    "n": 109
+   },
+   {
+    "v": 1,
+    "n": 63
+   },
+   {
+    "v": 2,
+    "n": 29
+   },
+   {
+    "v": 7,
+    "n": 1
+   }
+  ],
+  "putchk.amani": [
+   {
+    "v": "f",
+    "n": 202
+   }
+  ],
+  "putchk.bankrdf": [
+   {
+    "v": 5,
+    "n": 130
+   },
+   {
+    "v": 8,
+    "n": 27
+   },
+   {
+    "v": 7,
+    "n": 26
+   },
+   {
+    "v": 4,
+    "n": 10
+   },
+   {
+    "v": 6,
+    "n": 7
+   },
+   {
+    "v": 2,
+    "n": 2
+   }
+  ],
+  "putchk.CheckTypeID": [
+   {
+    "v": 1,
+    "n": 202
+   }
+  ],
+  "putchk.shfacbuy": [
+   {
+    "v": 0,
+    "n": 202
+   }
+  ],
+  "CheckTypes.ID": [
+   {
+    "v": 1,
+    "n": 1
+   },
+   {
+    "v": 2,
+    "n": 1
+   }
+  ],
+  "CheckTypes.Desciption": [
+   {
+    "v": "چك هاي كاغذي",
+    "n": 1
+   },
+   {
+    "v": "چك هاي الكترونيك",
+    "n": 1
+   }
+  ],
+  "PosDetails.IsHavaleh": [
+   {
+    "v": false,
+    "n": 737
+   },
+   {
+    "v": true,
+    "n": 346
+   }
+  ],
+  "PosDetails.PosBankRdf": [
+   {
+    "v": 6,
+    "n": 479
+   },
+   {
+    "v": 4,
+    "n": 260
+   },
+   {
+    "v": 3,
+    "n": 229
+   },
+   {
+    "v": 2,
+    "n": 81
+   },
+   {
+    "v": 5,
+    "n": 22
+   },
+   {
+    "v": 7,
+    "n": 8
+   },
+   {
+    "v": 8,
+    "n": 4
+   }
+  ],
+  "PosDetails.TerminalID": [
+   {
+    "v": null,
+    "n": 1083
+   }
+  ],
+  "PosDetails.UserID": [
+   {
+    "v": 6,
+    "n": 526
+   },
+   {
+    "v": 3,
+    "n": 331
+   },
+   {
+    "v": 5,
+    "n": 175
+   },
+   {
+    "v": 4,
+    "n": 23
+   },
+   {
+    "v": 1,
+    "n": 15
+   },
+   {
+    "v": 2,
+    "n": 13
+   }
+  ],
+  "PosDetails.Rdf_": [
+   {
+    "v": 1,
+    "n": 984
+   },
+   {
+    "v": 2,
+    "n": 87
+   },
+   {
+    "v": 3,
+    "n": 11
+   },
+   {
+    "v": 4,
+    "n": 1
+   }
+  ],
+  "BANK.BankRdf": [
+   {
+    "v": 4,
+    "n": 3
+   },
+   {
+    "v": 1,
+    "n": 2
+   },
+   {
+    "v": 3,
+    "n": 2
+   },
+   {
+    "v": 2,
+    "n": 1
+   }
+  ],
+  "BANK.IsPos": [
+   {
+    "v": true,
+    "n": 7
+   },
+   {
+    "v": false,
+    "n": 1
+   }
+  ],
+  "BANK.IsCard": [
+   {
+    "v": false,
+    "n": 8
+   }
+  ],
+  "BANK.Active": [
+   {
+    "v": true,
+    "n": 7
+   },
+   {
+    "v": false,
+    "n": 1
+   }
+  ],
+  "CUSTOMERS.kind": [
+   {
+    "v": 1,
+    "n": 2499
+   },
+   {
+    "v": 2,
+    "n": 215
+   },
+   {
+    "v": 4,
+    "n": 10
+   }
+  ],
+  "CUSTOMERS.active": [
+   {
+    "v": "t",
+    "n": 2723
+   },
+   {
+    "v": "f",
+    "n": 1
+   }
+  ],
+  "CUSTOMERS.hesab_status": [
+   {
+    "v": 1,
+    "n": 2724
+   }
+  ],
+  "visitors.kind": [
+   {
+    "v": 1,
+    "n": 10
+   }
+  ],
+  "visitors.active": [
+   {
+    "v": "t",
+    "n": 10
+   }
+  ],
+  "visitors.is_supervisor": [
+   {
+    "v": "f",
+    "n": 10
+   }
+  ],
+  "sys_users.role_id": [
+   {
+    "v": 1,
+    "n": 3
+   },
+   {
+    "v": 6,
+    "n": 1
+   },
+   {
+    "v": 4,
+    "n": 1
+   },
+   {
+    "v": 3,
+    "n": 1
+   }
+  ],
+  "sys_users.active": [
+   {
+    "v": true,
+    "n": 5
+   },
+   {
+    "v": false,
+    "n": 1
+   }
+  ],
+  "sys_users.IsLocked": [
+   {
+    "v": null,
+    "n": 6
+   }
+  ],
+  "_table_darDescriptionType": [
+   {
+    "rowId": 1,
+    "Description": "مشتري",
+    "p": 0,
+    "moeinID": null,
+    "TransferCode": ""
+   },
+   {
+    "rowId": 2,
+    "Description": "مشتري",
+    "p": 1,
+    "moeinID": null,
+    "TransferCode": ""
+   },
+   {
+    "rowId": 3,
+    "Description": "پرداخت",
+    "p": 1,
+    "moeinID": null,
+    "TransferCode": ""
+   }
+  ]
+ },
+ "pos": {},
+ "treasury": {},
+ "checks": {},
+ "balances": {
+  "customers_balance_cols": [
+   {
+    "SHMO": 18,
+    "MONAME": "04حسن سياهپور- كوي پيروزي",
+    "man": "<1e6",
+    "cred": "<1e3",
+    "check_eteb": 1,
+    "hesab_status": 1,
+    "maxopen_time": "1499/12/29",
+    "just_naghdi": 0,
+    "black_list": 0,
+    "kind": 1,
+    "c_pos": ""
+   }
+  ],
+  "mandeh_sample": [
+   {
+    "ID": 1,
+    "Shmo": 2,
+    "Mandeh": "<1e3",
+    "Etebar": "<1e3",
+    "CheckAddToMandeh": false,
+    "MaxFaktorTasvieNashode": 0,
+    "MaxSarCheck": 0,
+    "MaxCheckPassNashode": "<1e3",
+    "MaxOpenTime": null,
+    "BlockResult": null
+   },
+   {
+    "ID": 2,
+    "Shmo": 3,
+    "Mandeh": "<1e3",
+    "Etebar": "<1e3",
+    "CheckAddToMandeh": false,
+    "MaxFaktorTasvieNashode": 0,
+    "MaxSarCheck": 0,
+    "MaxCheckPassNashode": "<1e3",
+    "MaxOpenTime": null,
+    "BlockResult": null
+   },
+   {
+    "ID": 3,
+    "Shmo": 4,
+    "Mandeh": "<1e6",
+    "Etebar": "<1e3",
+    "CheckAddToMandeh": false,
+    "MaxFaktorTasvieNashode": 0,
+    "MaxSarCheck": 0,
+    "MaxCheckPassNashode": "<1e3",
+    "MaxOpenTime": null,
+    "BlockResult": null
+   },
+   {
+    "ID": 4,
+    "Shmo": 5,
+    "Mandeh": "<1e6",
+    "Etebar": "<1e3",
+    "CheckAddToMandeh": false,
+    "MaxFaktorTasvieNashode": 0,
+    "MaxSarCheck": 0,
+    "MaxCheckPassNashode": "<1e3",
+    "MaxOpenTime": null,
+    "BlockResult": null
+   },
+   {
+    "ID": 5,
+    "Shmo": 6,
+    "Mandeh": "<1e6",
+    "Etebar": "<1e3",
+    "CheckAddToMandeh": false,
+    "MaxFaktorTasvieNashode": 0,
+    "MaxSarCheck": 0,
+    "MaxCheckPassNashode": "<1e3",
+    "MaxOpenTime": null,
+    "BlockResult": null
+   }
+  ],
+  "mandeh_stats": [
+   {
+    "n": 2724,
+    "nonzero": 600,
+    "with_credit": 0,
+    "len_min": 1,
+    "len_max": 12
+   }
+  ],
+  "cust_act_pair_check": [
+   {
+    "rdf_": 6723,
+    "shmo": 476,
+    "date": "1405/07/11",
+    "act_bes": "<1e9",
+    "act_bed": "<1e3",
+    "act_dis": "<text 53>",
+    "act_id": 1,
+    "ghno": 839
+   },
+   {
+    "rdf_": 6722,
+    "shmo": 2692,
+    "date": "1405/07/11",
+    "act_bes": "<1e3",
+    "act_bed": "<1e3",
+    "act_dis": "<text 52>",
+    "act_id": 55,
+    "ghno": 993
+   },
+   {
+    "rdf_": 6721,
+    "shmo": 476,
+    "date": "1405/07/11",
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_dis": "<text 52>",
+    "act_id": 20,
+    "ghno": 993
+   },
+   {
+    "rdf_": 6720,
+    "shmo": 1243,
+    "date": "1405/07/11",
+    "act_bes": "<1e3",
+    "act_bed": "<1e9",
+    "act_dis": "<text 64>",
+    "act_id": 44,
+    "ghno": 129
+   },
+   {
+    "rdf_": 6719,
+    "shmo": 668,
+    "date": "1405/07/11",
+    "act_bes": "<1e9",
+    "act_bed": "<1e3",
+    "act_dis": "<text 80>",
+    "act_id": 3,
+    "ghno": 838
+   },
+   {
+    "rdf_": 6717,
+    "shmo": 2276,
+    "date": "1405/07/11",
+    "act_bes": "<1e9",
+    "act_bed": "<1e3",
+    "act_dis": "قبض دريافت 837-ش.پوز   قبض دريافت 837 - ",
+    "act_id": 1,
+    "ghno": 837
+   }
+  ],
+  "cust_act_sums": [
+   {
+    "n": 6176,
+    "sum_bes": "<1e12",
+    "sum_bed": "<1e12",
+    "customers": 2724
+   }
+  ],
+  "view_customer_like": [
+   {
+    "view_name": "CustactGetchk"
+   },
+   {
+    "view_name": "CustomersTablet"
+   },
+   {
+    "view_name": "ViewCustomerBoughtGroupkala"
+   },
+   {
+    "view_name": "vw_customer"
+   },
+   {
+    "view_name": "VW_CustomerControl"
+   },
+   {
+    "view_name": "VW_CustomerDefinition"
+   },
+   {
+    "view_name": "VW_CustomerEditHistory"
+   },
+   {
+    "view_name": "VW_CustomerInformation"
+   },
+   {
+    "view_name": "VW_CustomerInformationByLines"
+   },
+   {
+    "view_name": "VW_CustomerMoghayeratInAccounting"
+   },
+   {
+    "view_name": "VW_CustomerOperatingRecord"
+   },
+   {
+    "view_name": "VW_CustomersGain"
+   },
+   {
+    "view_name": "VW_GainDetailsCustomers"
+   },
+   {
+    "view_name": "VW_ListCustomer"
+   },
+   {
+    "view_name": "VW_ListCustomerToLatestFactor"
+   }
+  ],
+  "functions_like_mandeh": [
+   {
+    "name": "DF_Sys_Mandeh_Customer_CheckAddToMandeh",
+    "type": "D "
+   },
+   {
+    "name": "DF_Sys_Mandeh_Customer_Etebar",
+    "type": "D "
+   },
+   {
+    "name": "DF_Sys_Mandeh_Customer_islocked",
+    "type": "D "
+   },
+   {
+    "name": "<text 44>",
+    "type": "D "
+   },
+   {
+    "name": "<text 45>",
+    "type": "D "
+   },
+   {
+    "name": "DF_Sys_Mandeh_Customer_MaxSarCheck",
+    "type": "D "
+   },
+   {
+    "name": "EntghalMandeHesabha",
+    "type": "P "
+   },
+   {
+    "name": "Fix_Sys_Mandeh_Customer",
+    "type": "P "
+   },
+   {
+    "name": "FK_Sys_Mandeh_Customer_CUSTOMERS",
+    "type": "F "
+   },
+   {
+    "name": "FK_Sys_Mandeh_Customer_osystems",
+    "type": "F "
+   },
+   {
+    "name": "GetManCustomerToDate",
+    "type": "FN"
+   },
+   {
+    "name": "GetSumMandehForAccountName",
+    "type": "FN"
+   },
+   {
+    "name": "mansarfasl",
+    "type": "FN"
+   },
+   {
+    "name": "PK_Sys_Mandeh_Customer",
+    "type": "PK"
+   },
+   {
+    "name": "Sys_Mandeh_Customer",
+    "type": "U "
+   }
+  ],
+  "balance_agreement": [
+   {
+    "compared": 2724,
+    "agreeing": 2724
+   }
+  ]
+ },
+ "operators": {
+  "visitors": [
+   {
+    "vis_rdf": 1,
+    "vis_name": "ويزيتور سيستم",
+    "Username": null,
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e3",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 2,
+    "vis_name": "شادي نظري/پرسنل",
+    "Username": "nazari",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e9",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 3,
+    "vis_name": "فاطمه محمودي/پرسنل",
+    "Username": "mahmodi",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e9",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 4,
+    "vis_name": "اسما حمداني/پرسنل",
+    "Username": "asma",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e9",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 5,
+    "vis_name": "الهام حمداني/پرسنل",
+    "Username": "elham",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e9",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 6,
+    "vis_name": "جواد لطيفي/ويزيتور",
+    "Username": "latifi",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e9",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 7,
+    "vis_name": "مصطفي خدايار/ويزيتور",
+    "Username": "khodayar",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e12",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 8,
+    "vis_name": "رضا قريشي/ويزيتور",
+    "Username": "",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e9",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 9,
+    "vis_name": "فروشگاه",
+    "Username": "",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e3",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   },
+   {
+    "vis_rdf": 10,
+    "vis_name": "ابتسام حمداني",
+    "Username": "modir",
+    "UserID": null,
+    "kind": 1,
+    "active": "t",
+    "is_supervisor": "f",
+    "supervisor_rdf": 0,
+    "vis_man": "<1e3",
+    "rdf_device": null,
+    "NotCalculateCommision": false,
+    "BlackList": false
+   }
+  ],
+  "visitor_pass_state": [
+   {
+    "vis_rdf": 1,
+    "Username": null,
+    "pw_state": "null",
+    "pw_bytes": null
+   },
+   {
+    "vis_rdf": 2,
+    "Username": "nazari",
+    "pw_state": "set",
+    "pw_bytes": 6
+   },
+   {
+    "vis_rdf": 3,
+    "Username": "mahmodi",
+    "pw_state": "set",
+    "pw_bytes": 6
+   },
+   {
+    "vis_rdf": 4,
+    "Username": "asma",
+    "pw_state": "set",
+    "pw_bytes": 8
+   },
+   {
+    "vis_rdf": 5,
+    "Username": "elham",
+    "pw_state": "set",
+    "pw_bytes": 6
+   },
+   {
+    "vis_rdf": 6,
+    "Username": "latifi",
+    "pw_state": "set",
+    "pw_bytes": 6
+   },
+   {
+    "vis_rdf": 7,
+    "Username": "khodayar",
+    "pw_state": "set",
+    "pw_bytes": 6
+   },
+   {
+    "vis_rdf": 8,
+    "Username": "",
+    "pw_state": "set",
+    "pw_bytes": 0
+   },
+   {
+    "vis_rdf": 9,
+    "Username": "",
+    "pw_state": "set",
+    "pw_bytes": 0
+   },
+   {
+    "vis_rdf": 10,
+    "Username": "modir",
+    "pw_state": "set",
+    "pw_bytes": 6
+   }
+  ],
+  "sys_users": [
+   {
+    "user_id": 1,
+    "user_name": "Admin",
+    "user_fname": "آتيران",
+    "user_lname": "آتيران نوين",
+    "role_id": 1,
+    "active": true,
+    "IsLocked": null,
+    "shmo": 1,
+    "TafsilID": 2,
+    "AccessToCRM": false,
+    "pw_state": "set",
+    "pw_bytes": 4
+   },
+   {
+    "user_id": 2,
+    "user_name": "مدير",
+    "user_fname": "ابتسام",
+    "user_lname": "حمداني",
+    "role_id": 1,
+    "active": false,
+    "IsLocked": null,
+    "shmo": 1,
+    "TafsilID": null,
+    "AccessToCRM": false,
+    "pw_state": "set",
+    "pw_bytes": 7
+   },
+   {
+    "user_id": 3,
+    "user_name": "الهام حمداني",
+    "user_fname": "الهام ",
+    "user_lname": "حمداني",
+    "role_id": 3,
+    "active": true,
+    "IsLocked": null,
+    "shmo": 1,
+    "TafsilID": 4,
+    "AccessToCRM": false,
+    "pw_state": "set",
+    "pw_bytes": 8
+   },
+   {
+    "user_id": 4,
+    "user_name": "اسما حمداني",
+    "user_fname": "اسما",
+    "user_lname": "حمداني",
+    "role_id": 1,
+    "active": true,
+    "IsLocked": null,
+    "shmo": 1,
+    "TafsilID": 5,
+    "AccessToCRM": false,
+    "pw_state": "set",
+    "pw_bytes": 4
+   },
+   {
+    "user_id": 5,
+    "user_name": "خانم نظري",
+    "user_fname": "شادي ",
+    "user_lname": "نظري",
+    "role_id": 4,
+    "active": true,
+    "IsLocked": null,
+    "shmo": 1,
+    "TafsilID": 6,
+    "AccessToCRM": false,
+    "pw_state": "set",
+    "pw_bytes": 1
+   },
+   {
+    "user_id": 6,
+    "user_name": "خانم محمودي",
+    "user_fname": "فاطمه",
+    "user_lname": "محمودي",
+    "role_id": 6,
+    "active": true,
+    "IsLocked": null,
+    "shmo": 1,
+    "TafsilID": null,
+    "AccessToCRM": false,
+    "pw_state": "set",
+    "pw_bytes": 1
+   }
+  ],
+  "role_tables": [
+   {
+    "name": "AppAccess"
+   },
+   {
+    "name": "AppAccessTypes"
+   },
+   {
+    "name": "meelano_access_roles"
+   },
+   {
+    "name": "meelano_access_users"
+   },
+   {
+    "name": "role"
+   },
+   {
+    "name": "RoleFieldPermission"
+   },
+   {
+    "name": "RoleFormPermission"
+   },
+   {
+    "name": "Roles"
+   },
+   {
+    "name": "UserAppAccess"
+   },
+   {
+    "name": "userRole"
+   },
+   {
+    "name": "UserRole"
+   }
+  ],
+  "meelano_access_roles": [
+   {
+    "role_key": "accountant",
+    "role_label": "حسابدار",
+    "perm_len": 108,
+    "updated": "2026-09-26 09:18:01"
+   },
+   {
+    "role_key": "admin",
+    "role_label": "مدیر اصلی / Admin",
+    "perm_len": 484,
+    "updated": "2026-10-03 11:12:29"
+   },
+   {
+    "role_key": "collections",
+    "role_label": "مامور مطالبات",
+    "perm_len": 129,
+    "updated": "2026-09-26 09:18:01"
+   },
+   {
+    "role_key": "distributor",
+    "role_label": "مامور پخش",
+    "perm_len": 108,
+    "updated": "2026-09-26 01:01:48"
+   },
+   {
+    "role_key": "driver",
+    "role_label": "راننده",
+    "perm_len": 88,
+    "updated": "2026-09-26 00:59:07"
+   },
+   {
+    "role_key": "employee",
+    "role_label": "کارمند",
+    "perm_len": 83,
+    "updated": "2026-09-26 09:18:01"
+   },
+   {
+    "role_key": "manager",
+    "role_label": "مدیر",
+    "perm_len": 323,
+    "updated": "2026-09-26 00:59:07"
+   },
+   {
+    "role_key": "sales_employee",
+    "role_label": "کارمند بخش فروش",
+    "perm_len": 306,
+    "updated": "2026-09-26 09:18:01"
+   },
+   {
+    "role_key": "senior",
+    "role_label": "کاربر ارشد",
+    "perm_len": 145,
+    "updated": "2026-09-26 00:59:07"
+   },
+   {
+    "role_key": "senior_accountant",
+    "role_label": "حسابدار ارشد",
+    "perm_len": 306,
+    "updated": "2026-09-26 09:18:00"
+   },
+   {
+    "role_key": "user",
+    "role_label": "کاربر محدود",
+    "perm_len": 64,
+    "updated": "2026-09-26 00:59:07"
+   },
+   {
+    "role_key": "visitor",
+    "role_label": "ویزیتور",
+    "perm_len": 177,
+    "updated": "2026-09-26 12:54:21"
+   },
+   {
+    "role_key": "warehouse",
+    "role_label": "انباردار",
+    "perm_len": 383,
+    "updated": "2026-09-26 09:20:34"
+   },
+   {
+    "role_key": "worker",
+    "role_label": "کارگر",
+    "perm_len": 73,
+    "updated": "2026-09-26 00:59:07"
+   }
+  ],
+  "meelano_access_users": [
+   {
+    "username": "asma",
+    "display_name": "اسما حمداني/پرسنل",
+    "source": "ویزیتورها",
+    "role_key": "warehouse",
+    "enabled": true,
+    "perm_len": 0
+   },
+   {
+    "username": "اسما حمداني",
+    "display_name": "اسما حمداني",
+    "source": "کاربران آتیران",
+    "role_key": "warehouse",
+    "enabled": true,
+    "perm_len": 0
+   },
+   {
+    "username": "Admin",
+    "display_name": "Admin",
+    "source": "کاربران آتیران",
+    "role_key": "admin",
+    "enabled": true,
+    "perm_len": 0
+   }
+  ]
+ },
+ "definitions_digest": {},
+ "money": {},
+ "counts": {
+  "object_types": [
+   {
+    "type": "FN",
+    "n": 281
+   },
+   {
+    "type": "P ",
+    "n": 293
+   },
+   {
+    "type": "U ",
+    "n": 493
+   },
+   {
+    "type": "TF",
+    "n": 5
+   },
+   {
+    "type": "IF",
+    "n": 4
+   },
+   {
+    "type": "V ",
+    "n": 148
+   }
+  ],
+  "resolved": {}
+ }
+}

@@ -1,0 +1,26 @@
+detail json: docs/finance/AtiranFinanceDetail.json (24463 bytes)
+errors: 42
+  cols_dar: not all arguments converted during string formatting
+  cols_darDescriptionType: not all arguments converted during string formatting
+  cols_ban_act: not all arguments converted during string formatting
+  cols_COW: not all arguments converted during string formatting
+  cols_cust_act: not all arguments converted during string formatting
+  cols_sailfact: not all arguments converted during string formatting
+  cols_subsailfact: not all arguments converted during string formatting
+  cols_SalefactTasvieh: not all arguments converted during string formatting
+  cols_DirectTasvieh: not all arguments converted during string formatting
+  cols_getchk: not all arguments converted during string formatting
+  cols_putchk: not all arguments converted during string formatting
+  cols_CheckTypes: not all arguments converted during string formatting
+  cols_getcheckhistorystatus: not all arguments converted during string formatting
+  cols_chkbatch: not all arguments converted during string formatting
+  cols_checks: not all arguments converted during string formatting
+  cols_PosDetails: not all arguments converted during string formatting
+  cols_TerminalPos: not all arguments converted during string formatting
+  cols_TerminalCompanyPos: not all arguments converted during string formatting
+  cols_BankPos: not all arguments converted during string formatting
+  cols_UserPos: not all arguments converted during string formatting
+resolved tables: {}
+pos counts: []
+server dates: []
+definitions: []
