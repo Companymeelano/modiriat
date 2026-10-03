@@ -6719,8 +6719,11 @@ public class MainActivity extends Activity {
             icon.setBackground(gradient(new int[]{alpha(accent, 130), alpha(GOLD_2, 58)}, GradientDrawable.Orientation.TL_BR, 14));
             cell.addView(icon, new LinearLayout.LayoutParams(dp(38), dp(38)));
             LinearLayout copy = new LinearLayout(this); copy.setOrientation(LinearLayout.VERTICAL); copy.setPadding(dp(8), 0, dp(8), 0);
-            copy.addView(text(item == null ? "شاخص" : item.optString("title", "شاخص"), 10.5f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-            copy.addView(text(formatNumber(item == null ? 0 : item.opt("value")), 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+            TextView cellTitle = text(item == null ? "شاخص" : item.optString("title", "شاخص"), 10.5f, MUTED, Typeface.BOLD);
+            cellTitle.setSingleLine(true); cellTitle.setEllipsize(TextUtils.TruncateAt.END);
+            copy.addView(cellTitle, new LinearLayout.LayoutParams(-1, -2));
+            // fitText: a 13-digit total used to be cut off in this two-column table on 360dp phones.
+            copy.addView(fitText(formatNumber(item == null ? 0 : item.opt("value")), 16, 11, TEXT), new LinearLayout.LayoutParams(-1, dp(24)));
             cell.addView(copy, new LinearLayout.LayoutParams(0, -2, 1f));
             LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1f); cp.setMargins(dp(3), dp(8), dp(3), 0);
             if (row != null) row.addView(cell, cp);
@@ -6753,7 +6756,7 @@ public class MainActivity extends Activity {
             icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             icon.setPadding(0, 0, 0, dp(2));
             TextView title = text(titleText, 11.5f, MUTED, Typeface.NORMAL);
-            TextView value = text(formatNumber(item == null ? 0 : item.opt("value")), 21, TEXT, Typeface.BOLD);
+            TextView value = fitText(formatNumber(item == null ? 0 : item.opt("value")), 21, 13, TEXT);
             TextView live = text("داده مستقیم", 10, tc(SUCCESS), Typeface.NORMAL);
             c.addView(icon, new LinearLayout.LayoutParams(-1, dp(46)));
             c.addView(title, new LinearLayout.LayoutParams(-1, -2));
@@ -11509,10 +11512,10 @@ public class MainActivity extends Activity {
         chip.setGravity(Gravity.CENTER);
         chip.setPadding(dp(6), dp(7), dp(6), dp(7));
         chip.setBackground(roundedStroke(alpha(accent, isLightTheme() ? 18 : 30), 16, alpha(accent, isLightTheme() ? 70 : 96)));
-        TextView v = text(formatNumber(value), 18f, tc(accent), Typeface.BOLD);
+        TextView v = fitText(formatNumber(value), 18f, 12f, tc(accent));
         v.setGravity(Gravity.CENTER);
         v.setIncludeFontPadding(false);
-        chip.addView(v, new LinearLayout.LayoutParams(-1, -2));
+        chip.addView(v, new LinearLayout.LayoutParams(-1, dp(26)));
         TextView l = text(label, 10.5f, MUTED, Typeface.BOLD);
         l.setGravity(Gravity.CENTER);
         l.setSingleLine(true);
@@ -11926,8 +11929,13 @@ public class MainActivity extends Activity {
         row.setPadding(dp(2), dp(3), dp(2), dp(3));
         TextView l = text(label, 10.8f, MUTED, Typeface.NORMAL);
         l.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
+        l.setSingleLine(true);
+        l.setEllipsize(TextUtils.TruncateAt.END);
         TextView v = text(value, 11.4f, valueColor, Typeface.BOLD);
         v.setSingleLine(true); v.setEllipsize(TextUtils.TruncateAt.START);
+        // The value may be a 13-digit amount: cap it at ~55% of the screen so it ellipsizes (from the start,
+        // where the rounding is) instead of starving the label and leaving it clipped to two letters.
+        v.setMaxWidth(Math.round(getResources().getDisplayMetrics().widthPixels * 0.55f));
         row.addView(l); row.addView(v);
         parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
     }
