@@ -4934,7 +4934,6 @@ public class MainActivity extends Activity {
             };
             // Eight COUNTs in ONE round trip. At 192 ms per statement to the live server the old loop
             // alone made the home page wait ~1.5 s before the real dashboard work even started.
-            List<String> readers = new ArrayList<>();
             StringBuilder counts = new StringBuilder("SELECT ");
             for (int i = 0; i < targets.length; i++) {
                 if (i > 0) counts.append(", ");

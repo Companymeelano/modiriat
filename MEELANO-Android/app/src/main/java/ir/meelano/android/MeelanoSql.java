@@ -54,6 +54,7 @@ final class MeelanoSql {
         Connection raw;
         long lastUsed;
         long createdAt;
+        boolean poisoned;      // a socket-level failure was seen on this connection: never reuse it
     }
 
     private static final ArrayDeque<Pooled> IDLE = new ArrayDeque<>();
@@ -61,6 +62,7 @@ final class MeelanoSql {
     private static long connects = 0, leases = 0, reconnects = 0, failures = 0;
     private static long lastConnectMs = 0, lastLeaseMs = 0;
     private static String lastError = "";
+    private static volatile String lastReconnectReason = "";
 
     private static final ConcurrentHashMap<String, Set<String>> COLUMNS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Boolean> TABLES = new ConcurrentHashMap<>();
@@ -170,11 +172,22 @@ final class MeelanoSql {
             if (p == null || p.raw == null) { LOCK.notifyAll(); return; }
             p.lastUsed = System.currentTimeMillis();
             boolean usable;
-            try { usable = !p.raw.isClosed(); } catch (Throwable t) { usable = false; }
+            try { usable = !p.poisoned && !p.raw.isClosed(); } catch (Throwable t) { usable = false; }
             if (usable && IDLE.size() < POOL_MAX) IDLE.addFirst(p);
             else discard(p);
             LOCK.notifyAll();
         }
+    }
+
+    /** jTDS raises these when the socket to the server died; the whole pool must be rebuilt. */
+    private static boolean connectionLost(Throwable t) {
+        String m = t == null ? "" : String.valueOf(t.getMessage());
+        String c = t == null ? "" : t.getClass().getName();
+        String all = (m + " " + c).toLowerCase(Locale.US);
+        return all.contains("connection reset") || all.contains("broken pipe") || all.contains("socket")
+                || all.contains("read timed out") || all.contains("timed out") || all.contains("connection is closed")
+                || all.contains("connection closed") || all.contains("i/o error") || all.contains("network")
+                || all.contains("sockettimeout") || all.contains("unexpected end of stream");
     }
 
     /** Drop every pooled connection (used after a timeout/retry, and by the connection-health page). */
@@ -182,12 +195,14 @@ final class MeelanoSql {
         synchronized (LOCK) {
             while (!IDLE.isEmpty()) discard(IDLE.pollFirst());
             reconnects++;
-            if (reason != null && !reason.isEmpty()) lastError = reason;
+            if (reason != null && !reason.isEmpty()) { lastError = reason; lastReconnectReason = reason; }
             LOCK.notifyAll();
         }
         COLUMNS.clear(); TABLES.clear(); FUNCTIONS.clear(); LATEST.clear();
         todayValue = ""; todayAt = 0L;
     }
+
+    static String reconnectReason() { return lastReconnectReason; }
 
     static String stats() {
         synchronized (LOCK) {
@@ -223,7 +238,11 @@ final class MeelanoSql {
                             return method.invoke(p.raw, args);
                         } catch (InvocationTargetException ex) {
                             Throwable cause = ex.getCause() == null ? ex : ex.getCause();
-                            synchronized (LOCK) { lastError = shortMessage(cause); }
+                            boolean lost = connectionLost(cause);
+                            synchronized (LOCK) {
+                                lastError = shortMessage(cause);
+                                if (lost) { p.poisoned = true; reconnects++; lastReconnectReason = shortMessage(cause); }
+                            }
                             throw cause;
                         }
                     }
