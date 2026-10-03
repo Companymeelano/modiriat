@@ -51,6 +51,33 @@ jobs:
             echo "::error title=Finance build::$(echo "$line" | cut -c1-260)"
           done
 
+      - name: Publish build diagnostics to the branch
+        if: failure() && github.event_name == 'push'
+        run: |
+          mkdir -p docs/finance
+          {
+            echo "# Finance build diagnostics ($GITHUB_SHA)"
+            echo
+            echo '## Merger / task failure'
+            echo '```'
+            grep -n -B 4 -A 30 -E "What went wrong|Execution failed for task|Manifest merger failed|error:" "$RUNNER_TEMP/fin-build.log" | head -160
+            echo '```'
+            echo
+            echo '## Java errors'
+            echo '```'
+            grep -E "\.java:[0-9]+|cannot find symbol|symbol:|location:|error:" "$RUNNER_TEMP/fin-build.log" | head -80
+            echo '```'
+          } > docs/finance/build-error.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -f docs/finance/build-error.md
+          git commit -q -m "Finance build diagnostics [skip ci]" || echo "no changes"
+          for i in 1 2 3; do
+            git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
+            git push -q origin HEAD:${GITHUB_REF_NAME} && break
+            sleep 6
+          done
+
       - name: Collect APKs
         if: success()
         run: |
