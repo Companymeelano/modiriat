@@ -245,6 +245,21 @@ def main():
         """SELECT ISNULL((SELECT TOP (1) STUFF((SELECT N',' + c.name FROM sys.columns c WHERE c.object_id=o.object_id ORDER BY c.column_id FOR XML PATH('')),1,1,N'') FROM sys.objects o JOIN sys.schemas s ON s.schema_id=o.schema_id WHERE o.name=N'Visit'), N'')""")
     run(box, "visit_rows",
         """SELECT ISNULL((SELECT SUM(p.rows) FROM sys.partitions p JOIN sys.objects o ON o.object_id=p.object_id WHERE o.name=N'Visit' AND p.index_id IN (0,1)),0)""")
+    # Hamrah.Visit is the real field-visit table (schema Hamrah, 0 rows). Get its full typed column list and
+    # the exact schema name so the app reads it instead of reporting "table missing".
+    run(box, "visit_schema",
+        """SELECT ISNULL((SELECT TOP (1) s.name FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE t.name=N'Visit'), N'none')""")
+    run(box, "visit_columns_typed",
+        """SELECT ISNULL((SELECT TOP (1) STUFF((SELECT N',' + c.name + N':' + ty.name + N'(' + CAST(c.max_length AS nvarchar(10)) + N')' FROM sys.columns c JOIN sys.types ty ON ty.user_type_id=c.user_type_id WHERE c.object_id=o.object_id ORDER BY c.column_id FOR XML PATH('')),1,1,N'') FROM sys.objects o JOIN sys.schemas s ON s.schema_id=o.schema_id WHERE o.name=N'Visit'), N'')""")
+    run(box, "baze_columns_typed",
+        """SELECT STUFF((SELECT N',' + c.name + N':' + ty.name FROM sys.columns c JOIN sys.types ty ON ty.user_type_id=c.user_type_id WHERE c.object_id=OBJECT_ID(N'dbo.baze') ORDER BY c.column_id FOR XML PATH('')),1,1,N'')""")
+    run(box, "vis_goals_all_columns",
+        """SELECT STUFF((SELECT N',' + c.name FROM sys.columns c WHERE c.object_id=OBJECT_ID(N'dbo.vis_goals') ORDER BY c.column_id FOR XML PATH('')),1,1,N'')""")
+    run(box, "vis_goals_sample",
+        """SELECT TOP (6) CAST(vis_rdf AS nvarchar(20)), CAST(baze_rdf AS nvarchar(20)), CAST(ISNULL(mab,0) AS nvarchar(30)) FROM dbo.vis_goals WITH (NOLOCK) ORDER BY vis_rdf""")
+    run(box, "baze_sample",
+        """SELECT TOP (4) CAST(rdf AS nvarchar(20)) + N' ' + CAST(ISNULL(name,N'') AS nvarchar(60)) FROM dbo.baze WITH (NOLOCK) ORDER BY rdf""")
+
     # Visitor goals: the manager page shows «هدف» next to real sales, so confirm the goal column is populated.
     run(box, "vis_goals_columns",
         """SELECT STUFF((SELECT N',' + c.name + N':' + t.name FROM sys.columns c JOIN sys.types t ON t.user_type_id=c.user_type_id WHERE c.object_id=OBJECT_ID(N'dbo.vis_goals') ORDER BY c.column_id FOR XML PATH('')),1,1,N'')""")

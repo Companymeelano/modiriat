@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -198,7 +199,7 @@ final class MeelanoSql {
             if (reason != null && !reason.isEmpty()) { lastError = reason; lastReconnectReason = reason; }
             LOCK.notifyAll();
         }
-        COLUMNS.clear(); TABLES.clear(); FUNCTIONS.clear(); LATEST.clear();
+        COLUMNS.clear(); TABLES.clear(); FUNCTIONS.clear(); LATEST.clear(); QUALIFIED.clear();
         todayValue = ""; todayAt = 0L;
     }
 
@@ -252,21 +253,51 @@ final class MeelanoSql {
     // ------------------------------------------------------------------ cached metadata
 
     /** Column names of dbo.<table>, cached for the life of the process (one round trip per table). */
+    /**
+     * Columns of a table or view. The object is looked up in dbo first and then in any other schema,
+     * because Atiran keeps some tables outside dbo (Hamrah.Visit, for example), and the old dbo-only
+     * lookup made those pages report "table missing" while the data was there.
+     */
     static Set<String> columns(Connection c, String table) {
         if (table == null || table.trim().isEmpty()) return Collections.emptySet();
         String key = table.trim().toLowerCase(Locale.US);
         Set<String> cached = COLUMNS.get(key);
         if (cached != null) return cached;
         Set<String> set = new LinkedHashSet<>();
-        try (PreparedStatement ps = c.prepareStatement(
-                "SELECT c.name FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id "
-                        + "JOIN sys.schemas s ON s.schema_id=o.schema_id WHERE s.name=N'dbo' AND o.type IN (N'U',N'V') AND o.name=? ORDER BY c.column_id")) {
+        String objectIdSql = "SELECT TOP (1) CAST(o.object_id AS nvarchar(20)) FROM sys.objects o JOIN sys.schemas s ON s.schema_id=o.schema_id "
+                + "WHERE o.type IN (N'U',N'V') AND o.name=? ORDER BY CASE WHEN s.name=N'dbo' THEN 0 ELSE 1 END, s.name";
+        try (PreparedStatement ps = c.prepareStatement(objectIdSql)) {
             ps.setString(1, table.trim());
-            try (ResultSet r = ps.executeQuery()) { while (r.next()) set.add(r.getString(1)); }
+            String objectId = null;
+            try (ResultSet r = ps.executeQuery()) { if (r.next()) objectId = r.getString(1); }
+            if (objectId != null) {
+                try (PreparedStatement cs = c.prepareStatement("SELECT name FROM sys.columns WHERE object_id=CAST(? AS int) ORDER BY column_id")) {
+                    cs.setString(1, objectId);
+                    try (ResultSet r = cs.executeQuery()) { while (r.next()) set.add(r.getString(1)); }
+                }
+            }
         } catch (Exception ignored) { }
         if (!set.isEmpty()) COLUMNS.put(key, set);
         return set;
     }
+
+    /** «schema.name» of the table/view, dbo preferred, or null when it does not exist anywhere. */
+    static String qualifiedTable(Connection c, String name) {
+        if (name == null || name.trim().isEmpty()) return null;
+        String key = name.trim().toLowerCase(Locale.US);
+        if (QUALIFIED.containsKey(key)) return QUALIFIED.get(key);
+        String found = null;
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT TOP (1) s.name + N'.' + o.name FROM sys.objects o JOIN sys.schemas s ON s.schema_id=o.schema_id "
+                        + "WHERE o.type IN (N'U',N'V') AND o.name=? ORDER BY CASE WHEN s.name=N'dbo' THEN 0 ELSE 1 END, s.name")) {
+            ps.setString(1, name.trim());
+            try (ResultSet r = ps.executeQuery()) { if (r.next()) found = r.getString(1); }
+        } catch (Exception ignored) { }
+        QUALIFIED.put(key, found);
+        return found;
+    }
+
+    private static final Map<String, String> QUALIFIED = new ConcurrentHashMap<>();
 
     static boolean tableExists(Connection c, String table) {
         if (table == null || table.trim().isEmpty()) return false;
@@ -274,15 +305,16 @@ final class MeelanoSql {
         Boolean cached = TABLES.get(key);
         if (cached != null) return cached;
         boolean found = false;
+        // Any schema counts (Hamrah.Visit): existence must not depend on the owner schema.
         try (PreparedStatement ps = c.prepareStatement(
-                "SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE s.name=N'dbo' AND t.name=?")) {
+                "SELECT 1 FROM sys.tables t WHERE t.name=?")) {
             ps.setString(1, table.trim());
             try (ResultSet r = ps.executeQuery()) { found = r.next(); }
         } catch (Exception ignored) { }
         if (!found) {
             // views count too (VW_Forush_DarBazeZamani, vw_customer, ...)
             try (PreparedStatement ps = c.prepareStatement(
-                    "SELECT 1 FROM sys.views v JOIN sys.schemas s ON s.schema_id=v.schema_id WHERE s.name=N'dbo' AND v.name=?")) {
+                    "SELECT 1 FROM sys.views v WHERE v.name=?")) {
                 ps.setString(1, table.trim());
                 try (ResultSet r = ps.executeQuery()) { found = r.next(); }
             } catch (Exception ignored) { }

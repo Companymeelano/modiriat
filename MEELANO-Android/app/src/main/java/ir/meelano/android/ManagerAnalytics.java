@@ -646,24 +646,28 @@ final class ManagerAnalytics {
         return out;
     }
 
-    /** Field-visit intelligence from the real Visit table (columns confirmed by CI probe: VisRdf, Shmo, Duration, DateCreated, TimeCreated). */
+    /**
+     * Field-visit intelligence from the real Visit table. The live Atiran2 database keeps it in the
+     * «Hamrah» schema (Hamrah.Visit — confirmed by the CI probe: VisitID, VisRdf, Shmo, Duration,
+     * Created, Sent, ...), not in dbo, so the old dbo-only existence test wrongly told the manager the
+     * table was missing. The owner schema is resolved at runtime and the real column names are used.
+     */
     static JSONObject fieldVisits(Connection c, int range) throws Exception {
         JSONObject out = new JSONObject();
         JSONArray perVisitor = new JSONArray();
         JSONArray recent = new JSONArray();
-        if (!tableExists(c, "Visit")) {
-            // The live Atiran2 database has no Visit table (verified by the CI probe), so this page must
-            // say so instead of looking like a broken query.
+        String visitTable = qualifiedTable(c, "Visit");
+        if (visitTable == null) {
             out.put("perVisitor", perVisitor); out.put("recent", recent);
             out.put("available", false);
-            out.put("note", "در این نسخهٔ آتیران جدول Visit وجود ندارد؛ ثبت ویزیت میدانی روی سرور فعال نیست. دادهٔ ویزیتورها از sailfact و vis_goals خوانده می‌شود.");
+            out.put("note", "جدول ویزیت میدانی (Visit) در این نسخهٔ آتیران وجود ندارد؛ ثبت ویزیت روی سرور فعال نیست. دادهٔ ویزیتورها از sailfact و vis_goals خوانده می‌شود.");
             return out;
         }
         Set<String> v = columns(c, "Visit");
-        String vVis = resolve(v, "VisRdf", "vis_rdf", "VisitRdf");
-        String vDate = resolve(v, "DateCreated", "Created");
-        String vTime = resolve(v, "TimeCreated", "Sent");
-        String vDur = resolve(v, "Duration");
+        String vVis = resolve(v, "VisRdf", "vis_rdf", "VisitRdf", "visitor_rdf");
+        String vDate = resolve(v, "DateCreated", "Created", "VisitDate", "date");
+        String vTime = resolve(v, "TimeCreated", "Sent", "time");
+        String vDur = resolve(v, "Duration", "duration", "VisitDuration");
         String vShmo = resolve(v, "Shmo", "shmo");
         if (vVis == null || vDate == null) { out.put("perVisitor", perVisitor); out.put("recent", recent); return out; }
         Set<String> vis = columns(c, "visitors");
@@ -672,7 +676,7 @@ final class ManagerAnalytics {
         String nameExpr = visKey != null && visName != null ? "COALESCE(TRY_CONVERT(nvarchar(150),vi.[" + visName + "]),N'بدون نام')" : "N'بدون نام'";
         String joinVis = visKey != null ? " LEFT JOIN dbo.visitors vi ON TRY_CONVERT(nvarchar(100),vi.[" + visKey + "])=TRY_CONVERT(nvarchar(100),vs.[" + vVis + "])" : "";
         String durExpr = vDur == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(TRY_CONVERT(decimal(19,2),vs.[" + vDur + "]),0)";
-        String sql1 = "SELECT TOP (10) " + nameExpr + ", COUNT_BIG(1), ISNULL(SUM(" + durExpr + "),0) FROM dbo.Visit vs" + joinVis + " GROUP BY " + nameExpr + " ORDER BY 2 DESC";
+        String sql1 = "SELECT TOP (10) " + nameExpr + ", COUNT_BIG(1), ISNULL(SUM(" + durExpr + "),0) FROM " + visitTable + " vs" + joinVis + " GROUP BY " + nameExpr + " ORDER BY 2 DESC";
         try (PreparedStatement ps = c.prepareStatement(sql1)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", r.getString(1) == null ? "—" : r.getString(1)); o.put("visits", r.getLong(2)); o.put("duration", r.getDouble(3)); perVisitor.put(o); } }
         }
@@ -683,13 +687,23 @@ final class ManagerAnalytics {
         String joinCust = cShmo != null && vShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),vs.[" + vShmo + "])" : "";
         String vLat = resolve(v, "SaveLat", "SentLat");
         String vLng = resolve(v, "SaveLng", "SentLng");
-        String sql2 = "SELECT TOP (30) TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]), " + (vTime == null ? "CAST(NULL AS nvarchar(20))" : "TRY_CONVERT(nvarchar(20),vs.[" + vTime + "])") + ", " + custExpr + ", " + durExpr + ", " + (vLat == null ? "CAST(NULL AS decimal(12,7))" : "TRY_CONVERT(decimal(12,7),vs.[" + vLat + "])") + ", " + (vLng == null ? "CAST(NULL AS decimal(12,7))" : "TRY_CONVERT(decimal(12,7),vs.[" + vLng + "])") + " FROM dbo.Visit vs" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]) DESC";
+        String sql2 = "SELECT TOP (30) TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]), " + (vTime == null ? "CAST(NULL AS nvarchar(20))" : "TRY_CONVERT(nvarchar(20),vs.[" + vTime + "])") + ", " + custExpr + ", " + durExpr + ", " + (vLat == null ? "CAST(NULL AS decimal(12,7))" : "TRY_CONVERT(decimal(12,7),vs.[" + vLat + "])") + ", " + (vLng == null ? "CAST(NULL AS decimal(12,7))" : "TRY_CONVERT(decimal(12,7),vs.[" + vLng + "])") + " FROM " + visitTable + " vs" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]) DESC";
         try (PreparedStatement ps = c.prepareStatement(sql2)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("time", r.getString(2) == null ? "" : r.getString(2)); o.put("party", r.getString(3) == null ? "—" : r.getString(3)); o.put("duration", r.getDouble(4)); o.put("lat", r.getDouble(5)); o.put("lng", r.getDouble(6)); recent.put(o); } }
         }
         out.put("perVisitor", perVisitor);
         out.put("recent", recent);
+        out.put("available", true);
+        out.put("table", visitTable);
+        if (perVisitor.length() == 0 && recent.length() == 0) {
+            out.put("note", "جدول ویزیت میدانی (" + visitTable + ") روی سرور آماده است ولی هنوز هیچ ویزیتی در آن ثبت نشده؛ به‌محض ثبت، همین صفحه پر می‌شود. تا آن زمان عملکرد ویزیتورها در «نظارت بر فروش» از فاکتورها خوانده می‌شود.");
+        }
         return out;
+    }
+
+    /** Schema-qualified name of a table/view (Hamrah.Visit) — one cached implementation in MeelanoSql. */
+    static String qualifiedTable(Connection c, String name) {
+        return MeelanoSql.qualifiedTable(c, name);
     }
 
     /** Credit risk from the real Sys_Mandeh_Customer table (columns confirmed by CI probe: Shmo, Mandeh, Etebar, BlockResult). */
