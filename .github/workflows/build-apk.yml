@@ -30,6 +30,9 @@ jobs:
           if [ -n "$ZIP" ]; then
             echo "Using uploaded zip: $ZIP"; rm -rf MEELANO-Android; unzip -q -o "$ZIP"
           fi
+          # unique app version per build (fixes duplicate versionName across releases)
+          sed -i "s/versionCode [0-9]\+/versionCode ${{ github.run_number }}/" MEELANO-Android/app/build.gradle
+          sed -i "s/versionName '[0-9.]\+'/versionName '6.1.${{ github.run_number }}'/" MEELANO-Android/app/build.gradle
           VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle)
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"

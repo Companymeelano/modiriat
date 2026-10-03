@@ -12449,6 +12449,17 @@ public class MainActivity extends Activity {
                 addReportLine(c, o.optString("name", "—") + (keeper.isEmpty() ? "" : " • انباردار: " + keeper), formatNumber(o.optLong("items", 0)) + " قلم", TEXT);
             }
         }
+        JSONObject errs = m.optJSONObject("errors");
+        if (errs != null && errs.length() > 0) {
+            LinearLayout c = addReportCard("خطاهای دریافت گزارش — این متن را برای پشتیبانی بفرستید", "!", DANGER);
+            java.util.Iterator<String> it = errs.keys();
+            while (it.hasNext()) { String k = it.next(); addReportLine(c, k, errs.optString(k, "—"), DANGER); }
+        }
+        boolean noDataAtAll = (sales == null || sales.length() == 0) && (m.optJSONArray("top") == null || m.optJSONArray("top").length() == 0) && (byDay == null || byDay.length() == 0);
+        if (noDataAtAll && (errs == null || errs.length() == 0)) {
+            LinearLayout c = addReportCard("گزارشی برای نمایش نیست", "!", WARNING);
+            addReportLine(c, "اتصال برقرار است ولی داده‌ای از دیتابیس نیامد", "بازه/فیلترها را تغییر دهید یا به پشتیبانی اطلاع دهید", TEXT);
+        }
         JSONArray top = m.optJSONArray("top");
         if (top != null && top.length() > 0) {
             LinearLayout c = addReportCard("ترکیب کالا — پرفروش‌های بازه", "◈", navAccent("products"));

@@ -511,9 +511,10 @@ final class ManagerAnalytics {
     /** Sales Cockpit: totals vs previous period + weekday mix + product mix (validated columns only). */
     static JSONObject cockpit(Connection c, int range) throws Exception {
         JSONObject out = new JSONObject();
-        out.put("sales", rangeBlock(c, true, range));
-        out.put("purchases", rangeBlock(c, false, range));
-        out.put("top", products(c, range).optJSONArray("top"));
+        JSONObject errs = new JSONObject();
+        try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception ex) { putErr(errs, "sales", ex); }
+        try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception ex) { putErr(errs, "purchases", ex); }
+        try { out.put("top", products(c, range).optJSONArray("top")); } catch (Exception ex) { putErr(errs, "top", ex); }
         JSONArray byDay = new JSONArray();
         Set<String> cols = columns(c, "sailfact");
         String dateCol = resolve(cols, "date");
@@ -531,9 +532,10 @@ final class ManagerAnalytics {
             }
         }
         out.put("byDay", byDay);
-        try { out.put("periods", periodSales(c)); } catch (Exception ignored) { }
-        try { out.put("profit", productProfit(c, range)); } catch (Exception ignored) { }
-        try { out.put("warehouses", warehouses(c)); } catch (Exception ignored) { }
+        try { out.put("periods", periodSales(c)); } catch (Exception ex) { putErr(errs, "periods", ex); }
+        try { out.put("profit", productProfit(c, range)); } catch (Exception ex) { putErr(errs, "profit", ex); }
+        try { out.put("warehouses", warehouses(c)); } catch (Exception ex) { putErr(errs, "warehouses", ex); }
+        if (errs.length() > 0) out.put("errors", errs);
         return out;
     }
 
@@ -784,6 +786,10 @@ final class ManagerAnalytics {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", r.getString(1) == null ? "—" : r.getString(1)); o.put("keeper", r.getString(2) == null ? "" : r.getString(2)); o.put("items", r.getLong(3)); arr.put(o); } }
         }
         return arr;
+    }
+
+    private static void putErr(JSONObject errs, String key, Exception ex) {
+        try { String m = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage(); if (m.length() > 300) m = m.substring(0, 300); errs.put(key, m); } catch (Exception ignored) { }
     }
 
     // ============================ orchestrator ============================
