@@ -16774,17 +16774,27 @@ public class MainActivity extends Activity {
             String body = null;
             java.net.HttpURLConnection conn = null;
             try {
-                conn = (java.net.HttpURLConnection) new java.net.URL(MANAGER_EDITION ? MANAGER_UPDATE_MANIFEST_URL : STAFF_EDITION ? STAFF_UPDATE_MANIFEST_URL : STORE_EDITION ? STORE_UPDATE_MANIFEST_URL : UPDATE_MANIFEST_URL).openConnection();
-                conn.setConnectTimeout(8000); conn.setReadTimeout(8000); conn.setInstanceFollowRedirects(true);
-                if (conn.getResponseCode() == 200) {
-                    try (java.io.InputStream in = conn.getInputStream()) {
-                        ByteArrayOutputStream out = new ByteArrayOutputStream(); byte[] buf = new byte[2048]; int n;
-                        while ((n = in.read(buf)) > 0 && out.size() < 16_384) out.write(buf, 0, n);
-                        body = new String(out.toByteArray(), StandardCharsets.UTF_8);
-                    }
+                String[] sources = MANAGER_EDITION ? MANAGER_UPDATE_SOURCES
+                        : new String[]{STAFF_EDITION ? STAFF_UPDATE_MANIFEST_URL : STORE_EDITION ? STORE_UPDATE_MANIFEST_URL : UPDATE_MANIFEST_URL};
+                for (String source : sources) {
+                    try {
+                        conn = (java.net.HttpURLConnection) new java.net.URL(source).openConnection();
+                        conn.setConnectTimeout(8000); conn.setReadTimeout(8000); conn.setInstanceFollowRedirects(true);
+                        if (source.contains("api.github.com")) conn.setRequestProperty("Accept", "application/vnd.github+json");
+                        if (conn.getResponseCode() == 200) {
+                            try (java.io.InputStream in = conn.getInputStream()) {
+                                ByteArrayOutputStream out = new ByteArrayOutputStream(); byte[] buf = new byte[2048]; int n;
+                                while ((n = in.read(buf)) > 0 && out.size() < 64_000) out.write(buf, 0, n);
+                                body = new String(out.toByteArray(), StandardCharsets.UTF_8);
+                            }
+                        }
+                    } catch (Exception ignored) {
+                    } finally { if (conn != null) conn.disconnect(); conn = null; }
+                    if (body != null && !body.trim().isEmpty()) break;
                 }
+                if (body != null && body.trim().startsWith("[")) body = managerManifestFromReleases(body);
             } catch (Exception ignored) {
-            } finally { if (conn != null) conn.disconnect(); }
+            }
             final String result = body;
             runOnUiThread(() -> {
                 try {
@@ -16796,6 +16806,39 @@ public class MainActivity extends Activity {
                 if (manual && "settings".equals(activePage)) renderVisitorEditionSettings();
             });
         }, "meelano-update-check").start();
+    }
+
+    /**
+     * Builds a manager update manifest out of the GitHub releases list. The CI tags are
+     * «v6.2.53-build-53» and versionCode = 1000 + build number (see build-apk.yml), so the newest
+     * release whose assets contain MEELANO-Manager-*-release.apk can be offered exactly like a manifest.
+     */
+    private String managerManifestFromReleases(String listJson) {
+        try {
+            org.json.JSONArray releases = new org.json.JSONArray(listJson);
+            for (int i = 0; i < releases.length(); i++) {
+                JSONObject rel = releases.optJSONObject(i);
+                if (rel == null) continue;
+                org.json.JSONArray assets = rel.optJSONArray("assets");
+                if (assets == null) continue;
+                for (int a = 0; a < assets.length(); a++) {
+                    JSONObject asset = assets.optJSONObject(a);
+                    if (asset == null) continue;
+                    String name = asset.optString("name", "");
+                    if (!name.startsWith("MEELANO-Manager-") || !name.endsWith("-release.apk")) continue;
+                    String tag = rel.optString("tag_name", "");
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("-build-(\\d+)").matcher(tag);
+                    if (!m.find()) continue;
+                    String version = tag.startsWith("v") ? tag.substring(1).split("-build-")[0] : tag;
+                    return new JSONObject()
+                            .put("versionCode", 1000 + Integer.parseInt(m.group(1)))
+                            .put("versionName", version)
+                            .put("url", asset.optString("browser_download_url", ""))
+                            .toString();
+                }
+            }
+        } catch (Exception ignored) { }
+        return null;
     }
 
     private void openAppUpdate(JSONObject up) {
@@ -24751,6 +24794,15 @@ public class MainActivity extends Activity {
     private static final String STORE_UPDATE_MANIFEST_URL = "https://github.com/Companymeelano/Newhamrah/raw/arena/01a0e474-newhamrah/apk/latest-store.json";
     /** Manager app: its own manifest, written by CI next to MEELANO-Manager-*.apk in the «modiriat» repository. */
     private static final String MANAGER_UPDATE_MANIFEST_URL = "https://github.com/Companymeelano/modiriat/raw/main/apk/latest-manager.json";
+    /**
+     * Tried in order until one answers: the branch manifest, then the branch this build came from, and finally
+     * the releases API — the published APKs always exist there even when the CI commit of apk/ did not land,
+     * so «بروزرسانی برنامه» keeps working instead of silently reporting «به‌روز».
+     */
+    private static final String[] MANAGER_UPDATE_SOURCES = {
+            MANAGER_UPDATE_MANIFEST_URL,
+            "https://github.com/Companymeelano/modiriat/raw/arena/01a1028f-modiriat/apk/latest-manager.json",
+            "https://api.github.com/repos/Companymeelano/modiriat/releases?per_page=5"};
 
     private String editionTitle() { return MANAGER_EDITION ? "پخش درخشان مدیریت" : STAFF_EDITION ? "پخش درخشان پرسنل" : STORE_EDITION ? "پخش درخشان فروشگاه" : "پخش درخشان ویزیتور"; }
 

@@ -201,9 +201,18 @@ jobs:
           cat apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-manager.json
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git add apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-manager.json
-          git commit -m "Build APK v$APP_VERSION [skip ci]" || echo "No changes"
-          for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
+          git add -f apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-manager.json
+          if git diff --cached --quiet; then echo "No apk changes to commit"; else git commit -m "Build APK v$APP_VERSION [skip ci]"; fi
+          # The loop must not swallow push failures: three jobs (build/analysis/screenshots) push to the same
+          # branch, and a rejected push used to leave apk/ and the update manifests missing from the branch.
+          pushed=0
+          for i in 1 2 3 4 5; do
+            git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" || git rebase --abort || true
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then pushed=1; break; fi
+            echo "push attempt $i failed; retrying"; sleep 7
+          done
+          if [ "$pushed" != "1" ]; then echo "::error title=APK commit::apk/ could not be pushed to ${GITHUB_REF_NAME}"; exit 1; fi
+          git log --oneline -1
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
