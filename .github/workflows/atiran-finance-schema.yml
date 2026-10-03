@@ -55,6 +55,14 @@ jobs:
             docs/finance/FinancialSchemaMapping.md > docs/finance/probe-log.txt 2>&1 || true
           grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-log.txt | tail -70 | sed 's/[0-9]\{6,\}/<num>/g'
 
+      - name: Discover finance details (read-only)
+        continue-on-error: true
+        run: |
+          pip install --quiet python-tds
+          python3 .github/scripts/atiran_finance_detail.py docs/finance/AtiranFinanceDetail.json \
+            > docs/finance/probe-detail-log.txt 2>&1 || true
+          grep -v -i -E "password|S_PASS|S_USER" docs/finance/probe-detail-log.txt | tail -50 | sed 's/[0-9]\{6,\}/<num>/g'
+
       - name: Commit the schema mapping
         run: |
           test -s docs/finance/AtiranFinancialSchema.json || echo '{"ok":false}' > docs/finance/AtiranFinancialSchema.json
