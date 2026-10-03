@@ -1,5 +1,2 @@
-10-03 08:25:27.014  8404  8449 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
-10-03 08:25:27.015  8404  8449 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
-10-03 08:25:27.026   556   576 I ActivityTaskManager: Displayed ir.meelano.manager.debug/ir.meelano.android.MainActivity for user 0: +3s305ms
-10-03 08:25:33.550   556   986 D CoreBackPreview: Window{aa35acb u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback null
-10-03 08:25:33.569   556  1077 W InputManager-JNI: Input channel object 'aa35acb ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-03 09:42:03.392   564  1996 W InputManager-JNI: Input channel object 'f4fa4b0 ir.meelano.manager.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-03 09:42:03.582   564  1996 D CoreBackPreview: Window{95aa4f6 u0 ir.meelano.manager.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@f1bb64, mPriority=-1, mIsAnimationCallback=false}
