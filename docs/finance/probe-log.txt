@@ -1,0 +1,13 @@
+/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py:128: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  out = {"ok": True, "generated_utc": datetime.datetime.utcnow().isoformat() + "Z",
+/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py:584: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  datetime.datetime.utcnow().isoformat() + "Z", "errors": tb.splitlines()[-6:]}
+connecting to live Atiran server (host/db/user hidden, read-only)
+FATAL: Traceback (most recent call last):
+  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 577, in cli
+    main()
+  File "/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py", line 207, in main
+    out[key][o["name"]] = {"schema": o.get("schema_name"), "rows": o.get("rows_est"),
+    ~~~^^^^^
+KeyError: 'functions'
+

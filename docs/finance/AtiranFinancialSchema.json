@@ -1,1 +1,13 @@
-{"ok":false}
+{
+ "ok": false,
+ "fatal": "'functions'",
+ "generated_utc": "2026-10-03T21:55:53.098204Z",
+ "errors": [
+  "  File \"/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py\", line 577, in cli",
+  "    main()",
+  "  File \"/home/runner/work/modiriat/modiriat/.github/scripts/atiran_finance_schema.py\", line 207, in main",
+  "    out[key][o[\"name\"]] = {\"schema\": o.get(\"schema_name\"), \"rows\": o.get(\"rows_est\"),",
+  "    ~~~^^^^^",
+  "KeyError: 'functions'"
+ ]
+}
