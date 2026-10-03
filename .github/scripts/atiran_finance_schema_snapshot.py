@@ -18,6 +18,7 @@ import pytds
 
 BACKUP = "/var/opt/mssql/backup/Atiran2.bak"
 DATABASE = "Atiran2"
+CURRENT_STAGE = "initialization"
 
 
 def json_value(value: Any) -> Any:
@@ -90,10 +91,13 @@ def wait_until_ready() -> None:
 
 
 def restore_and_collect(output_path: Path) -> None:
+    global CURRENT_STAGE
+    CURRENT_STAGE = "wait for isolated SQL Server readiness"
     wait_until_ready()
     connection = connect()
     cursor = connection.cursor()
 
+    CURRENT_STAGE = "read backup header metadata"
     header_rows = query(cursor, f"RESTORE HEADERONLY FROM DISK = {sql_literal(BACKUP)}")
     if not header_rows:
         raise RuntimeError("Backup header is empty")
@@ -111,6 +115,7 @@ def restore_and_collect(output_path: Path) -> None:
     )
     backup_metadata = {key: header.get(key) for key in allowed_header_fields if key in header}
 
+    CURRENT_STAGE = "read backup file metadata"
     files = query(cursor, f"RESTORE FILELISTONLY FROM DISK = {sql_literal(BACKUP)}")
     if not files:
         raise RuntimeError("Backup file list is empty")
@@ -147,6 +152,7 @@ def restore_and_collect(output_path: Path) -> None:
     if data_index == 0 or log_index == 0:
         raise RuntimeError("Backup must contain at least one data file and one log file")
 
+    CURRENT_STAGE = "restore dated backup inside the ephemeral SQL Server container"
     restore_sql = (
         f"RESTORE DATABASE {quote_identifier(DATABASE)} FROM DISK = {sql_literal(BACKUP)} "
         "WITH REPLACE, RECOVERY, " + ", ".join(moves) + ", STATS = 10"
@@ -154,6 +160,7 @@ def restore_and_collect(output_path: Path) -> None:
     query(cursor, restore_sql)
     connection.close()
 
+    CURRENT_STAGE = "collect SQL catalog metadata only"
     connection = connect(DATABASE, tries=10)
     cursor = connection.cursor()
     # Every statement below reads SQL Server catalog/system metadata only. No user-table rows are read.
@@ -335,8 +342,14 @@ def main() -> int:
         restore_and_collect(Path(sys.argv[1]))
         return 0
     except Exception as error:
-        # Avoid printing query results, credentials, backup paths, or SQL rows into CI logs.
-        print("Schema snapshot failed: " + type(error).__name__ + ": " + str(error)[:300], file=sys.stderr)
+        # This text contains only the stage and driver error (never query results). It is also
+        # emitted as a GitHub annotation so failures remain diagnosable if raw logs are unavailable.
+        detail = str(error).replace(os.environ.get("SA_PASS", "\u0000"), "[redacted]")
+        detail = " ".join(detail.replace("\r", " ").replace("\n", " ").split())[:300]
+        message = f"Stage: {CURRENT_STAGE}; error: {type(error).__name__}; detail: {detail or 'no driver detail'}"
+        escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A").replace("::", "%3A%3A")
+        print("::error title=Metadata-only schema snapshot::" + escaped)
+        print("Schema snapshot failed: " + message, file=sys.stderr)
         return 1
 
 
