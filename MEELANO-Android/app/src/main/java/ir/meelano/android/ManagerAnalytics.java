@@ -894,7 +894,7 @@ final class ManagerAnalytics {
      * together brings the same figures in about a second, and keeps the per-section timings and error
      * entries so a slow or failing card is still traceable from the screen.
      */
-    static JSONObject fetchParallel(int range) {
+    static JSONObject fetchParallel(int range) throws Exception {
         JSONObject out = new JSONObject();
         JSONArray errors = new JSONArray();
         JSONObject timings = new JSONObject();
