@@ -3,92 +3,92 @@
  "sections": {
   "timings": {
    "server_today": {
-    "ms": 232,
+    "ms": 204,
     "rows": 1,
     "error": null
    },
    "stock_fn": {
-    "ms": 253,
+    "ms": 203,
     "rows": 1,
     "error": null
    },
    "old_range_1m": {
-    "ms": 510,
+    "ms": 422,
     "rows": 1,
     "error": null
    },
    "new_range_1m": {
-    "ms": 258,
+    "ms": 215,
     "rows": 1,
     "error": null
    },
    "old_range_1m_sum": {
-    "ms": 260,
+    "ms": 218,
     "rows": 1,
     "error": null
    },
    "new_range_1m_sum": {
-    "ms": 261,
+    "ms": 217,
     "rows": 1,
     "error": null
    },
    "old_dedupe_source": {
-    "ms": 263,
+    "ms": 220,
     "rows": 1,
     "error": null
    },
    "new_plain_agg": {
-    "ms": 276,
+    "ms": 219,
     "rows": 1,
     "error": null
    },
    "dup_check": {
-    "ms": 605,
+    "ms": 215,
     "rows": 1,
     "error": null
    },
    "latest_anchor_app": {
-    "ms": 238,
+    "ms": 237,
     "rows": 1,
     "error": null
    },
    "latest_anchor_typed": {
-    "ms": 240,
+    "ms": 248,
     "rows": 1,
     "error": null
    },
    "home_customers_debt": {
-    "ms": 265,
-    "rows": 1,
-    "error": null
-   },
-   "home_sales_today_old": {
-    "ms": 240,
-    "rows": 1,
-    "error": null
-   },
-   "visitors_rows": {
     "ms": 221,
     "rows": 1,
     "error": null
    },
+   "home_sales_today_old": {
+    "ms": 227,
+    "rows": 1,
+    "error": null
+   },
+   "visitors_rows": {
+    "ms": 206,
+    "rows": 1,
+    "error": null
+   },
    "sys_users_rows": {
-    "ms": 225,
+    "ms": 202,
     "rows": 1,
     "error": null
    },
    "inventory_rows": {
-    "ms": 225,
+    "ms": 205,
     "rows": 1,
     "error": null
    },
    "ka_act_rows": {
-    "ms": 255,
+    "ms": 222,
     "rows": 1,
     "error": null
    },
    "buyfact_rows": {
-    "ms": 220,
+    "ms": 209,
     "rows": 1,
     "error": null
    }
@@ -150,7 +150,7 @@
   "1",
   "1"
  ],
- "roundtrip_ms": 225,
+ "roundtrip_ms": 205,
  "tables": {
   "sailfact": {
    "exists": true,

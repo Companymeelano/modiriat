@@ -6,7 +6,7 @@
  "sections": {
   "home_dashboard": {
    "statements": 9,
-   "ms": 2104,
+   "ms": 2090,
    "values": {
     "kpi_counts_one_statement": [
      [
@@ -105,7 +105,7 @@
   },
   "manager_reports": {
    "statements": 14,
-   "ms": 3413,
+   "ms": 3072,
    "values": {
     "sales_today": [
      [
@@ -226,7 +226,7 @@
   },
   "management_intelligence": {
    "statements": 9,
-   "ms": 2593,
+   "ms": 2145,
    "values": {
     "cockpit_sales_30d_with_prev": [
      [
@@ -409,7 +409,7 @@
   },
   "sales_supervision": {
    "statements": 6,
-   "ms": 1471,
+   "ms": 1283,
    "values": {
     "visitor_performance": [
      [
@@ -488,7 +488,7 @@
   },
   "merged_statement": {
    "statements": 3,
-   "ms": 758,
+   "ms": 649,
    "values": {
     "v1_simple_scalar": "ERR ('The multi-part identifier \"x.date\" could not be bound. The multi-part identifier \"x.date\" could not be bound. The multi-part identifier \"x.active\" could not b",
     "v2_scalar_over_derived": [
@@ -521,7 +521,7 @@
   },
   "visit_object": {
    "statements": 13,
-   "ms": 3541,
+   "ms": 3109,
    "values": {
     "objects_named_visit": [
      [
@@ -613,7 +613,7 @@
   },
   "extra_schema": {
    "statements": 3,
-   "ms": 705,
+   "ms": 649,
    "values": {
     "putchk_rows": [
      [
@@ -689,6 +689,6 @@
   "p1b": "1404/07/11"
  },
  "total_statements": 68,
- "total_ms": 14585,
+ "total_ms": 12997,
  "roundtrip_ms_reference": 192
 }

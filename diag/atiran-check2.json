@@ -83,35 +83,35 @@
   "26:4"
  ],
  "stock_apply_20_items": {
-  "ms": 249,
+  "ms": 236,
   "rows": 20
  },
  "batched_dashboard_kpis": {
-  "ms": 247,
+  "ms": 234,
   "rows": 1
  },
  "batched_manager_reports": {
-  "ms": 266,
+  "ms": 242,
   "rows": 1
  },
  "batched_daily_items": {
-  "ms": 267,
+  "ms": 235,
   "rows": 8
  },
  "batched_trend_7": {
-  "ms": 246,
+  "ms": 250,
   "rows": 6
  },
  "batched_top_debtors": {
-  "ms": 246,
+  "ms": 233,
   "rows": 8
  },
  "batched_checks_breakdown": {
-  "ms": 234,
+  "ms": 235,
   "rows": 4
  },
  "batched_visitor_share": {
-  "ms": 247,
+  "ms": 235,
   "rows": 6
  }
 }
