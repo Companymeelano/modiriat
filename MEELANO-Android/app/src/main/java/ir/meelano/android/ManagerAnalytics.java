@@ -7,13 +7,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-<<<<<<< HEAD
-import java.util.HashSet;
-=======
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
->>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -468,8 +464,6 @@ final class ManagerAnalytics {
         return arr;
     }
 
-<<<<<<< HEAD
-=======
     // ============================ phase 10-13: cockpit / collection / visitor goals / product radar ============================
     private static String persianDow(int dw) {
         switch (dw) { case 1: return "\u06cc\u06a9\u0634\u0646\u0628\u0647"; case 2: return "\u062f\u0648\u0634\u0646\u0628\u0647"; case 3: return "\u0633\u0647\u200c\u0634\u0646\u0628\u0647"; case 4: return "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647"; case 5: return "\u067e\u0646\u062c\u0634\u0646\u0628\u0647"; case 6: return "\u062c\u0645\u0639\u0647"; default: return "\u0634\u0646\u0628\u0647"; }
@@ -571,7 +565,6 @@ final class ManagerAnalytics {
         return out;
     }
 
->>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
     // ============================ orchestrator ============================
     /** One connection, sequential validated queries, per-section error capture (never crashes the UI). */
     static JSONObject fetch(Connection c, int range) throws Exception {

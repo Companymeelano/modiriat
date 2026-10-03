@@ -3842,13 +3842,10 @@ public class MainActivity extends Activity {
             case "dashboard":
                 if (MANAGER_EDITION) { loadManagerExecutive(); break; }
             case "mgr_drill": loadManagerDrill(); break;
-<<<<<<< HEAD
-=======
             case "mgr_cockpit": loadManagerCockpit(); break;
             case "mgr_collection": loadManagerCollection(); break;
             case "mgr_visits": loadManagerVisits(); break;
             case "mgr_products": loadManagerProducts(); break;
->>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
             default: loadDashboard(); break;
         }
     }
@@ -7195,11 +7192,7 @@ public class MainActivity extends Activity {
 
     private String firstAllowedPage() {
         if (MANAGER_EDITION) {
-<<<<<<< HEAD
-            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill"};
-=======
             String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill", "mgr_cockpit", "mgr_collection", "mgr_visits", "mgr_products"};
->>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
             for (String p : managerPages) if (canOpenPage(p)) return p;
             return "dashboard";
         }
@@ -12019,8 +12012,6 @@ public class MainActivity extends Activity {
         }
     }
 
-<<<<<<< HEAD
-=======
     // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
     private LinearLayout managerRangeRow(Runnable reload) {
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
@@ -12185,7 +12176,6 @@ public class MainActivity extends Activity {
         addDeveloperCredit(content);
     }
 
->>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
     // =============================== Phase 6-9: Executive dashboard + Action center + Drill-down ===============================
     private String freshnessText(long syncAt) {
         long min = (System.currentTimeMillis() - syncAt) / 60000;
@@ -12581,19 +12571,11 @@ public class MainActivity extends Activity {
                 new VisitorToolSpec("دستیار میلو", "پرسش از داده‌ها", "✧", navAccent("assistant"), () -> showApp("assistant"), canOpenPage("assistant"))
         });
         addVisitorMoreGroup("هوش مدیریتی", "دریل‌داون واقعی به رکوردهای آتیران", new VisitorToolSpec[]{
-<<<<<<< HEAD
-                new VisitorToolSpec("اتاق فروش", "اسناد فروش بازه", "↗", navAccent("reports"), () -> { managerDrillKind = "sales"; showApp("mgr_drill"); }, true),
-                new VisitorToolSpec("مرکز وصول", "چک‌های دریافتی", "✓", SUCCESS, () -> { managerDrillKind = "checks"; showApp("mgr_drill"); }, true),
-                new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
-                new VisitorToolSpec("عملکرد ویزیتور", "فروش/سفارش/مشتری", "♜", navAccent("personnel"), () -> { managerDrillKind = "visitors"; showApp("mgr_drill"); }, true),
-                new VisitorToolSpec("هوش کالا", "پرفروش‌های بازه", "◈", navAccent("products"), () -> { managerDrillKind = "products"; showApp("mgr_drill"); }, true)
-=======
                 new VisitorToolSpec("اتاق فروش", "مقایسه بازه + ترکیب کالا و روز", "↗", navAccent("reports"), () -> showApp("mgr_cockpit"), true),
                 new VisitorToolSpec("مرکز وصول", "سن‌یابی واقعی مطالبات", "✓", SUCCESS, () -> showApp("mgr_collection"), true),
                 new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("عملکرد ویزیتور", "فروش در برابر هدف vis_goals", "♜", navAccent("personnel"), () -> showApp("mgr_visits"), true),
                 new VisitorToolSpec("هوش کالا", "طلا / موجودی صفر / بدون فروش", "◈", navAccent("products"), () -> showApp("mgr_products"), true)
->>>>>>> e9dac0d (فاز ۱۰-۱۳: اتاق فروش (مقایسه بازه+ترکیب روز/کالا) + مرکز وصول (aging واقعی t_date/dif_date_alan) + عملکرد ویزیتور با هدف vis_goals + هوش کالا (طلا/موجودی صفر ka_act/بدون فروش))
         });
         addDeveloperCredit(content);
     }
