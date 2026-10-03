@@ -1,4 +1,62 @@
-# Manager UI audit — 0 page dumps, screen 1080x2400 @420dpi
+# Manager UI audit — 18 page dumps, screen 1080x2400 @420dpi
 
+OK 00-login                           texts= 14 clicks= 6
+OK 01-credentials-filled              texts= 14 clicks= 6
+!! 02-manager-home                    texts= 21 clicks=15  tiny=5
+      tiny       ↗ اتاق فروش 166x66 (809, 748, 975, 814)
+      tiny       ✓ وصول 166x66 (633, 748, 799, 814)
+      tiny       ♜ ویزیتور 166x66 (457, 748, 623, 814)
+      tiny       ◈ کالا 166x66 (281, 748, 447, 814)
+      tiny       ♛ اعتبار 166x66 (105, 748, 271, 814)
+!! 03-manager-home-settled            texts= 49 clicks=27  tiny=5
+      tiny       ↗ اتاق فروش 166x66 (809, 805, 975, 871)
+      tiny       ✓ وصول 166x66 (633, 805, 799, 871)
+      tiny       ♜ ویزیتور 166x66 (457, 805, 623, 871)
+      tiny       ◈ کالا 166x66 (281, 805, 447, 871)
+      tiny       ♛ اعتبار 166x66 (105, 805, 271, 871)
+!! 10-بیشتر                           texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 10-تأییدها                         texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 10-پرسنل                           texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 10-گزارش‌ها                        texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 11-بیشتر-settled                   texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 11-تأییدها-settled                 texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 11-پرسنل-settled                   texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 11-گزارش‌ها-settled                texts=  8 clicks=13  unlabelled=1 tiny=1
+      unlabelled ViewGroup @(83, 231, 997, 504)
+      tiny       Sat, Oct 3 224x62 (83, 330, 307, 392)
+!! 12-اتاق-فروش                       texts= 47 clicks=21  tiny=5
+      tiny       ↗ اتاق فروش 166x66 (809, 748, 975, 814)
+      tiny       ✓ وصول 166x66 (633, 748, 799, 814)
+      tiny       ♜ ویزیتور 166x66 (457, 748, 623, 814)
+      tiny       ◈ کالا 166x66 (281, 748, 447, 814)
+      tiny       ♛ اعتبار 166x66 (105, 748, 271, 814)
+!! 12-وصول                            texts= 49 clicks=27  tiny=5
+      tiny       ↗ اتاق فروش 166x66 (809, 805, 975, 871)
+      tiny       ✓ وصول 166x66 (633, 805, 799, 871)
+      tiny       ♜ ویزیتور 166x66 (457, 805, 623, 871)
+      tiny       ◈ کالا 166x66 (281, 805, 447, 871)
+      tiny       ♛ اعتبار 166x66 (105, 805, 271, 871)
+!! 30-narrow-1.3x-home                texts= 13 clicks= 6  tiny=1
+      tiny       ورود 550x44 (85, 1385, 635, 1429)
+!! 31-narrow-بیشتر                    texts= 13 clicks= 6  tiny=1
+      tiny       ورود 550x44 (85, 1385, 635, 1429)
+!! 31-narrow-تأییدها                  texts= 13 clicks= 6  tiny=1
+      tiny       ورود 550x44 (85, 1385, 635, 1429)
+!! 31-narrow-گزارش‌ها                 texts= 13 clicks= 6  tiny=1
+      tiny       ورود 550x44 (85, 1385, 635, 1429)
 
-TOTALS pages=0 clipped=0 unlabelled=0 overflow=0 tiny=0 errors=0 empty=0
+TOTALS pages=18 clipped=0 unlabelled=8 overflow=0 tiny=32 errors=0 empty=0
