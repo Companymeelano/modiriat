@@ -1,0 +1,75 @@
+name: Atiran analytics live
+
+# Runs ONLY when the commit message contains [analytics-live]. Compiles the app's own data layer
+# (MeelanoSql + ManagerAnalytics + MeelanoJalali, with MainActivity stubbed by
+# tools/analytics-live/make_stub.py) and executes ManagerAnalytics.fetch() against the production
+# Atiran2 server through the same jTDS driver, URL and credentials as the Android app.
+#
+# Why this exists: the emulator review shows what the screen renders, this shows what the database
+# returns and what SQL reached it - so a card that shows «—» is traced to a statement instead of
+# guessed from a screenshot. It also proves statement lengths (see the jTDS length probe) and the
+# local parenthesis guard.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  analytics:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[analytics-live')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Fetch the driver and JSON library the app uses
+        run: |
+          mkdir -p lib
+          curl -fsSL --retry 3 -o lib/jtds.jar https://repo1.maven.org/maven2/net/sourceforge/jtds/jtds/1.3.1/jtds-1.3.1.jar
+          curl -fsSL --retry 3 -o lib/json.jar https://repo1.maven.org/maven2/org/json/json/20231013/json-20231013.jar
+          ls -l lib
+
+      - name: Build the harness from the real app sources
+        run: |
+          APP=MEELANO-Android/app/src/main/java/ir/meelano/android
+          rm -rf build && mkdir -p build/src/ir/meelano/android build/classes
+          cp "$APP/MeelanoSql.java" "$APP/ManagerAnalytics.java" "$APP/MeelanoJalali.java" build/src/ir/meelano/android/
+          cp tools/analytics-live/AnalyticsLive.java build/src/ir/meelano/android/
+          python3 tools/analytics-live/make_stub.py "$APP/MainActivity.java" build/src/ir/meelano/android/MainActivity.java
+          javac -encoding UTF-8 -nowarn -cp lib/jtds.jar:lib/json.jar -d build/classes build/src/ir/meelano/android/*.java
+          echo "compiled:"; ls build/classes/ir/meelano/android/
+
+      - name: Run the shipped data layer against the production server
+        continue-on-error: true
+        run: |
+          mkdir -p diag
+          java -Dfile.encoding=UTF-8 -cp build/classes:lib/jtds.jar:lib/json.jar ir.meelano.android.AnalyticsLive 2>&1 | tee diag/analytics-live.txt
+          test -s diag/analytics-live.txt || echo '{"ok":false,"fatal":"no output"}' > diag/analytics-live.txt
+
+      - name: Keep the report on the branch
+        if: always()
+        run: |
+          wc -l diag/analytics-live.txt || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -f diag/analytics-live.txt
+          git commit -q -m "Atiran analytics live report [skip ci]" || echo "no changes"
+          for i in 1 2 3; do
+            git pull -q --rebase origin "${GITHUB_REF_NAME}" || true
+            git push -q origin HEAD:"${GITHUB_REF_NAME}" && break || sleep 5
+          done || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: analytics-live
+          path: diag/analytics-live.txt
+          if-no-files-found: warn

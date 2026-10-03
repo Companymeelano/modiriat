@@ -838,24 +838,43 @@ final class ManagerAnalytics {
         return " | sql=" + one;
     }
 
+    /** One analytics section: records how long it took and turns a failure into a visible error line. */
+    interface Section { Object run() throws Exception; }
+
+    static void section(JSONObject out, JSONArray errors, JSONObject timings, String key, Section body) {
+        long t0 = System.currentTimeMillis();
+        try {
+            out.put(key, body.run());
+        } catch (Exception e) {
+            errors.put(key + ": " + String.valueOf(e.getMessage()) + sqlHint());
+        } finally {
+            long ms = System.currentTimeMillis() - t0;
+            try { timings.put(key, ms); } catch (Exception ignored) { }
+        }
+    }
+
     static JSONObject fetch(Connection c, int range) throws Exception {
         JSONObject out = new JSONObject();
         JSONArray errors = new JSONArray();
+        JSONObject timings = new JSONObject();
         out.put("range", range);
         out.put("syncAt", System.currentTimeMillis());
-        try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception e) { errors.put("sales: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception e) { errors.put("purchases: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("trend", trend(c, 7)); } catch (Exception e) { errors.put("trend: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("receivables", receivables(c)); } catch (Exception e) { errors.put("receivables: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("debtors", debtors(c, 8)); } catch (Exception e) { errors.put("debtors: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("customers", customerCategories(c, range)); } catch (Exception e) { errors.put("customers: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("visitors", visitorGoals(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("credit", creditRisk(c)); } catch (Exception e) { errors.put("credit: " + String.valueOf(e.getMessage()) + sqlHint()); }
-        try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage()) + sqlHint()); }
+        // Every section is timed and every failure is captured, so a slow or empty card can always be
+        // traced to one statement. MainActivity renders «errors» and the timings on the dashboard.
+        section(out, errors, timings, "sales",       () -> rangeBlock(c, true, range));
+        section(out, errors, timings, "purchases",   () -> rangeBlock(c, false, range));
+        section(out, errors, timings, "trend",       () -> trend(c, 7));
+        section(out, errors, timings, "receivables", () -> receivables(c));
+        section(out, errors, timings, "debtors",     () -> debtors(c, 8));
+        section(out, errors, timings, "customers",   () -> customerCategories(c, range));
+        section(out, errors, timings, "visitors",    () -> visitorGoals(c, range));
+        section(out, errors, timings, "products",    () -> products(c, range));
+        section(out, errors, timings, "checkBuckets",() -> checkBuckets(c));
+        section(out, errors, timings, "aging",       () -> collection(c));
+        section(out, errors, timings, "credit",      () -> creditRisk(c));
+        section(out, errors, timings, "feed",        () -> activityFeed(c));
         out.put("errors", errors);
+        out.put("timings", timings);
         return out;
     }
 }
