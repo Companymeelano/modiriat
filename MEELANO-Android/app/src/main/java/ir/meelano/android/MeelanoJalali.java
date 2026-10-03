@@ -94,6 +94,26 @@ final class MeelanoJalali {
         } catch (Exception e) { return -1; }
     }
 
+    /** "۱۴۰۵/۰۷/۱۱" or "1405-7-11" -> "1405/07/11" (empty when it is not a Jalali date). */
+    static String normalize(String text) {
+        if (text == null) return "";
+        StringBuilder b = new StringBuilder();
+        for (char ch : text.trim().toCharArray()) {
+            if (ch >= '\u06F0' && ch <= '\u06F9') b.append((char) ('0' + (ch - '\u06F0')));
+            else if (ch >= '\u0660' && ch <= '\u0669') b.append((char) ('0' + (ch - '\u0660')));
+            else b.append(ch);
+        }
+        String[] p = b.toString().split("[/\\-]");
+        if (p.length < 3) return "";
+        try {
+            int y = Integer.parseInt(p[0].trim());
+            int m = Integer.parseInt(p[1].trim());
+            int d = p[2].trim().length() > 2 ? Integer.parseInt(p[2].trim().substring(0, 2)) : Integer.parseInt(p[2].trim());
+            if (y < 1300 || y > 1600 || m < 1 || m > 12 || d < 1 || d > 31) return "";
+            return String.format(Locale.US, "%04d/%02d/%02d", y, m, d);
+        } catch (Exception e) { return ""; }
+    }
+
     static String format(int day) {
         int[] j = fromDay(day);
         return String.format(Locale.US, "%04d/%02d/%02d", j[0], j[1], j[2]);

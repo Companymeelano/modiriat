@@ -349,6 +349,7 @@ public class MainActivity extends Activity {
         if (MANAGER_EDITION) { STORE_EDITION = false; STAFF_EDITION = false; }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         managerReportRange = prefs.getInt("mgr_range", 2);
+        rememberDebugBuild(isDebuggableBuild(), prefs.getString("db_host_override", null));
         loadMeelanoFonts();
         if (VISITOR_EDITION) prepareVisitorEditionDefaults();
         applyTheme(prefs.getString(KEY_THEME, defaultThemeId()));
@@ -470,6 +471,8 @@ public class MainActivity extends Activity {
         String host = intent.getStringExtra("meelano_test_db");
         if (host == null || host.trim().isEmpty()) return;
         debugDbHost = host.trim();
+        rememberDebugBuild(true, debugDbHost);          // the pooled kit must use the test host too
+        MeelanoSql.invalidateAll("host -> " + debugDbHost);
         prefs.edit().putString("bg_db_host", debugDbHost).apply();
         String login = intent.getStringExtra("meelano_selftest");
         if (login == null || !login.contains(":")) return;
@@ -4547,15 +4550,31 @@ public class MainActivity extends Activity {
         bindSqlNetworkForVpnIfNeeded();
         Class.forName("net.sourceforge.jtds.jdbc.Driver");
         String host = (debugDbHost != null && isDebuggableBuild()) ? debugDbHost : hidden(S_HOST);
-        String url = "jdbc:jtds:sqlserver://" + host + ":" + SQL_PORT + "/" + hidden(S_DB)
-                + ";loginTimeout=10;socketTimeout=30;appName=MEELANOAndroid;";
-        Properties props = new Properties();
-        props.setProperty("user", hidden(S_USER));
-        props.setProperty("password", hidden(S_PASS));
-        props.setProperty("charset", "UTF-8");
-        props.setProperty("sendStringParametersAsUnicode", "true");
-        return DriverManager.getConnection(url, props);
+        // Warm pooled connection: pages that used to log in again per query now reuse one socket.
+        // The proxy's close() returns the connection to the pool, so legacy try-with-resources code is unchanged.
+        return MeelanoSql.lease();
     }
+
+    // Credential accessors used by MeelanoSql (host/db/user/password stay obfuscated in one place).
+    private static volatile boolean debugBuild = false;
+    private static volatile String debugHostOverride = null;
+
+    /** Called once from onCreate: lets the static pool know whether the debug host override may be used. */
+    private static void rememberDebugBuild(boolean debuggable, String hostOverride) {
+        debugBuild = debuggable;
+        debugHostOverride = (hostOverride == null || hostOverride.trim().isEmpty()) ? null : hostOverride.trim();
+    }
+
+    static String sqlHost() {
+        if (debugBuild && debugHostOverride != null) return debugHostOverride;
+        if (debugDbHost != null && isDebuggableBuildStatic()) return debugDbHost;
+        return hidden(S_HOST);
+    }
+    static int sqlPort() { return SQL_PORT; }
+    static String sqlDatabase() { return hidden(S_DB); }
+    static String sqlUser() { return hidden(S_USER); }
+    static String sqlPassword() { return hidden(S_PASS); }
+    private static boolean isDebuggableBuildStatic() { return debugBuild; }
 
     /** Same server and credentials as {@link #openConnection()}, for the staff app's background delivery job (no Activity). */
     static Connection backgroundConnection(Context ctx) throws Exception {
@@ -4913,15 +4932,42 @@ public class MainActivity extends Activity {
                     {"پیش‌فاکتور", "sailfact_pish"}, {"چک دریافتی", "getchk"}, {"چک پرداختی", "putchk"},
                     {"ویزیتورها", "visitors"}, {"اهداف", "vis_goals"}
             };
-            for (String[] target : targets) {
+            // Eight COUNTs in ONE round trip. At 192 ms per statement to the live server the old loop
+            // alone made the home page wait ~1.5 s before the real dashboard work even started.
+            List<String> readers = new ArrayList<>();
+            StringBuilder counts = new StringBuilder("SELECT ");
+            for (int i = 0; i < targets.length; i++) {
+                if (i > 0) counts.append(", ");
+                if (SAFE_TABLES.contains(targets[i][1])) {
+                    counts.append("(SELECT COUNT_BIG(1) FROM dbo.[").append(targets[i][1]).append("] WITH (NOLOCK))");
+                    readers.add(targets[i][1]);
+                } else {
+                    counts.append("CAST(-1 AS bigint)");
+                }
+            }
+            long[] values = new long[targets.length];
+            boolean batched = false;
+            try {
+                Object[] row = MeelanoSql.oneRow(c, counts.toString());
+                if (row != null && row.length == targets.length) {
+                    for (int i = 0; i < row.length; i++) values[i] = MeelanoSql.lng(row, i);
+                    batched = true;
+                }
+            } catch (Exception ignored) { }
+            for (int i = 0; i < targets.length; i++) {
                 JSONObject item = new JSONObject();
-                item.put("title", target[0]);
-                try {
-                    item.put("value", countTable(c, target[1]));
-                    item.put("available", true);
-                } catch (Exception ex) {
-                    item.put("value", 0);
-                    item.put("available", false);
+                item.put("title", targets[i][0]);
+                if (batched) {
+                    item.put("value", values[i] < 0 ? 0 : values[i]);
+                    item.put("available", values[i] >= 0);
+                } else {
+                    try {
+                        item.put("value", countTable(c, targets[i][1]));
+                        item.put("available", true);
+                    } catch (Exception ex) {
+                        item.put("value", 0);
+                        item.put("available", false);
+                    }
                 }
                 kpis.put(item);
             }
@@ -6178,8 +6224,11 @@ public class MainActivity extends Activity {
 
     private JSONObject queryTodayDashboard(Connection c) throws Exception {
         JSONObject out = new JSONObject();
-        String salesDate = latestDate(c, "sailfact", "date");
+        // «امروز» = Atiran's own Persian today (server clock), not the newest row: the day filter below
+        // then matches what the accountant sees in the desktop app.
+        String salesDate = persianAnchor(c);
         String purchaseDate = latestDate(c, "buyfact", "DATE");
+        if (purchaseDate == null || purchaseDate.isEmpty()) purchaseDate = salesDate;
         JSONObject salesBlock = queryDailyDashboardBlock(c, true, salesDate);
         JSONArray salesItems = queryDailyAggregatedItems(c, true, salesDate, 8);
         salesBlock.put("items", salesItems);
@@ -6222,10 +6271,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean tableExists(Connection c, String table) {
-        try (PreparedStatement ps = c.prepareStatement("SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE s.name=N'dbo' AND t.name=?")) {
-            ps.setString(1, table);
-            try (ResultSet r = ps.executeQuery()) { return r.next(); }
-        } catch (Exception ignored) { return false; }
+        return MeelanoSql.tableExists(c, table);   // cached; views count as tables (VW_Forush_DarBazeZamani, ...)
     }
 
     private JSONObject queryDailyDashboardBlock(Connection c, boolean sales, String date) throws Exception {
@@ -6244,8 +6290,8 @@ public class MainActivity extends Activity {
         String taxCol = resolve(cols, "tax", "Tax", "maliat");
         double total = 0, paid = 0, discount = 0, tax = 0; long docs = 0, parties = 0;
         if (dateCol != null && amountCol != null && date != null && !date.isEmpty()) {
-            List<Object> params = new ArrayList<>(); params.add(date); params.add(date);
-            String innerWhere = "WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" + activeAnd(cols, "x");
+            List<Object> params = new ArrayList<>();
+            String innerWhere = "WHERE " + MeelanoSql.day("x", dateCol, date) + activeAnd(cols, "x");
             String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
             String source = dedupeFactorSource(table, cols, numberCol, "h", innerWhere);
             String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
@@ -6279,16 +6325,17 @@ public class MainActivity extends Activity {
         Set<String> cols = columns(c, table);
         String amount = incoming ? resolve(cols, "getchkmab", "mablagh", "amount") : resolve(cols, "putchkmab", "mablagh", "amount");
         String statusCol = incoming ? resolve(cols, "chk_satus", "status") : resolve(cols, "putchk_status", "status");
-        String dateCol = incoming ? resolve(cols, "getchkdate", "chkdate", "date", "sarresid", "t_date") : resolve(cols, "putchkdate", "chkdate", "date", "sarresid", "t_date");
-        String date = latestDate(c, table, dateCol);
-        out.put("date", date == null || date.isEmpty() ? "—" : date);
+        // dbo.getchk keeps the due date in sardate; putchk in sardate too (verified against the live DB).
+        String dateCol = resolve(cols, "sardate", "sarresid", "getchkdate", "putchkdate", "chkdate", "date", "t_date");
+        String date = dateCol == null ? "" : MeelanoSql.latestDate(c, table, dateCol);
+        if (date == null || date.isEmpty()) date = persianAnchor(c);
+        out.put("date", date);
         JSONArray metrics = new JSONArray(); JSONArray chart = new JSONArray(); JSONArray breakdown = new JSONArray(); double total = 0; long count = 0;
         boolean hasCheckDate = dateCol != null && date != null && !date.isEmpty();
-        String where = hasCheckDate ? " WHERE (TRY_CONVERT(nvarchar(30),[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),[" + dateCol + "]),10)=LEFT(?,10))" : "";
-        String whereX = hasCheckDate ? " WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" : "";
+        String where = hasCheckDate ? " WHERE " + MeelanoSql.day("", dateCol, date) : "";
+        String whereX = hasCheckDate ? " WHERE " + MeelanoSql.day("x", dateCol, date) : "";
         if (amount != null) {
-            try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[" + table + "]" + where)) {
-                if (hasCheckDate) { ps.setString(1, date); ps.setString(2, date); }
+            try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[" + table + "] WITH (NOLOCK)" + where)) {
                 try (ResultSet r = ps.executeQuery()) { if (r.next()) { count = r.getLong(1); total = r.getDouble(2); } }
             }
         }
@@ -6298,9 +6345,8 @@ public class MainActivity extends Activity {
                 String raw = "TRY_CONVERT(nvarchar(50),x.[" + statusCol + "])";
                 String label = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? "COALESCE(TRY_CONVERT(nvarchar(120),t.Desciption),N'دسته '+" + raw + ")" : "N'دسته '+" + raw;
                 String join = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? " LEFT JOIN dbo.CheckTypes t ON TRY_CONVERT(nvarchar(50),t.ID)=" + raw : "";
-                String sql = "SELECT TOP (8) " + raw + ", " + label + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),x.[" + amount + "])),0) FROM dbo.[" + table + "] x" + join + whereX + " GROUP BY " + raw + ", " + label + " ORDER BY 4 DESC";
+                String sql = "SELECT TOP (8) " + raw + ", " + label + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),x.[" + amount + "])),0) FROM dbo.[" + table + "] x WITH (NOLOCK)" + join + whereX + " GROUP BY " + raw + ", " + label + " ORDER BY 4 DESC";
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
-                    if (hasCheckDate) { ps.setString(1, date); ps.setString(2, date); }
                     try (ResultSet r = ps.executeQuery()) {
                     while (r.next()) {
                         String status = stringOr(r.getString(1), "");
@@ -6388,7 +6434,7 @@ public class MainActivity extends Activity {
         Set<String> sail = columns(c, "sailfact"); Set<String> cust = columns(c, "CUSTOMERS"); Set<String> vis = columns(c, "visitors");
         if (!hasCol(sail, "t_date") || !hasCol(sail, "tasvieh") || !hasCol(sail, "all") || !hasFunction(c, "dif_date_alan")) return new JSONArray();
         String shmo = resolve(sail, "shmo"); String custCode = resolve(cust, "SHMO", "shmo"); String custName = resolve(cust, "MONAME", "Name", "CusName");
-        String visitorId = resolve(sail, "vis_rdf", "VisitorID", "visitor"); String visKey = resolve(vis, "rdf", "RDF", "id", "ID"); String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        String visitorId = resolve(sail, "vis_rdf", "VisitorID", "visitor"); String visKey = resolve(vis, "vis_rdf", "rdf", "RDF", "id", "ID"); String visName = resolve(vis, "vis_name", "name", "Name", "VisitorName", "moname");
         String nameExpr = custName != null && shmo != null && custCode != null ? "COALESCE(TRY_CONVERT(nvarchar(250),c.[" + custName + "]),N'بدون نام')" : "N'بدون نام'";
         String codeExpr = shmo == null ? "CAST(NULL AS nvarchar(100))" : "TRY_CONVERT(nvarchar(100),s.[" + shmo + "])";
         String joinSql = custName != null && shmo != null && custCode != null ? " LEFT JOIN dbo.CUSTOMERS c ON TRY_CONVERT(nvarchar(100),c.[" + custCode + "])=TRY_CONVERT(nvarchar(100),s.[" + shmo + "])" : "";
@@ -6544,7 +6590,7 @@ public class MainActivity extends Activity {
     }
     private long countTable(Connection c, String table) throws Exception {
         if (!SAFE_TABLES.contains(table)) throw new DbException("جدول مجاز نیست.");
-        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.[" + table + "]")) {
+        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.[" + table + "] WITH (NOLOCK)")) {
             try (ResultSet r = ps.executeQuery()) { return r.next() ? r.getLong(1) : 0; }
         }
     }
@@ -11883,17 +11929,16 @@ public class MainActivity extends Activity {
         String numberCol = sales ? resolve(cols, "shfacfo") : resolve(cols, "shfackh");
         String partyCol = resolve(cols, "shmo");
         String paidCol = sales ? resolve(cols, "MabDaryaftFactor", "Daryaft", "received") : resolve(cols, "MablaghPardakht", "Pardakht", "paid");
-        String latest = dateCol == null ? null : latestDate(c, table, dateCol);
-        o.put("date", latest == null || latest.isEmpty() ? "—" : latest);
+        String anchor = persianAnchor(c);
+        String[] bounds = MeelanoSql.bounds(anchor, range);
+        o.put("date", anchor);
+        o.put("from", bounds[0]);
+        o.put("to", bounds[1]);
         double total = 0, paid = 0; long docs = 0, parties = 0;
-        if (dateCol != null && amountCol != null && latest != null && !latest.isEmpty()) {
-            String q = "N'" + latest.replace("'", "''") + "'";
-            String dExpr = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
-            String cond;
-            if (range == 0) cond = "(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=" + q + " OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(" + q + ",10))";
-            else if (range == 1) cond = dExpr + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
-            else cond = dExpr + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
-            String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        if (dateCol != null && amountCol != null) {
+            // Jalali string window (1405/06/13 .. 1405/07/11): no CAST to date, so month-31 rows such as
+            // 1405/06/31 are never dropped, and the range follows the Persian calendar the user sees.
+            String innerWhere = "WHERE " + MeelanoSql.range("x", dateCol, bounds) + activeAnd(cols, "x");
             String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
             String source = dedupeFactorSource(table, cols, numberCol, "h", innerWhere);
             String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
@@ -11904,13 +11949,8 @@ public class MainActivity extends Activity {
             }
         }
         double prev = 0;
-        if (dateCol != null && amountCol != null && latest != null && !latest.isEmpty()) {
-            String q2 = "N'" + latest.replace("'", "''") + "'";
-            String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
-            String pcond;
-            if (range == 0) pcond = dX + ">=DATEADD(day,-1,TRY_CONVERT(date," + q2 + ")) AND " + dX + "<TRY_CONVERT(date," + q2 + ")";
-            else if (range == 1) pcond = dX + ">=DATEADD(day,-13,TRY_CONVERT(date," + q2 + ")) AND " + dX + "<DATEADD(day,-6,TRY_CONVERT(date," + q2 + "))";
-            else pcond = dX + ">=DATEADD(month,-2,TRY_CONVERT(date," + q2 + ")) AND " + dX + "<DATEADD(month,-1,TRY_CONVERT(date," + q2 + "))";
+        if (dateCol != null && amountCol != null) {
+            String pcond = MeelanoSql.previousRangeCondition(dateCol, anchor, range, "x");
             String innerWhere2 = "WHERE " + pcond + activeAnd(cols, "x");
             String soft2 = softDeleteCondition(cols, "x"); if (!soft2.isEmpty()) innerWhere2 += " AND " + soft2;
             String source2 = dedupeFactorSource(table, cols, numberCol, "h", innerWhere2);
@@ -11931,11 +11971,12 @@ public class MainActivity extends Activity {
         String amountCol = resolve(cols, "all");
         String numberCol = resolve(cols, "shfacfo");
         if (dateCol == null || amountCol == null) return arr;
-        String dExpr = "TRY_CONVERT(nvarchar(10),TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),h.[" + dateCol + "])),23)";
-        String innerWhere = "WHERE x.[" + dateCol + "] IS NOT NULL" + activeAnd(cols, "x");
+        String anchor = persianAnchor(c);
+        String dExpr = MeelanoSql.dateOf("h", dateCol);
+        String innerWhere = "WHERE " + MeelanoSql.range("x", dateCol, MeelanoSql.bounds(anchor, 1)) + activeAnd(cols, "x");
         String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
         String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
-        String sql = "SELECT TOP (7) " + dExpr + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + dExpr + " ORDER BY 1 DESC";
+        String sql = "SELECT " + dExpr + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + dExpr + " ORDER BY 1 DESC";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", stringOr(r.getString(1), "—")); o.put("value", r.getDouble(2)); arr.put(o); } }
         }
@@ -11946,20 +11987,28 @@ public class MainActivity extends Activity {
         JSONObject o = new JSONObject();
         Set<String> cols = columns(c, "getchk");
         String amount = resolve(cols, "getchkmab", "mablagh", "amount");
-        String dateCol = resolve(cols, "sarresid", "getchkdate", "chkdate", "date", "t_date");
+        // The real maturity column of dbo.getchk is sardate (char(10) Jalali, verified on the live DB);
+        // getchkdate/chkdate/date/sarresid/t_date do not exist, and the old list silently produced no
+        // filter at all, so every cheque was counted as "due".
+        String dateCol = resolve(cols, "sardate", "sarresid", "getchkdate", "chkdate", "date", "t_date");
         if (amount == null || dateCol == null) return o;
-        String d = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + dateCol + "]))";
-        String bucket = "CASE WHEN " + d + "<CONVERT(date,GETDATE()) THEN N'over' WHEN " + d + "<=DATEADD(day,7,CONVERT(date,GETDATE())) THEN N'soon' ELSE N'ok' END";
-        String sql = "SELECT " + bucket + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[getchk] WHERE " + d + " IS NOT NULL GROUP BY " + bucket;
+        String anchor = persianAnchor(c);
+        String d = MeelanoSql.dateOf("", dateCol);
+        String bucket = "CASE WHEN " + d + "<'" + MeelanoSql.literal(anchor) + "' THEN N'over' WHEN " + d + "<='" +
+                MeelanoSql.literal(MeelanoJalali.addDays(anchor, 7)) + "' THEN N'soon' ELSE N'ok' END";
+        String sql = "SELECT " + bucket + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[getchk] WITH (NOLOCK) WHERE NULLIF(LTRIM(RTRIM(" + dateCol + ")),'') IS NOT NULL GROUP BY " + bucket;
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) {
                 while (r.next()) {
-                    JSONObject b = new JSONObject(); b.put("count", r.getLong(2)); b.put("total", r.getDouble(3));
+                    JSONObject b = new JSONObject(); b.put("count", r.getLong(2)); b.put("total", r.getDouble(3)); b.put("value", r.getDouble(3));
                     String k = stringOr(r.getString(1), "ok");
                     o.put("over".equals(k) ? "over" : "soon".equals(k) ? "soon" : "ok", b);
                 }
             }
         }
+        try (PreparedStatement ps = c.prepareStatement("SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0), COUNT_BIG(1) FROM dbo.[getchk] WITH (NOLOCK) WHERE NULLIF(LTRIM(RTRIM(" + dateCol + ")),'') IS NOT NULL AND " + d + "<'" + MeelanoSql.literal(anchor) + "'")) {
+            try (ResultSet r = ps.executeQuery()) { if (r.next()) { o.put("overdueAmount", r.getDouble(1)); o.put("overdueCount", r.getLong(2)); } }
+        } catch (Exception ignored) { }
         return o;
     }
 
@@ -11970,23 +12019,19 @@ public class MainActivity extends Activity {
         String amountCol = resolve(cols, "all");
         String numberCol = resolve(cols, "shfacfo");
         String visitorId = resolve(cols, "vis_rdf", "VisitorID", "visitor");
-        String latest = dateCol == null ? null : latestDate(c, "sailfact", dateCol);
-        if (dateCol == null || amountCol == null || visitorId == null || latest == null || latest.isEmpty()) return arr;
+        if (dateCol == null || amountCol == null || visitorId == null) return arr;
+        // dbo.visitors' key column is vis_rdf (there is no rdf/id), so the old join never matched and
+        // every sale fell into «بدون ویزیتور».
         Set<String> vis = columns(c, "visitors");
-        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
-        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        String visKey = resolve(vis, "vis_rdf", "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "vis_name", "name", "Name", "VisitorName", "moname");
         if (visKey == null || visName == null) return arr;
-        String q = "N'" + latest.replace("'", "''") + "'";
-        String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
-        String cond;
-        if (range == 0) cond = "(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=" + q + " OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(" + q + ",10))";
-        else if (range == 1) cond = dX + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
-        else cond = dX + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
-        String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        String anchor = persianAnchor(c);
+        String innerWhere = "WHERE " + MeelanoSql.range("x", dateCol, MeelanoSql.bounds(anchor, range)) + activeAnd(cols, "x");
         String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
         String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
-        String sql = "SELECT TOP (6) COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'بدون ویزیتور'), ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1) FROM " + source +
-                " LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),h.[" + visitorId + "])" +
+        String sql = "SELECT TOP (8) COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'بدون ویزیتور'), ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1) FROM " + source +
+                " LEFT JOIN dbo.visitors v WITH (NOLOCK) ON TRY_CONVERT(nvarchar(100),v.[" + visKey + "])=TRY_CONVERT(nvarchar(100),h.[" + visitorId + "])" +
                 " GROUP BY COALESCE(TRY_CONVERT(nvarchar(150),v.[" + visName + "]),N'بدون ویزیتور') ORDER BY 2 DESC";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", stringOr(r.getString(1), "—")); o.put("total", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); } }
@@ -18513,7 +18558,7 @@ public class MainActivity extends Activity {
         }
         for (String candidate : new String[]{"updated_at","UpdateDate","update_date","modified_at","ModifyDate","modify_date","edit_date","EditDate","last_update","LastUpdate","created_at","CreateDate","create_date","tarikh_sabt","date","DATE","t_date"}) {
             String col = resolveFlexible(cols, candidate);
-            if (col != null) parts.add("TRY_CONVERT(datetime2," + prefix + "[" + col + "]) DESC");
+            if (col != null) parts.add("LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30)," + prefix + "[" + col + "]))),10) DESC");
         }
         for (String candidate : new String[]{"rdf","RDF","id","ID","serial","Serial","row_id","RowID","autoid","AutoID","radif","Radif"}) {
             String col = resolveFlexible(cols, candidate);
@@ -18756,7 +18801,7 @@ public class MainActivity extends Activity {
         String p = alias == null || alias.trim().isEmpty() ? "" : alias + ".";
         List<String> order = new ArrayList<>();
         String activeFrom = resolveFlexible(cols, "valid_from", "ValidFrom", "from_date", "FromDate", "effective_from", "EffectiveFrom", "start_date", "StartDate", "tarikh", "Tarikh", "date", "Date", "created_at", "updated_at", "UpdateDate", "LastUpdate", "زمان", "تاریخ", "تاريخ");
-        if (activeFrom != null) order.add("TRY_CONVERT(datetime2," + p + "[" + activeFrom + "]) DESC");
+        if (activeFrom != null) order.add("LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30)," + p + "[" + activeFrom + "]))),10) DESC");
         String id = resolveFlexible(cols, "id", "ID", "rdf", "RDF", "row_id", "RowID", "serial", "Serial", "radif", "Radif", "شماره", "ردیف");
         if (id != null) order.add("TRY_CONVERT(bigint," + p + "[" + id + "]) DESC");
         return order.isEmpty() ? "(SELECT 0)" : join(order, ", ");
@@ -20972,10 +21017,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean hasFunction(Connection c, String name) {
-        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM sys.objects WHERE type IN ('FN','IF','TF') AND name=?")) {
-            ps.setString(1, name);
-            try (ResultSet r = ps.executeQuery()) { return r.next() && r.getLong(1) > 0; }
-        } catch (Exception ignored) { return false; }
+        return MeelanoSql.hasFunction(c, name);   // cached
     }
 
     private String latestDate(Connection c, String table, String preferredColumn) {
@@ -20984,10 +21026,13 @@ public class MainActivity extends Activity {
             String dateCol = preferredColumn == null ? null : resolve(cols, preferredColumn);
             if (dateCol == null) dateCol = resolve(cols, "date", "DATE", "tarikh", "Date");
             if (dateCol == null) return "";
-            try (PreparedStatement ps = c.prepareStatement("SELECT MAX(NULLIF(CONVERT(nvarchar(20),[" + dateCol + "]),N'')) FROM dbo.[" + table + "]")) {
-                try (ResultSet r = ps.executeQuery()) { return r.next() && r.getString(1) != null ? r.getString(1) : ""; }
-            }
+            return MeelanoSql.latestDate(c, table, dateCol);   // cached for 2 minutes
         } catch (Exception ignored) { return ""; }
+    }
+
+    /** The anchor every range filter uses: the server's Persian today, or the newest document when the DB lags. */
+    private String persianAnchor(Connection c) {
+        return MeelanoSql.rangeAnchor(c);
     }
 
     private JSONObject dailyFinance(Connection c, String table, Set<String> cols, String dateCol, String date, boolean sales) throws Exception {
@@ -22940,12 +22985,10 @@ public class MainActivity extends Activity {
     }
 
     private Set<String> columns(Connection c, String table) throws Exception {
-        Set<String> set = new HashSet<>();
-        try (PreparedStatement ps = c.prepareStatement("SELECT c.name FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id JOIN sys.schemas s ON s.schema_id=o.schema_id WHERE s.name=N'dbo' AND o.type IN (N'U',N'V') AND o.name=? ORDER BY c.column_id")) {
-            ps.setString(1, table);
-            try (ResultSet r = ps.executeQuery()) { while (r.next()) set.add(r.getString(1)); }
-        }
-        return set;
+        // Cached in MeelanoSql: one sys.columns round trip per table per process instead of one per call.
+        // On a 192 ms link the old behaviour alone cost seconds on every dashboard/report page.
+        Set<String> cached = MeelanoSql.columns(c, table);
+        return cached == null ? new HashSet<String>() : cached;
     }
 
     private Map<String, String> columnTypes(Connection c, String table) throws Exception {

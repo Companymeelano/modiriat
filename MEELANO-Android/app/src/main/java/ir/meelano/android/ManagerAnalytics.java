@@ -29,12 +29,10 @@ final class ManagerAnalytics {
 
     // ============================ metadata kit (same validation semantics as MainActivity) ============================
     static Set<String> columns(Connection c, String table) throws Exception {
-        Set<String> set = new HashSet<>();
-        try (PreparedStatement ps = c.prepareStatement("SELECT c.name FROM sys.columns c JOIN sys.objects o ON o.object_id=c.object_id JOIN sys.schemas s ON s.schema_id=o.schema_id WHERE s.name=N'dbo' AND o.type IN (N'U',N'V') AND o.name=? ORDER BY c.column_id")) {
-            ps.setString(1, table);
-            try (ResultSet r = ps.executeQuery()) { while (r.next()) set.add(r.getString(1)); }
-        }
-        return set;
+        // One sys.columns round trip per table per process (MeelanoSql cache). The management pages used
+        // to spend 30+ round trips on metadata alone before the first business query even started.
+        Set<String> cached = MeelanoSql.columns(c, table);
+        return cached == null ? new HashSet<String>() : cached;
     }
 
     static String resolve(Set<String> cols, String... candidates) {
@@ -140,7 +138,7 @@ final class ManagerAnalytics {
         }
         for (String candidate : new String[]{"updated_at", "UpdateDate", "modified_at", "ModifyDate", "last_update", "LastUpdate", "created_at", "CreateDate", "tarikh_sabt", "date", "DATE", "t_date"}) {
             String col = resolveFlexible(cols, candidate);
-            if (col != null) parts.add("TRY_CONVERT(datetime2," + prefix + "[" + col + "]) DESC");
+            if (col != null) parts.add("LEFT(LTRIM(RTRIM(TRY_CONVERT(nvarchar(30)," + prefix + "[" + col + "]))),10) DESC");
         }
         for (String candidate : new String[]{"rdf", "RDF", "id", "ID", "serial", "Serial", "row_id", "RowID", "autoid", "AutoID", "radif", "Radif"}) {
             String col = resolveFlexible(cols, candidate);
@@ -159,17 +157,11 @@ final class ManagerAnalytics {
     }
 
     static boolean tableExists(Connection c, String table) {
-        try (PreparedStatement ps = c.prepareStatement("SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id WHERE s.name=N'dbo' AND t.name=?")) {
-            ps.setString(1, table);
-            try (ResultSet r = ps.executeQuery()) { return r.next(); }
-        } catch (Exception ignored) { return false; }
+        return MeelanoSql.tableExists(c, table);
     }
 
     private static boolean hasFunction(Connection c, String name) {
-        try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM sys.objects WHERE type IN ('FN','IF','TF') AND name=?")) {
-            ps.setString(1, name);
-            try (ResultSet r = ps.executeQuery()) { return r.next() && r.getLong(1) > 0; }
-        } catch (Exception ignored) { return false; }
+        return MeelanoSql.hasFunction(c, name);
     }
 
     static String latestDate(Connection c, String table, String preferredColumn) {
@@ -178,25 +170,30 @@ final class ManagerAnalytics {
             String dateCol = preferredColumn == null ? null : resolve(cols, preferredColumn);
             if (dateCol == null) dateCol = resolve(cols, "date", "DATE", "tarikh", "Date");
             if (dateCol == null) return "";
-            try (PreparedStatement ps = c.prepareStatement("SELECT MAX(NULLIF(CONVERT(nvarchar(20),[" + dateCol + "]),N'')) FROM dbo.[" + table + "]")) {
-                try (ResultSet r = ps.executeQuery()) { return r.next() && r.getString(1) != null ? r.getString(1) : ""; }
-            }
+            return MeelanoSql.latestDate(c, table, dateCol);
         } catch (Exception ignored) { return ""; }
+    }
+
+    /** The anchor of every range filter: Atiran's own Persian today (server clock), cached. */
+    static String anchor(Connection c) {
+        return MeelanoSql.rangeAnchor(c);
     }
 
     private static String quote(String s) { return "N'" + s.replace("'", "''") + "'"; }
 
     // ============================ range condition (single source of truth for date filters) ============================
     private static String rangeCondition(Set<String> cols, String dateCol, String latest, int range, String alias) {
-        String q = quote(latest);
-        String p = alias + ".[" + dateCol + "]";
-        String conv = "TRY_CONVERT(nvarchar(30)," + p + ")";
-        String dExpr = "TRY_CONVERT(date," + conv + ")";
-        if (range == 0) return "(" + conv + "=" + q + " OR LEFT(" + conv + ",10)=LEFT(" + q + ",10))";
-        if (range == 1) return dExpr + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
-        if (range == 2) return dExpr + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
-        if (range == 3) return dExpr + ">=DATEADD(month,-12,TRY_CONVERT(date," + q + "))";
-        return "(" + conv + "=" + q + " OR LEFT(" + conv + ",10)=LEFT(" + q + ",10))";
+        // Jalali string window. The previous implementation cast the Persian date to a SQL date and did
+        // DATEADD maths on it: rows whose Jalali day is impossible in the Gregorian calendar
+        // (1405/06/31 ...) became NULL and silently vanished from every report, and the "30 day" window
+        // was really a Gregorian month. Comparing zero-padded "1405/06/13" strings keeps every row and
+        // follows the Persian calendar exactly.
+        return MeelanoSql.rangeCondition(dateCol, latest, range <= 0 ? 2 : range, alias);
+    }
+
+    /** The window before the current one (for «نسبت به بازهٔ قبل»). */
+    private static String previousRangeCondition(String dateCol, String latest, int range, String alias) {
+        return MeelanoSql.previousRangeCondition(dateCol, latest, range <= 0 ? 2 : range, alias);
     }
 
     // ============================ business queries ============================
@@ -210,7 +207,7 @@ final class ManagerAnalytics {
         String numberCol = sales ? resolve(cols, "shfacfo") : resolve(cols, "shfackh");
         String partyCol = resolve(cols, "shmo");
         String paidCol = sales ? resolve(cols, "MabDaryaftFactor", "Daryaft", "received") : resolve(cols, "MablaghPardakht", "Pardakht", "paid");
-        String latest = dateCol == null ? "" : latestDate(c, table, dateCol);
+        String latest = anchor(c);   // Persian today from the server clock, not the newest row
         o.put("date", latest.isEmpty() ? "—" : latest);
         double total = 0, paid = 0, prev = 0; long docs = 0, parties = 0;
         if (dateCol != null && amountCol != null && !latest.isEmpty()) {
@@ -223,12 +220,7 @@ final class ManagerAnalytics {
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 try (ResultSet r = ps.executeQuery()) { if (r.next()) { total = r.getDouble(1); docs = r.getLong(2); parties = r.getLong(3); paid = r.getDouble(4); } }
             }
-            String q = quote(latest);
-            String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
-            String pcond;
-            if (range == 0) pcond = dX + ">=DATEADD(day,-1,TRY_CONVERT(date," + q + ")) AND " + dX + "<TRY_CONVERT(date," + q + ")";
-            else if (range == 1) pcond = dX + ">=DATEADD(day,-13,TRY_CONVERT(date," + q + ")) AND " + dX + "<DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
-            else pcond = dX + ">=DATEADD(month,-2,TRY_CONVERT(date," + q + ")) AND " + dX + "<DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
+            String pcond = previousRangeCondition(dateCol, latest, range, "x");
             String inner2 = "WHERE " + pcond + activeAnd(cols, "x");
             String soft2 = softDeleteCondition(cols, "x"); if (!soft2.isEmpty()) inner2 += " AND " + soft2;
             String source2 = dedupeFactorSource(table, cols, numberCol, "h", inner2);
@@ -248,7 +240,7 @@ final class ManagerAnalytics {
         String amountCol = resolve(cols, "all");
         String numberCol = resolve(cols, "shfacfo");
         if (dateCol == null || amountCol == null) return arr;
-        String dExpr = "TRY_CONVERT(nvarchar(10),TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),h.[" + dateCol + "])),23)";
+        String dExpr = MeelanoSql.dateOf("h", dateCol);
         String inner = "WHERE x.[" + dateCol + "] IS NOT NULL" + activeAnd(cols, "x");
         String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) inner += " AND " + soft;
         String source = dedupeFactorSource("sailfact", cols, numberCol, "h", inner);
@@ -322,7 +314,7 @@ final class ManagerAnalytics {
         String cShmo = resolve(cust, "SHMO", "shmo");
         long active = 0, never = 0, inactive = 0;
         if (sShmo != null && cShmo != null && sDate != null) {
-            String latest = latestDate(c, "sailfact", "date");
+            String latest = anchor(c);
             if (!latest.isEmpty()) {
                 String cond = rangeCondition(sail, sDate, latest, range <= 0 ? 2 : range, "s");
                 try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.CUSTOMERS c WHERE EXISTS (SELECT 1 FROM dbo.sailfact s WHERE TRY_CONVERT(nvarchar(100),s.[" + sShmo + "])=TRY_CONVERT(nvarchar(100),c.[" + cShmo + "]) AND " + cond + ")")) {
@@ -331,7 +323,7 @@ final class ManagerAnalytics {
                 try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.CUSTOMERS c WHERE NOT EXISTS (SELECT 1 FROM dbo.sailfact s WHERE TRY_CONVERT(nvarchar(100),s.[" + sShmo + "])=TRY_CONVERT(nvarchar(100),c.[" + cShmo + "]))")) {
                     try (ResultSet r = ps.executeQuery()) { if (r.next()) never = r.getLong(1); }
                 }
-                try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.CUSTOMERS c WHERE EXISTS (SELECT 1 FROM dbo.sailfact s WHERE TRY_CONVERT(nvarchar(100),s.[" + sShmo + "])=TRY_CONVERT(nvarchar(100),c.[" + cShmo + "])) AND NOT EXISTS (SELECT 1 FROM dbo.sailfact s WHERE TRY_CONVERT(nvarchar(100),s.[" + sShmo + "])=TRY_CONVERT(nvarchar(100),c.[" + cShmo + "]) AND TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),s.[" + sDate + "]))>=DATEADD(day,-60,CONVERT(date,GETDATE())))")) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1) FROM dbo.CUSTOMERS c WHERE EXISTS (SELECT 1 FROM dbo.sailfact s WHERE TRY_CONVERT(nvarchar(100),s.[" + sShmo + "])=TRY_CONVERT(nvarchar(100),c.[" + cShmo + "])) AND NOT EXISTS (SELECT 1 FROM dbo.sailfact s WHERE TRY_CONVERT(nvarchar(100),s.[" + sShmo + "])=TRY_CONVERT(nvarchar(100),c.[" + cShmo + "]) AND " + MeelanoSql.daysBack(sDate, anchor(c), 60, "s") + ")")) {
                     try (ResultSet r = ps.executeQuery()) { if (r.next()) inactive = r.getLong(1); }
                 }
             }
@@ -350,10 +342,10 @@ final class ManagerAnalytics {
         String visitorId = resolve(sail, "vis_rdf", "VisitorID", "visitor");
         if (visitorId == null || amountCol == null) return arr;
         Set<String> vis = columns(c, "visitors");
-        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
-        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        String visKey = resolve(vis, "vis_rdf", "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "vis_name", "name", "Name", "VisitorName", "moname");
         if (visKey == null || visName == null) return arr;
-        String latest = dateCol == null ? "" : latestDate(c, "sailfact", "date");
+        String latest = dateCol == null ? "" : anchor(c);
         String cond = dateCol != null && !latest.isEmpty() ? rangeCondition(sail, dateCol, latest, range <= 0 ? 2 : range, "x") : "1=1";
         String inner = "WHERE " + cond + activeAnd(sail, "x");
         String soft = softDeleteCondition(sail, "x"); if (!soft.isEmpty()) inner += " AND " + soft;
@@ -379,7 +371,7 @@ final class ManagerAnalytics {
         String dNumber = resolveFlexible(d, "shfacfo", "shfac", "number");
         if (key != null && lineAmount != null && dNumber != null) {
             Set<String> sail = columns(c, "sailfact");
-            String latest = latestDate(c, "sailfact", "date");
+            String latest = anchor(c);
             String sDate = resolve(sail, "date");
             String sNumber = resolve(sail, "shfacfo");
             if (!latest.isEmpty() && sDate != null && sNumber != null) {
@@ -403,11 +395,13 @@ final class ManagerAnalytics {
         JSONObject o = new JSONObject();
         Set<String> cols = columns(c, "getchk");
         String amount = resolve(cols, "getchkmab", "mablagh", "amount");
-        String dateCol = resolve(cols, "sarresid", "getchkdate", "chkdate", "date", "t_date");
+        String dateCol = resolve(cols, "sardate", "sarresid", "getchkdate", "chkdate", "date", "t_date");
         if (amount == null || dateCol == null) return o;
-        String dd = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + dateCol + "]))";
-        String bucket = "CASE WHEN " + dd + "<CONVERT(date,GETDATE()) THEN N'over' WHEN " + dd + "<=DATEADD(day,7,CONVERT(date,GETDATE())) THEN N'soon' ELSE N'ok' END";
-        String sql = "SELECT " + bucket + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[getchk] WHERE " + dd + " IS NOT NULL GROUP BY " + bucket;
+        // Jalali buckets: over = due before Atiran's today, soon = due within a week, ok = later.
+        String anchor = anchor(c);
+        String dd = MeelanoSql.dateOf("", dateCol);
+        String bucket = "CASE WHEN " + dd + "<'" + MeelanoSql.literal(anchor) + "' THEN N'over' WHEN " + dd + "<='" + MeelanoSql.literal(MeelanoJalali.addDays(anchor, 7)) + "' THEN N'soon' ELSE N'ok' END";
+        String sql = "SELECT " + bucket + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[getchk] WITH (NOLOCK) WHERE NULLIF(LTRIM(RTRIM([" + dateCol + "])),'') IS NOT NULL GROUP BY " + bucket;
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) {
                 while (r.next()) {
@@ -428,16 +422,16 @@ final class ManagerAnalytics {
         String sNum = resolve(sail, "shfacfo");
         String sAll = resolve(sail, "all");
         if (sDate != null && sAll != null) {
-            String sql = "SELECT TOP (5) TRY_CONVERT(nvarchar(20),[" + sDate + "]), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),[" + sNum + "])") + ", " + sqlNumberExpr(null, sAll, "decimal(19,2)") + " FROM dbo.sailfact ORDER BY TRY_CONVERT(datetime2,TRY_CONVERT(nvarchar(30),[" + sDate + "])) DESC";
+            String sql = "SELECT TOP (5) LEFT(LTRIM(RTRIM(CONVERT(nvarchar(30),[" + sDate + "]))),10), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),[" + sNum + "])") + ", " + sqlNumberExpr(null, sAll, "decimal(19,2)") + " FROM dbo.sailfact WITH (NOLOCK) ORDER BY LEFT(LTRIM(RTRIM([" + sDate + "])),10) DESC";
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("type", "sale"); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("number", r.getString(2) == null ? "" : r.getString(2)); o.put("amount", r.getDouble(3)); arr.put(o); } }
             }
         }
         Set<String> gc = columns(c, "getchk");
         String gAmt = resolve(gc, "getchkmab", "mablagh", "amount");
-        String gDate = resolve(gc, "getchkdate", "chkdate", "date");
+        String gDate = resolve(gc, "sardate", "getchkdate", "chkdate", "date");
         if (gAmt != null && gDate != null) {
-            try (PreparedStatement ps = c.prepareStatement("SELECT TOP (3) TRY_CONVERT(nvarchar(20),[" + gDate + "]), TRY_CONVERT(decimal(19,2),[" + gAmt + "]) FROM dbo.getchk ORDER BY TRY_CONVERT(datetime2,TRY_CONVERT(nvarchar(30),[" + gDate + "])) DESC")) {
+            try (PreparedStatement ps = c.prepareStatement("SELECT TOP (3) LEFT(LTRIM(RTRIM(CONVERT(nvarchar(30),[" + gDate + "]))),10), TRY_CONVERT(decimal(19,2),[" + gAmt + "]) FROM dbo.getchk WITH (NOLOCK) ORDER BY LEFT(LTRIM(RTRIM([" + gDate + "])),10) DESC")) {
                 try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("type", "check"); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("amount", r.getDouble(2)); arr.put(o); } }
             }
         }
@@ -482,7 +476,7 @@ final class ManagerAnalytics {
             if (sDate != null && sAll != null) {
                 String joinSql = cName != null && sShmo != null && cShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),[" + sShmo + "])" : "";
                 String nameExpr = cName != null && sShmo != null && cShmo != null ? "COALESCE(TRY_CONVERT(nvarchar(250),cu.[" + cName + "]),N'بدون نام')" : "N'بدون نام'";
-                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) TRY_CONVERT(nvarchar(20),[" + sDate + "]), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),[" + sNum + "])") + ", " + sqlNumberExpr(null, sAll, "decimal(19,2)") + ", " + nameExpr + " FROM dbo.sailfact" + joinSql + " ORDER BY TRY_CONVERT(datetime2,TRY_CONVERT(nvarchar(30),[" + sDate + "])) DESC")) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) LEFT(LTRIM(RTRIM([" + sDate + "])),10), " + (sNum == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),[" + sNum + "])") + ", " + sqlNumberExpr(null, sAll, "decimal(19,2)") + ", " + nameExpr + " FROM dbo.sailfact WITH (NOLOCK)" + joinSql + " ORDER BY LEFT(LTRIM(RTRIM([" + sDate + "])),10) DESC")) {
                     try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("number", r.getString(2) == null ? "" : r.getString(2)); o.put("amount", r.getDouble(3)); o.put("party", r.getString(4) == null ? "—" : r.getString(4)); arr.put(o); } }
                 }
             }
@@ -494,7 +488,7 @@ final class ManagerAnalytics {
             String gDate = resolve(gc, "sarresid", "getchkdate", "chkdate", "date");
             String gBank = resolve(gc, "bank", "Bank", "bankname", "BANK");
             if (gAmt != null && gDate != null) {
-                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) TRY_CONVERT(nvarchar(20),[" + gDate + "]), TRY_CONVERT(decimal(19,2),[" + gAmt + "]), " + (gBank == null ? "CAST(NULL AS nvarchar(120))" : "TRY_CONVERT(nvarchar(120),[" + gBank + "])") + " FROM dbo.getchk ORDER BY TRY_CONVERT(datetime2,TRY_CONVERT(nvarchar(30),[" + gDate + "])) DESC")) {
+                try (PreparedStatement ps = c.prepareStatement("SELECT TOP (60) LEFT(LTRIM(RTRIM([" + gDate + "])),10), TRY_CONVERT(decimal(19,2),[" + gAmt + "]), " + (gBank == null ? "CAST(NULL AS nvarchar(120))" : "TRY_CONVERT(nvarchar(120),[" + gBank + "])") + " FROM dbo.getchk WITH (NOLOCK) ORDER BY LEFT(LTRIM(RTRIM([" + gDate + "])),10) DESC")) {
                     try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("amount", r.getDouble(2)); o.put("bank", r.getString(3) == null ? "—" : r.getString(3)); arr.put(o); } }
                 }
             }
@@ -520,15 +514,32 @@ final class ManagerAnalytics {
         String dateCol = resolve(cols, "date");
         String amountCol = resolve(cols, "all");
         String numberCol = resolve(cols, "shfacfo");
-        String latest = dateCol == null ? "" : latestDate(c, "sailfact", dateCol);
+        String latest = dateCol == null ? "" : anchor(c);
         if (dateCol != null && amountCol != null && !latest.isEmpty()) {
-            String dExpr = "DATEPART(dw, TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),h.[" + dateCol + "])))";
+            // Group by the Jalali day text and derive the weekday in Java: DATEPART/CAST on a Persian date
+            // string dropped month-31 rows and produced Gregorian weekdays.
+            String dExpr = MeelanoSql.dateOf("h", dateCol);
             String inner = "WHERE " + rangeCondition(cols, dateCol, latest, range, "x") + activeAnd(cols, "x");
             String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) inner += " AND " + soft;
             String source = dedupeFactorSource("sailfact", cols, numberCol, "h", inner);
-            String sql = "SELECT " + dExpr + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + dExpr + " ORDER BY 1";
+            String sql = "SELECT " + dExpr + " d, ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + dExpr + " ORDER BY 1";
+            Map<String, Double> perDow = new HashMap<>();
             try (PreparedStatement ps = c.prepareStatement(sql)) {
-                try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", persianDow(r.getInt(1))); o.put("value", r.getDouble(2)); byDay.put(o); } }
+                try (ResultSet r = ps.executeQuery()) {
+                    while (r.next()) {
+                        String day = r.getString(1) == null ? "" : r.getString(1);
+                        String wd = day.isEmpty() ? "" : MeelanoJalali.weekday(day);
+                        if (wd.isEmpty()) continue;
+                        Double cur = perDow.get(wd);
+                        perDow.put(wd, (cur == null ? 0 : cur) + r.getDouble(2));
+                    }
+                }
+            }
+            String[] order = {"\u0634\u0646\u0628\u0647", "\u06cc\u06a9\u0634\u0646\u0628\u0647", "\u062f\u0648\u0634\u0646\u0628\u0647", "\u0633\u0647\u200c\u0634\u0646\u0628\u0647", "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647", "\u067e\u0646\u062c\u0634\u0646\u0628\u0647", "\u062c\u0645\u0639\u0647"};
+            for (String wd : order) {
+                Double v = perDow.get(wd);
+                if (v == null) continue;
+                JSONObject o = new JSONObject(); o.put("label", wd); o.put("value", v.doubleValue()); byDay.put(o);
             }
         }
         out.put("byDay", byDay);
@@ -567,8 +578,8 @@ final class ManagerAnalytics {
         String gDone = resolve(g, "done", "achieved", "sale", "actual");
         if (gVis == null || gTarget == null) return visitors;
         Set<String> vis = columns(c, "visitors");
-        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
-        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        String visKey = resolve(vis, "vis_rdf", "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "vis_name", "name", "Name", "VisitorName", "moname");
         // period filter: prefer the active baze row covering the latest sale date (columns confirmed by probe: rdf,name,sta,end_)
         String bazeCond = "";
         String periodName = "";
@@ -581,13 +592,13 @@ final class ManagerAnalytics {
             String bEnd = resolve(bz, "end_");
             Set<String> sailCols = columns(c, "sailfact");
             String sDate = resolve(sailCols, "date");
-            String latest = sDate == null ? "" : latestDate(c, "sailfact", sDate);
+            String latest = sDate == null ? "" : anchor(c);
             if (bRdf != null && bSta != null && bEnd != null && !latest.isEmpty()) {
                 String bAct = resolve(bz, "Active");
                 String actCond = "";
                 if (bAct != null) actCond = " AND (UPPER(LTRIM(RTRIM(TRY_CONVERT(nvarchar(20),[" + bAct + "])))) IN (N'T',N'TRUE',N'Y',N'YES',N'1') OR TRY_CONVERT(int,[" + bAct + "])=1)";
-                String q = quote(latest);
-                String sql = "SELECT TOP (1) " + (bName == null ? "CAST(NULL AS nvarchar(150))" : "TRY_CONVERT(nvarchar(150),[" + bName + "])") + ", TRY_CONVERT(nvarchar(100),[" + bRdf + "]) FROM dbo.baze WHERE TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + bSta + "]))<=TRY_CONVERT(date," + q + ") AND TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + bEnd + "]))>=TRY_CONVERT(date," + q + ")" + actCond + " ORDER BY TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[" + bEnd + "])) DESC";
+                String q = "'" + MeelanoSql.literal(latest) + "'";
+                String sql = "SELECT TOP (1) " + (bName == null ? "CAST(NULL AS nvarchar(150))" : "TRY_CONVERT(nvarchar(150),[" + bName + "])") + ", TRY_CONVERT(nvarchar(100),[" + bRdf + "]) FROM dbo.baze WITH (NOLOCK) WHERE LEFT(LTRIM(RTRIM([" + bSta + "])),10)<=" + q + " AND LEFT(LTRIM(RTRIM([" + bEnd + "])),10)>=" + q + actCond + " ORDER BY LEFT(LTRIM(RTRIM([" + bEnd + "])),10) DESC";
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
                     try (ResultSet r = ps.executeQuery()) { if (r.next()) { periodName = r.getString(1) == null ? "" : r.getString(1); String bId = r.getString(2); if (bId != null) bazeCond = " AND TRY_CONVERT(nvarchar(100),g.[" + gBaze + "])=" + quote(bId); } }
                 }
@@ -649,8 +660,8 @@ final class ManagerAnalytics {
         String vShmo = resolve(v, "Shmo", "shmo");
         if (vVis == null || vDate == null) { out.put("perVisitor", perVisitor); out.put("recent", recent); return out; }
         Set<String> vis = columns(c, "visitors");
-        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
-        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        String visKey = resolve(vis, "vis_rdf", "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "vis_name", "name", "Name", "VisitorName", "moname");
         String nameExpr = visKey != null && visName != null ? "COALESCE(TRY_CONVERT(nvarchar(150),vi.[" + visName + "]),N'بدون نام')" : "N'بدون نام'";
         String joinVis = visKey != null ? " LEFT JOIN dbo.visitors vi ON TRY_CONVERT(nvarchar(100),vi.[" + visKey + "])=TRY_CONVERT(nvarchar(100),vs.[" + vVis + "])" : "";
         String durExpr = vDur == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(TRY_CONVERT(decimal(19,2),vs.[" + vDur + "]),0)";
@@ -753,7 +764,7 @@ final class ManagerAnalytics {
         String cost = resolve(inv, "pure_buy_price", "BuyPrice", "buy_price", "LastBuyPrice");
         if (sNum == null || dNum == null || shka == null || linesum == null || tedvah == null || name == null || cost == null) return arr;
         String sDate = resolve(sail, "date");
-        String latest = sDate == null ? "" : latestDate(c, "sailfact", sDate);
+        String latest = sDate == null ? "" : anchor(c);
         String inner = (sDate != null && !latest.isEmpty() ? "WHERE " + rangeCondition(sail, sDate, latest, range, "x") : "WHERE 1=1") + activeAnd(sail, "x");
         String source = dedupeFactorSource("sailfact", sail, sNum, "h", inner);
         String profitExpr = "ISNULL(" + sqlNumberExpr("d", linesum, "decimal(19,2)") + ",0) - ISNULL(" + sqlNumberExpr("d", tedvah, "decimal(19,4)") + ",0)*ISNULL(" + sqlNumberExpr("i", cost, "decimal(19,4)") + ",0)";
