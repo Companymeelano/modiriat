@@ -11,3 +11,6 @@ DONE
 ## e2e/staff-selftest.txt
 STEP login FAIL نام کاربری یا رمز عبور پخش درخشان معتبر نیست.
 DONE
+VISITOR_COUNT: 1
+VISITOR_USERNAMES: [None]
+VISITOR_COLUMNS: ['vis_rdf', 'vis_name', 'vis_addre', 'vis_tell1', 'vis_tell2', 'vis_cell', 'vis_man', 'VIs_region', 'viss_date', 'active', 'vis_city', 'h_sabet', 'image', 'is_supervisor', 'supervisor_rdf', 'supervisor_per', 'dar_z', 'eteb', 'per_p_d_naghd', 'per_p_d_check', 'per_jar_bch', 'kind', 'tedad_fmmt', 'mab_fmmt', 'rdf_device', 'TedadFactorMojazMande', 'MablaghMojazMandeJahatFactorha', 'Type1', 'Type2', 'Username', 'Password', 'UserID', 'rdf_device_distribution', 'NotCalculateCommision', 'CountCustomerBed', 'BlackList']
