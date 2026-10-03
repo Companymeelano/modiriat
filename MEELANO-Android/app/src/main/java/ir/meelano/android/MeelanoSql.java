@@ -233,6 +233,13 @@ final class MeelanoSql {
                             try { return p.raw == null || p.raw.isClosed(); } catch (Throwable t) { return true; }
                         }
                         if ("toString".equals(name)) return "meelano-pooled-connection";
+                        // Last line of defence for generated SQL: a missing parenthesis in a builder used to
+                        // reach the server and come back as «Incorrect syntax near 'mx'», silently emptying a
+                        // whole dashboard section. Validate locally so the exact statement is reported.
+                        if (("prepareStatement".equals(name) || "createStatement".equals(name) || "prepareCall".equals(name))
+                                && args != null && args.length > 0 && args[0] instanceof String) {
+                            checkSqlParentheses((String) args[0]);
+                        }
                         if ("hashCode".equals(name)) return System.identityHashCode(p);
                         if ("equals".equals(name)) return proxy == (args == null || args.length == 0 ? null : args[0]);
                         try {
@@ -454,6 +461,39 @@ final class MeelanoSql {
     static String literal(String s) {
         if (s == null) return "";
         return s.replace("'", "''").replace("\u0000", "");
+    }
+
+    /**
+     * Throws when the generated statement has unbalanced parentheses. String literals (''), quoted
+     * identifiers ([..]) and comments are skipped so real SQL is never rejected by a false positive.
+     */
+    static void checkSqlParentheses(String sql) throws SQLException {
+        if (sql == null || sql.isEmpty()) return;
+        int depth = 0, min = 0, n = sql.length();
+        for (int i = 0; i < n; i++) {
+            char ch = sql.charAt(i);
+            if (ch == '\'') {
+                i++;
+                while (i < n) { if (sql.charAt(i) == '\'') { if (i + 1 < n && sql.charAt(i + 1) == '\'') { i += 2; continue; } break; } i++; }
+            } else if (ch == '[') {
+                while (i < n && sql.charAt(i) != ']') i++;
+            } else if (ch == '-' && i + 1 < n && sql.charAt(i + 1) == '-') {
+                while (i < n && sql.charAt(i) != '\n') i++;
+            } else if (ch == '/' && i + 1 < n && sql.charAt(i + 1) == '*') {
+                i += 2;
+                while (i + 1 < n && !(sql.charAt(i) == '*' && sql.charAt(i + 1) == '/')) i++;
+            } else if (ch == '(') {
+                depth++;
+            } else if (ch == ')') {
+                depth--;
+                if (depth < min) min = depth;
+            }
+        }
+        if (depth != 0 || min < 0) {
+            String preview = sql.length() > 400 ? sql.substring(0, 400) + " …" : sql;
+            throw new SQLException("MeelanoSql: دستور SQL تولیدشده پرانتز نامتوازن دارد ("
+                    + (depth > 0 ? (depth + " پرانتز بسته‌نشده") : "پرانتز بستهٔ اضافه") + ") :: " + preview);
+        }
     }
 
     /** Executes one batched statement and returns its single row (Long/Double/BigDecimal/String). */

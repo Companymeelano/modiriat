@@ -95,7 +95,10 @@ final class ManagerAnalytics {
         String status = resolveFlexible(cols, "status", "Status", "satus", "Satus", "state", "State");
         if (status != null) {
             String n = "UPPER(LTRIM(RTRIM(TRY_CONVERT(nvarchar(50)," + prefix + "[" + status + "]))))";
-            parts.add("(" + n + " IS NULL OR " + n + "=N'' OR " + n + " NOT IN (N'DELETED',N'DELETE',N'CANCEL',N'CANCELLED',N'VOID')");
+            // NOTE: keep both closing parens. One was missing here, so every statement built with this
+            // condition (sales range, trend, visitor goals, collection ageing) failed on the server with
+            // «Incorrect syntax near 'mx'» and the executive dashboard silently showed «—».
+            parts.add("(" + n + " IS NULL OR " + n + "=N'' OR " + n + " NOT IN (N'DELETED',N'DELETE',N'CANCEL',N'CANCELLED',N'VOID'))");
         }
         return parts.isEmpty() ? "" : "(" + join(parts, " AND ") + ")";
     }
