@@ -19,7 +19,7 @@
 
 ## موارد آزموده‌نشده یا باز
 
-- GitHub Actions run `37149665009`، `:finance:testDebugUnitTest` و `:finance:assembleDebug` را موفق اجرا کرد؛ نصب یا آزمون روی دستگاه/Emulator، اجرای UI و بررسی APK هنوز انجام نشده است.
+- GitHub Actions run `37149830102`، Unit Test، `assembleDebug` و نصب/اجرای Activity روی Android 35 Emulator را گذراند. گوشی فیزیکی، اتصال SQL واقعی، بررسی APK و سناریوی مالی آزمایش نشده‌اند.
 - جفت‌شدن TLS واقعی با jTDS 1.3.1 و گواهی SQL Server آزمایش نشده؛ اتصال عملیاتی Release مسدود است.
 - Prototype نگاشت SQL principal به `sys_users.user_id` و Role با `dbo.get_role_id` وجود دارد، اما روی سرور زنده تأیید و به session/UI وصل نشده؛ timeout/renewal و semantics `active`/`IsLocked` نیز نیازمند آزمون/تأیید است.
 - `FinanceAuthorizationRepository` سیاست ترکیب permissionهای فرم و زیرسیستم را حدس نمی‌زند؛ معنای مؤثر هر action باید از مالک سیستم و رفتار server-side تأیید شود.

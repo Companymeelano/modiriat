@@ -10,15 +10,15 @@
 - Catalog و تعریف ACL غیرشخصی، Menu/Form، و چند تعریف SQL منتخب خوانده و در شاخه فقط به‌صورت رمز‌شده ذخیره شدند. Workflow هیچ procedure را اجرا نکرد.
 - هیچ ردیف فروش، مشتری، مانده، بانک، چک، حساب کاربر، گذرواژه/hash یا Permission یک کاربر مشخص خوانده نشد. هیچ داده‌ای در backup تغییر نکرد.
 - `FinanceAuthorizationRepository` مسیر مستقیم SQL را به‌صورت fail-closed طراحی می‌کند: هویت SQL فعلی باید غیرـ`sysadmin`/غیرـ`db_owner` باشد و دقیقاً به یک `sys_users` فعال/باز و `dbo.get_role_id` منطبق شود؛ password/hash خوانده نمی‌شود. این نگاشت با سرور زنده تأیید نشده، به UI وصل نیست و policy نهایی ترکیب permissionها هنوز از مالک سامانه تأیید نشده است.
-- آزمون‌های فعلی فقط منطق fail-closed محلی را بررسی می‌کنند؛ اتصال، کاربر، دسترسی یا ردیف مالی واقعی را نمی‌آزمایند. اجرای GitHub Actions `37149665009` این Unit Testها را گذراند.
-- همان اجرای CI با موفقیت `:finance:assembleDebug` را ساخت؛ این فقط build نسخهٔ Debug روی Runner است.
+- آزمون‌های فعلی فقط منطق fail-closed محلی را بررسی می‌کنند؛ اتصال، کاربر، دسترسی یا ردیف مالی واقعی را نمی‌آزمایند. این Unit Testها در GitHub Actions `37149830102` گذشتند.
+- اجرای GitHub Actions `37149830102`، Unit Test و Debug APK را موفق ساخت؛ سپس APK را روی Android 35 Emulator نصب و Activity را اجرا کرد و process برنامه را بررسی کرد.
 
 ### مواردی که هنوز اجرا/تأیید نشده‌اند
 
 - هیچ صفحهٔ مالی ردیف تجاری نمی‌خواند و هیچ عملیات مالی نوشتنی وجود ندارد.
 - prototype احراز هویت مستقیم از SQL principal به `sys_users` و Role واقعی در repository وجود دارد؛ اما به UI/session وصل یا روی سرور واقعی آزموده نشده است.
 - نگاشت‌های Menu/Form در backup به‌عنوان **کاندیدهای واقعی** ثبت شده‌اند، اما مجوز کاربر جاری یا سازگاری آن‌ها با سرور روز اثبات نشده است.
-- Debug Build و Unit Test در GitHub Actions موفق است؛ نصب روی دستگاه/Emulator، اجرای UI، اتصال SQL واقعی و آزمون end-to-end انجام نشده‌اند.
+- Debug Build، Unit Test و نصب/اجرای shell در Android 35 Emulator در GitHub Actions موفق است؛ تست روی گوشی فیزیکی، اتصال SQL واقعی، ورود/دسترسی کاربر و آزمون مالی end-to-end انجام نشده‌اند.
 - APKهای امضاشده، نسخهٔ عملیاتی، گزارش تست کامل و SHA-256 نهایی تحویل نشده‌اند.
 
 ## مستندات
@@ -43,7 +43,7 @@
 ./gradlew :finance:assembleDebug
 ```
 
-این دو task در GitHub Actions run `37149665009` موفق شدند. APK خروجی فقط Debug است و در Git commit نشده؛ نصب/اجرای آن روی Emulator یا دستگاه هنوز انجام نشده است. اتصال به جداول مالی یا آزمون روی دیتابیس واقعی در این مرحله انجام نمی‌شود.
+`testDebugUnitTest`، `assembleDebug` و smoke نصب/اجرای Activity در Android 35 Emulator در GitHub Actions run `37149830102` موفق شدند. APK خروجی فقط Debug است و در Git commit نشده؛ نصب روی گوشی فیزیکی، اتصال جداول مالی یا آزمون روی دیتابیس واقعی انجام نشده است.
 
 ## کلید امضای Release
 
