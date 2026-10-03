@@ -3846,6 +3846,7 @@ public class MainActivity extends Activity {
             case "mgr_collection": loadManagerCollection(); break;
             case "mgr_visits": loadManagerVisits(); break;
             case "mgr_products": loadManagerProducts(); break;
+            case "mgr_field": loadManagerField(); break;
             default: loadDashboard(); break;
         }
     }
@@ -7192,7 +7193,7 @@ public class MainActivity extends Activity {
 
     private String firstAllowedPage() {
         if (MANAGER_EDITION) {
-            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill", "mgr_cockpit", "mgr_collection", "mgr_visits", "mgr_products"};
+            String[] managerPages = {"dashboard", "reports", "command", "personnel", "attendance", "customers", "products", "management", "manager_more", "settings", "mgr_drill", "mgr_cockpit", "mgr_collection", "mgr_visits", "mgr_products", "mgr_field"};
             for (String p : managerPages) if (canOpenPage(p)) return p;
             return "dashboard";
         }
@@ -12012,6 +12013,46 @@ public class MainActivity extends Activity {
         }
     }
 
+    // =============================== Field visit intelligence (real Visit table) ===============================
+    private void loadManagerField() {
+        content.removeAllViews();
+        addHero("ویزیت میدانی", "تعداد و مدت ویزیت‌های ثبت‌شده از جدول Visit — بدون GPS جعلی.");
+        content.addView(managerSkeleton(), new LinearLayout.LayoutParams(-1, -2));
+        runDb(() -> { try (Connection c = openConnection()) { return ManagerAnalytics.fieldVisits(c, managerReportRange).toString(); } }, new DbCallback() {
+            @Override public void ok(String body) { renderManagerField(safeJson(body)); }
+            @Override public void fail(Exception e) { showPageError("ویزیت میدانی", e, () -> loadManagerField()); }
+        });
+    }
+
+    private void renderManagerField(JSONObject m) {
+        content.removeAllViews();
+        addHero("ویزیت میدانی", "تعداد و مدت ویزیت‌های ثبت‌شده از جدول Visit — بدون GPS جعلی.");
+        JSONArray perVisitor = m.optJSONArray("perVisitor");
+        JSONArray recent = m.optJSONArray("recent");
+        if ((perVisitor == null || perVisitor.length() == 0) && (recent == null || recent.length() == 0)) {
+            addEmptyTo(content, "ویزیتی در جدول Visit ثبت نشده یا ستون‌های آن تأیید نشد.");
+            addDeveloperCredit(content);
+            return;
+        }
+        if (perVisitor != null && perVisitor.length() > 0) {
+            LinearLayout c = addReportCard("ویزیت به تفکیک ویزیتور", "♞", INFO);
+            double max = 1; for (int i = 0; i < perVisitor.length(); i++) { JSONObject o = perVisitor.optJSONObject(i); if (o != null) max = Math.max(max, o.optLong("visits", 0)); }
+            for (int i = 0; i < perVisitor.length(); i++) {
+                JSONObject o = perVisitor.optJSONObject(i); if (o == null) continue;
+                addBarLine(c, o.optString("name", "—"), formatNumber(o.optLong("visits", 0)) + " ویزیت • مدت " + faDigits(String.format(java.util.Locale.US, "%.0f", o.optDouble("duration", 0))), o.optLong("visits", 0), max, INFO);
+            }
+        }
+        if (recent != null && recent.length() > 0) {
+            LinearLayout c = addReportCard("آخرین ویزیت‌های ثبت‌شده", "◷", MUTED);
+            for (int i = 0; i < recent.length(); i++) {
+                JSONObject o = recent.optJSONObject(i); if (o == null) continue;
+                String t = o.optString("time", "");
+                addReportLine(c, faDigits(o.optString("date", "—")) + (t.isEmpty() ? "" : " • " + faDigits(t)) + " • " + o.optString("party", "—"), "مدت " + faDigits(String.format(java.util.Locale.US, "%.0f", o.optDouble("duration", 0))), TEXT);
+            }
+        }
+        addDeveloperCredit(content);
+    }
+
     // =============================== Phase 14-17: Reports 2.0 (PDF/CSV) + Milo insights ===============================
     private java.util.List<String> managerInsights(JSONObject m) {
         java.util.List<String> out = new java.util.ArrayList<>();
@@ -12845,7 +12886,8 @@ public class MainActivity extends Activity {
                 new VisitorToolSpec("مرکز وصول", "سن‌یابی واقعی مطالبات", "✓", SUCCESS, () -> showApp("mgr_collection"), true),
                 new VisitorToolSpec("مشتری‌شناسی", "بدهکاران اولویت‌دار", "♙", WARNING, () -> { managerDrillKind = "debtors"; showApp("mgr_drill"); }, true),
                 new VisitorToolSpec("عملکرد ویزیتور", "فروش در برابر هدف vis_goals", "♜", navAccent("personnel"), () -> showApp("mgr_visits"), true),
-                new VisitorToolSpec("هوش کالا", "طلا / موجودی صفر / بدون فروش", "◈", navAccent("products"), () -> showApp("mgr_products"), true)
+                new VisitorToolSpec("هوش کالا", "طلا / موجودی صفر / بدون فروش", "◈", navAccent("products"), () -> showApp("mgr_products"), true),
+                new VisitorToolSpec("ویزیت میدانی", "تعداد/مدت ویزیت از جدول Visit", "♞", INFO, () -> showApp("mgr_field"), true)
         });
         addDeveloperCredit(content);
     }

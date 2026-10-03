@@ -519,7 +519,7 @@ final class ManagerAnalytics {
         if (visitors.length() == 0 || !tableExists(c, "vis_goals")) return visitors;
         Set<String> g = columns(c, "vis_goals");
         String gVis = resolve(g, "vis_rdf", "visitor", "visitor_rdf", "rdf_visitor", "vis");
-        String gTarget = resolve(g, "target", "goal", "amount", "mablagh", "sale_goal", "forosh");
+        String gTarget = resolve(g, "mab", "target", "goal", "amount", "mablagh", "sale_goal", "forosh");
         String gDone = resolve(g, "done", "achieved", "sale", "actual");
         if (gVis == null || gTarget == null) return visitors;
         Set<String> vis = columns(c, "visitors");
@@ -536,7 +536,7 @@ final class ManagerAnalytics {
             JSONObject o = visitors.optJSONObject(i); if (o == null) continue;
             double[] gv = byName.get(o.optString("name", ""));
             o.put("goal", gv == null ? 0 : gv[0]);
-            o.put("achieved", gv == null ? 0 : gv[1]);
+            o.put("achieved", gv == null ? 0 : (gDone == null ? o.optDouble("sales", 0) : gv[1]));
         }
         return visitors;
     }
@@ -562,6 +562,43 @@ final class ManagerAnalytics {
             }
         }
         out.put("zeroStock", zero);
+        return out;
+    }
+
+    /** Field-visit intelligence from the real Visit table (columns confirmed by CI probe: VisRdf, Shmo, Duration, DateCreated, TimeCreated). */
+    static JSONObject fieldVisits(Connection c, int range) throws Exception {
+        JSONObject out = new JSONObject();
+        JSONArray perVisitor = new JSONArray();
+        JSONArray recent = new JSONArray();
+        if (!tableExists(c, "Visit")) { out.put("perVisitor", perVisitor); out.put("recent", recent); return out; }
+        Set<String> v = columns(c, "Visit");
+        String vVis = resolve(v, "VisRdf", "vis_rdf", "VisitRdf");
+        String vDate = resolve(v, "DateCreated", "Created");
+        String vTime = resolve(v, "TimeCreated", "Sent");
+        String vDur = resolve(v, "Duration");
+        String vShmo = resolve(v, "Shmo", "shmo");
+        if (vVis == null || vDate == null) { out.put("perVisitor", perVisitor); out.put("recent", recent); return out; }
+        Set<String> vis = columns(c, "visitors");
+        String visKey = resolve(vis, "rdf", "RDF", "id", "ID");
+        String visName = resolve(vis, "name", "Name", "vis_name", "VisitorName", "moname");
+        String nameExpr = visKey != null && visName != null ? "COALESCE(TRY_CONVERT(nvarchar(150),vi.[" + visName + "]),N'بدون نام')" : "N'بدون نام'";
+        String joinVis = visKey != null ? " LEFT JOIN dbo.visitors vi ON TRY_CONVERT(nvarchar(100),vi.[" + visKey + "])=TRY_CONVERT(nvarchar(100),vs.[" + vVis + "])" : "";
+        String durExpr = vDur == null ? "CAST(0 AS decimal(19,2))" : "ISNULL(TRY_CONVERT(decimal(19,2),vs.[" + vDur + "]),0)";
+        String sql1 = "SELECT TOP (10) " + nameExpr + ", COUNT_BIG(1), ISNULL(SUM(" + durExpr + "),0) FROM dbo.Visit vs" + joinVis + " GROUP BY " + nameExpr + " ORDER BY 2 DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql1)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("name", r.getString(1) == null ? "—" : r.getString(1)); o.put("visits", r.getLong(2)); o.put("duration", r.getDouble(3)); perVisitor.put(o); } }
+        }
+        Set<String> cust = columns(c, "CUSTOMERS");
+        String cShmo = resolve(cust, "SHMO", "shmo");
+        String cName = resolve(cust, "MONAME", "Name", "CusName");
+        String custExpr = cShmo != null && cName != null && vShmo != null ? "COALESCE(TRY_CONVERT(nvarchar(200),cu.[" + cName + "]),N'بدون نام')" : "N'—'";
+        String joinCust = cShmo != null && vShmo != null ? " LEFT JOIN dbo.CUSTOMERS cu ON TRY_CONVERT(nvarchar(100),cu.[" + cShmo + "])=TRY_CONVERT(nvarchar(100),vs.[" + vShmo + "])" : "";
+        String sql2 = "SELECT TOP (30) TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]), " + (vTime == null ? "CAST(NULL AS nvarchar(20))" : "TRY_CONVERT(nvarchar(20),vs.[" + vTime + "])") + ", " + custExpr + ", " + durExpr + " FROM dbo.Visit vs" + joinCust + " ORDER BY TRY_CONVERT(nvarchar(30),vs.[" + vDate + "]) DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql2)) {
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", r.getString(1) == null ? "—" : r.getString(1)); o.put("time", r.getString(2) == null ? "" : r.getString(2)); o.put("party", r.getString(3) == null ? "—" : r.getString(3)); o.put("duration", r.getDouble(4)); recent.put(o); } }
+        }
+        out.put("perVisitor", perVisitor);
+        out.put("recent", recent);
         return out;
     }
 

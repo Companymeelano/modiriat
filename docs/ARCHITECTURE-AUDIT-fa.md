@@ -31,9 +31,9 @@
 | کالای پرفروش/بدون‌فروش‌دوره | subsailfact×sailfact | SHKA, naka, LINESUM, shfacfo, active='t' | `products` |
 | فید فعالیت | sailfact, getchk | date, shfacfo, all, getchkmab | `activityFeed` |
 
-## ۳) DO-NOT-USE (متادیتای نامعتبر/ناموجود — بدون حدس)
-- **سود/بهای تمام‌شده**: ستون بهای تمام‌شدهٔ معتبر در sailfact/subsailfact تأیید نشده → فقط «حاشیه ناخالص فروش−خرید» (شفاف) نمایش می‌یابد؛ سود جعلی ممنوع.
-- **ویزیت GPS/مسیر واقعی/مدت ویزیت**: ستون‌های جدول `Visit` در Usage فعلی production تأیید نشده → بخش Visit Intelligence فقط از دادهٔ تأییدشده (ویزیت‌های ثبت‌شدهٔ میلو + اهداف vis_goals) استفاده می‌کند؛ Planned-vs-Actual GPS تا تأیید متادیتا غیرفعال.
+## ۳) وضعیت متادیتا — به‌روزرسانی probe (CI run 37090109252)
+- **تأییدشده با probe واقعی:** `Visit(VisitID,VisRdf,Shmo,Duration,DateCreated,TimeCreated,SaveLat,SaveLng,…)` → صفحهٔ «ویزیت میدانی» فعال شد. `vis_goals(rdf,baze_rdf,vis_rdf,mab,ted,Active,…)` → ستون هدف **mab** است و ستون «تحقق» وجود ندارد ⇒ تحقق = فروش واقعی ویزیتور (بدون دادهٔ ساختگی). `vw_customer(Lng,Lat,last_fact_date,…)`، `cust_act(act_bed,act_bes,date,…)`، `Sys_Mandeh_Customer(Etebar,Mandeh,…)`، `TellBook`، `sailfact_pish(gainall,taeed,Rejected,…)` نیز تأیید شدند.
+- **سود/بهای تمام‌شدهٔ sailfact**: همچنان تأیید نشده → فقط «حاشیه ناخالص فروش−خرید» (شفاف) نمایش می‌یابد؛ سود جعلی ممنوع.
 - **تاریخ ساخت مشتری (New)**: ستون created در CUSTOMERS تأیید نشده → دستهٔ «جدید» از درخواست‌های مشتری میلو (meelano_customer_requests) می‌آید نه حدس.
 - **Forecast واقعی**: وجود ندارد → عنوان «وضعیت فشار نقدینگی» (محاسبهٔ شفاف چک/وصول) حفظ می‌شود.
 
