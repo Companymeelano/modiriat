@@ -43,17 +43,17 @@ app/src/main/java/ir/meelano/android/MainActivity.java:8841: warning: [deprecati
 app/src/main/java/ir/meelano/android/MainActivity.java:8908: warning: [deprecation] Locale(String,String) in Locale has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:10971: warning: [deprecation] setCalendarViewShown(boolean) in DatePicker has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:10972: warning: [deprecation] setSpinnersShown(boolean) in DatePicker has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:16528: warning: [deprecation] canAuthenticate() in BiometricManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:16613: warning: [deprecation] versionCode in PackageInfo has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21047: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21047: warning: [deprecation] Locale(String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21047: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21073: warning: [deprecation] EXTRA_CHECK_VOICE_DATA_FOR in TextToSpeech.Engine has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:22188: warning: [deprecation] speak(String,int,HashMap<String,String>) in TextToSpeech has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:22286: warning: [deprecation] Builder(Context) in Builder has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:28298: warning: [serial] serializable class DbException has no definition of serialVersionUID
-app/src/main/java/ir/meelano/android/MainActivity.java:28578: warning: [deprecation] onBackPressed() in Activity has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:28586: warning: [deprecation] onBackPressed() in Activity has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:16543: warning: [deprecation] canAuthenticate() in BiometricManager has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:16628: warning: [deprecation] versionCode in PackageInfo has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21062: warning: [deprecation] Locale(String,String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21062: warning: [deprecation] Locale(String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21062: warning: [deprecation] Locale(String,String) in Locale has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:21088: warning: [deprecation] EXTRA_CHECK_VOICE_DATA_FOR in TextToSpeech.Engine has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:22203: warning: [deprecation] speak(String,int,HashMap<String,String>) in TextToSpeech has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:22301: warning: [deprecation] Builder(Context) in Builder has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:28313: warning: [serial] serializable class DbException has no definition of serialVersionUID
+app/src/main/java/ir/meelano/android/MainActivity.java:28593: warning: [deprecation] onBackPressed() in Activity has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:28601: warning: [deprecation] onBackPressed() in Activity has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:3844: warning: [fallthrough] possible fall-through into case
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:212: warning: [try] explicit call to close() on an auto-closeable resource
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:715: warning: [deprecation] Builder(Context) in Builder has been deprecated

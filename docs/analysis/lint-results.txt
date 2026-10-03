@@ -26,22 +26,22 @@
 
    https://developer.android.com/reference/java/util/Locale.html#default_locale
 
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19109: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19124: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
             int o = new android.media.ExifInterface(in).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL);
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19109: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19124: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
             int o = new android.media.ExifInterface(in).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL);
                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19109: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19124: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
             int o = new android.media.ExifInterface(in).getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL);
                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19110: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19125: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
             if (o == android.media.ExifInterface.ORIENTATION_ROTATE_90) return 90;
                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19111: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19126: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
             if (o == android.media.ExifInterface.ORIENTATION_ROTATE_180) return 180;
                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19112: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19127: Warning: Avoid using android.media.ExifInterface; use androidx.exifinterface.media.ExifInterface instead [ExifInterface]
             if (o == android.media.ExifInterface.ORIENTATION_ROTATE_270) return 270;
                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -210,19 +210,19 @@
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:12009: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                 canvas.drawRoundRect(new android.graphics.RectF(x, h * 0.72f - bh, x + barW, h * 0.72f), dp(4), dp(4), p);
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28344: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28359: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
             Path line = new Path();
                         ~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28345: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28360: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
             Path area = new Path();
                         ~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28427: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28442: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                 canvas.drawRoundRect(new RectF(x, h - bottom - h1, x + barW, h - bottom), dp(8), dp(8), paint);
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28429: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28444: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                 canvas.drawRoundRect(new RectF(x + barW + dp(3), h - bottom - h2, x + barW * 2 + dp(3), h - bottom), dp(8), dp(8), paint);
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28478: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28493: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                 RectF rect = new RectF(x, y, x + barW, h - bottom);
                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoCharts.java:198: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
@@ -384,100 +384,100 @@
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:11629: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) tile.setElevation(dp(3));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13477: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13492: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) tile.setElevation(dp(3));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13561: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13576: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(7));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14179: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14194: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(3));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14363: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14378: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(selected ? 3 : 1));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14373: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14388: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) art.setClipToOutline(true);
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14467: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14482: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(selected ? 6 : 3));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14564: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14579: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(selected ? 12 : 7));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14568: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14583: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) img.setElevation(dp(5));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14753: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14768: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) c.setElevation(dp(selected ? 5 : 2));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14766: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14781: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) img.setElevation(dp(4));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15568: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15583: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) pageDock.setElevation(dp(10));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15677: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15692: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) bubble.setElevation(dp(done ? 4 : 1));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16540: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16555: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false;
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16831: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16846: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
             if (cm == null || Build.VERSION.SDK_INT < 24) return;
                               ~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16972: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16987: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18269: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18284: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
         return Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                ~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18275: Warning: Unnecessary; Build.VERSION.SDK_INT < 23 is never true here [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18290: Warning: Unnecessary; Build.VERSION.SDK_INT < 23 is never true here [ObsoleteSdkInt]
         if (designPreview || prefs == null || hasLocationPermission() || prefs.getBoolean(KEY_LOCATION_ASKED, false) || Build.VERSION.SDK_INT < 23) return;
                                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20465: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20480: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) panel.setElevation(dp(9));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21113: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21128: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) box.setElevation(dp(10));
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21131: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21146: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) name.setTextDirection(View.TEXT_DIRECTION_RTL);
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21488: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21503: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) assistantInput.setTextDirection(View.TEXT_DIRECTION_RTL);
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21920: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21935: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) return "ks:" + keystoreEncrypt(raw.trim());
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22187: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22202: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) tts.speak(clean, TextToSpeech.QUEUE_FLUSH, null, "meelano_ai_answer");
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22285: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22300: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
             PendingIntent pi = PendingIntent.getActivity(this, 0, intent, Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22320: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22335: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         TextView badge = text(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? "✓ Keystore فعال روی این دستگاه" : "حالت سازگار قدیمی", 11, tc(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? SUCCESS : WARNING), Typeface.BOLD);
                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22320: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22335: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         TextView badge = text(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? "✓ Keystore فعال روی این دستگاه" : "حالت سازگار قدیمی", 11, tc(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? SUCCESS : WARNING), Typeface.BOLD);
                                                                                                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22322: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22337: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         badge.setBackground(roundedStroke(alpha(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? SUCCESS : WARNING, 18), 16, alpha(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? SUCCESS : WARNING, 70)));
                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22322: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22337: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         badge.setBackground(roundedStroke(alpha(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? SUCCESS : WARNING, 18), 16, alpha(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? SUCCESS : WARNING, 70)));
                                                                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:24058: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:24073: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
         boolean granted = Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
                           ~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:26467: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:26482: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
         if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27081: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27096: Warning: Unnecessary; SDK_INT is never < 24 [ObsoleteSdkInt]
         boolean granted = Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
                           ~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27156: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27171: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
             return Build.VERSION.SDK_INT >= 18 && l.isFromMockProvider();
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoDelivery.java:714: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
@@ -684,7 +684,7 @@ final class MeelanoSignatureView extends View {
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:2686: Warning: onTouch lambda should call View#performClick when a click is detected [ClickableViewAccessibility]
         e.setOnTouchListener((v, ev) -> {
                              ^
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18389: Warning: Custom view SignaturePadView overrides onTouchEvent but not performClick [ClickableViewAccessibility]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18404: Warning: Custom view SignaturePadView overrides onTouchEvent but not performClick [ClickableViewAccessibility]
         @Override public boolean onTouchEvent(MotionEvent e) { float x=e.getX(), y=e.getY(); if(e.getAction()==MotionEvent.ACTION_DOWN){ path.moveTo(x,y); invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_MOVE){ path.lineTo(x,y); invalidate(); return true; } return true; }
                                  ~~~~~~~~~~~~
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MeelanoCharts.java:178: Warning: Custom view Area overrides onTouchEvent but not performClick [ClickableViewAccessibility]
@@ -719,16 +719,16 @@ final class MeelanoSignatureView extends View {
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:10980: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                         if (target != null) target.setText("انتخاب تاریخ یادآوری: " + value);
                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22021: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22036: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
             summary.setText("مدل فعال: " + providerDisplayName(activeAiProvider()) + " • نام خطاب: " + displayFirstName());
                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22125: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22140: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
         if (status != null) status.setText("در حال اعتبارسنجی " + providerDisplayName(provider) + "…");
                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22151: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22166: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                     if (summary != null) summary.setText("مدل فعال: " + providerDisplayName(ids[which]) + " • نام خطاب: " + displayFirstName());
                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28545: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:28560: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
                 assistantInput.setText("این کد/بارکد را در کالاها بررسی کن: " + stringOr(code, ""));
                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -853,70 +853,70 @@ final class MeelanoSignatureView extends View {
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:11577: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         TextView t = text(title, 11.4f, TEXT, Typeface.BOLD); t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL); row.addView(t, new LinearLayout.LayoutParams(0, dp(32), 1f));
                                                                                    ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13182: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13197: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                              ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13243: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13258: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(Math.max(dp(12), (int)(dp(210) * Math.max(0.04, Math.min(1.0, progress)))), dp(7), Gravity.CENTER_VERTICAL | Gravity.RIGHT);
                                                                                                                                                                                         ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13744: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:13759: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         TextView mt = text("نمایش", 10.0f, TEXT, Typeface.BOLD); mt.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL); mt.setSingleLine(true); modePanel.addView(mt, new LinearLayout.LayoutParams(-2, -2));
                                                                                        ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14029: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14044: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, dp(small ? 18 : 22), Gravity.LEFT | Gravity.TOP);
                                                                                                     ~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14231: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14246: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                              ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14485: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:14500: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         FrameLayout.LayoutParams tagLp = new FrameLayout.LayoutParams(-2, dp(24), Gravity.RIGHT | Gravity.BOTTOM);
                                                                                           ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15842: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15857: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
             warning.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                                        ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15875: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:15890: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
             TextView warning = text("⚠ " + warn, 9.1f, tc(DANGER), Typeface.BOLD); warning.setGravity(Gravity.RIGHT); warning.setPadding(dp(7), dp(4), dp(7), dp(4)); warning.setBackground(roundedStroke(alpha(DANGER, 13), 14, alpha(DANGER, 50)));
                                                                                                               ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16942: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16957: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         addPreviewTableCell(head, "کالا", 1.45f, onColorFor(accent), Typeface.BOLD, Gravity.RIGHT | Gravity.CENTER_VERTICAL, true);
                                                                                             ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16952: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16967: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
             addPreviewTableCell(row, safeDisplayText(it.optString("name", ""), "کالا"), 1.45f, TEXT, Typeface.BOLD, Gravity.RIGHT | Gravity.CENTER_VERTICAL, false);
                                                                                                                             ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16988: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17003: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         TextView l = text(label, 9.0f, tc(accent), Typeface.BOLD); l.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL); l.setSingleLine(true);
                                                                                         ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16989: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17004: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         TextView v = text(stringOr(value, "—"), 10.1f, TEXT, Typeface.BOLD); v.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL); v.setSingleLine(true); v.setEllipsize(TextUtils.TruncateAt.END);
                                                                                                   ~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16997: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17012: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         TextView l = text(label, 9.6f, strong ? onColorFor(accent) : alpha(TEXT, 225), Typeface.BOLD); l.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                                                                                                                             ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:16998: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17013: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         TextView v = text(stringOr(value, "—"), strong ? 11.4f : 10.2f, strong ? onColorFor(accent) : accent, Typeface.BOLD); v.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL); v.setSingleLine(true); v.setEllipsize(TextUtils.TruncateAt.END);
                                                                                                                                                    ~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17006: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17021: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         n.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                              ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18064: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18079: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
                 TextView label = text("تاریخ " + dk,12.2f,TEXT,Typeface.BOLD); label.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL); day.addView(label,new LinearLayout.LayoutParams(0,-2,1f));
                                                                                                         ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20347: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20362: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         d.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                              ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21130: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21145: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         name.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                                 ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21487: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21502: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         assistantInput.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
                                           ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:21986: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:22001: Warning: Use "Gravity.START" instead of "Gravity.LEFT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         e.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
                              ~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:23812: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:23827: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
         if (!d.optString("phone").isEmpty()) { TextView ph = text(withIcon("☎", MeelanoCharts.fa(d.optString("phone"))), 10.4f, TEXT, Typeface.BOLD); ph.setTextDirection(View.TEXT_DIRECTION_LTR); ph.setGravity(Gravity.RIGHT); ic.addView(ph, new LinearLayout.LayoutParams(-1, -2)); }
                                                                                                                                                                                                                           ~~~~~
-/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27208: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
+/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:27223: Warning: Use "Gravity.END" instead of "Gravity.RIGHT" to ensure correct behavior in right-to-left locales [RtlHardcoded]
             LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(26), dp(26)); ip.gravity = Gravity.RIGHT; t.addView(ic, ip);
                                                                                                                ~~~~~
 /home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/res/layout/widget_meelano.xml:7: Warning: Use "end" instead of "right" to ensure correct behavior in right-to-left locales [RtlHardcoded]
