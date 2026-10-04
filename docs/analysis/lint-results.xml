@@ -13,7 +13,7 @@
         errorLine2="                                                                                                                                                 ~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="374"
+            line="378"
             column="146"/>
     </issue>
 
@@ -47,7 +47,7 @@
         errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="17513"
+            line="17584"
             column="25"/>
     </issue>
 
@@ -63,7 +63,7 @@
         errorLine2="                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="17513"
+            line="17584"
             column="73"/>
     </issue>
 
@@ -79,7 +79,7 @@
         errorLine2="                                                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="17513"
+            line="17584"
             column="118"/>
     </issue>
 
@@ -95,7 +95,7 @@
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="17514"
+            line="17585"
             column="22"/>
     </issue>
 
@@ -111,7 +111,7 @@
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="17515"
+            line="17586"
             column="22"/>
     </issue>
 
@@ -127,7 +127,7 @@
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="17516"
+            line="17587"
             column="22"/>
     </issue>
 
@@ -161,7 +161,7 @@
         errorLine2="                                                                                                                                                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="16796"
+            line="16867"
             column="234"/>
     </issue>
 
@@ -229,8 +229,40 @@
         errorLine2="                                         ~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1779"
+            line="1784"
             column="42"/>
+    </issue>
+
+    <issue
+        id="DiscouragedApi"
+        severity="Warning"
+        message="Use of this function is discouraged because resource reflection makes it harder to perform build optimizations and compile-time verification of code. It is much more efficient to retrieve resources by identifier (e.g. `R.foo.bar`) than by name (e.g. `getIdentifier(&quot;bar&quot;, &quot;foo&quot;, null)`)."
+        category="Correctness"
+        priority="2"
+        summary="Using discouraged APIs"
+        explanation="Discouraged APIs are allowed and are not deprecated, but they may be unfit for common use (e.g. due to slow performance or subtle behavior)."
+        errorLine1="            int atiranLogo = getResources().getIdentifier(&quot;atiran_management_icon&quot;, &quot;drawable&quot;, getPackageName());"
+        errorLine2="                                            ~~~~~~~~~~~~~">
+        <location
+            file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
+            line="1885"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="DiscouragedApi"
+        severity="Warning"
+        message="Use of this function is discouraged because resource reflection makes it harder to perform build optimizations and compile-time verification of code. It is much more efficient to retrieve resources by identifier (e.g. `R.foo.bar`) than by name (e.g. `getIdentifier(&quot;bar&quot;, &quot;foo&quot;, null)`)."
+        category="Correctness"
+        priority="2"
+        summary="Using discouraged APIs"
+        explanation="Discouraged APIs are allowed and are not deprecated, but they may be unfit for common use (e.g. due to slow performance or subtle behavior)."
+        errorLine1="            int atiranLogo = getResources().getIdentifier(&quot;atiran_management_icon&quot;, &quot;drawable&quot;, getPackageName());"
+        errorLine2="                                            ~~~~~~~~~~~~~">
+        <location
+            file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
+            line="2955"
+            column="45"/>
     </issue>
 
     <issue
@@ -309,7 +341,7 @@
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1920"
+            line="1930"
             column="27"/>
     </issue>
 
@@ -325,7 +357,7 @@
         errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1930"
+            line="1940"
             column="34"/>
     </issue>
 
@@ -341,7 +373,7 @@
         errorLine2="                         ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1936"
+            line="1946"
             column="26"/>
     </issue>
 
@@ -357,7 +389,7 @@
         errorLine2="                          ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1939"
+            line="1949"
             column="27"/>
     </issue>
 
@@ -373,7 +405,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1949"
+            line="1959"
             column="31"/>
     </issue>
 
@@ -389,7 +421,7 @@
         errorLine2="                     ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1958"
+            line="1968"
             column="22"/>
     </issue>
 
@@ -405,7 +437,7 @@
         errorLine2="                         ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1979"
+            line="1989"
             column="26"/>
     </issue>
 
@@ -421,7 +453,7 @@
         errorLine2="                     ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1989"
+            line="1999"
             column="22"/>
     </issue>
 
@@ -437,7 +469,7 @@
         errorLine2="                                   ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2721"
+            line="2731"
             column="36"/>
     </issue>
 
@@ -453,7 +485,7 @@
         errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2771"
+            line="2781"
             column="23"/>
     </issue>
 
@@ -469,7 +501,7 @@
         errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2811"
+            line="2821"
             column="23"/>
     </issue>
 
@@ -485,7 +517,7 @@
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5276"
+            line="5299"
             column="24"/>
     </issue>
 
@@ -501,7 +533,7 @@
         errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5283"
+            line="5306"
             column="34"/>
     </issue>
 
@@ -517,7 +549,7 @@
         errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5285"
+            line="5308"
             column="34"/>
     </issue>
 
@@ -533,7 +565,7 @@
         errorLine2="                             ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5302"
+            line="5325"
             column="30"/>
     </issue>
 
@@ -549,7 +581,7 @@
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5313"
+            line="5336"
             column="33"/>
     </issue>
 
@@ -565,7 +597,7 @@
         errorLine2="                           ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5322"
+            line="5345"
             column="28"/>
     </issue>
 
@@ -581,7 +613,7 @@
         errorLine2="                        ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="26740"
+            line="27162"
             column="25"/>
     </issue>
 
@@ -597,7 +629,7 @@
         errorLine2="                        ~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="26741"
+            line="27163"
             column="25"/>
     </issue>
 
@@ -613,7 +645,7 @@
         errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="26823"
+            line="27245"
             column="38"/>
     </issue>
 
@@ -629,7 +661,7 @@
         errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="26825"
+            line="27247"
             column="38"/>
     </issue>
 
@@ -645,7 +677,7 @@
         errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="26874"
+            line="27296"
             column="30"/>
     </issue>
 
@@ -901,7 +933,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1204"
+            line="1209"
             column="17"/>
     </issue>
 
@@ -917,7 +949,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1539"
+            line="1544"
             column="21"/>
     </issue>
 
@@ -933,7 +965,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1841"
+            line="1846"
             column="13"/>
     </issue>
 
@@ -949,7 +981,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1875"
+            line="1880"
             column="13"/>
     </issue>
 
@@ -965,7 +997,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1882"
+            line="1892"
             column="13"/>
     </issue>
 
@@ -981,7 +1013,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2024"
+            line="2034"
             column="13"/>
     </issue>
 
@@ -997,7 +1029,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2110"
+            line="2120"
             column="13"/>
     </issue>
 
@@ -1013,7 +1045,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2115"
+            line="2125"
             column="13"/>
     </issue>
 
@@ -1029,7 +1061,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2193"
+            line="2203"
             column="13"/>
     </issue>
 
@@ -1045,7 +1077,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2433"
+            line="2443"
             column="13"/>
     </issue>
 
@@ -1061,7 +1093,7 @@
         errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2552"
+            line="2562"
             column="18"/>
     </issue>
 
@@ -1077,7 +1109,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2676"
+            line="2686"
             column="13"/>
     </issue>
 
@@ -1093,7 +1125,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2933"
+            line="2949"
             column="13"/>
     </issue>
 
@@ -1109,7 +1141,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3320"
+            line="3341"
             column="13"/>
     </issue>
 
@@ -1125,7 +1157,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3346"
+            line="3367"
             column="13"/>
     </issue>
 
@@ -1141,7 +1173,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3429"
+            line="3450"
             column="13"/>
     </issue>
 
@@ -1157,7 +1189,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3438"
+            line="3459"
             column="13"/>
     </issue>
 
@@ -1173,7 +1205,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3556"
+            line="3577"
             column="17"/>
     </issue>
 
@@ -1189,7 +1221,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3611"
+            line="3632"
             column="13"/>
     </issue>
 
@@ -1205,7 +1237,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3731"
+            line="3752"
             column="13"/>
     </issue>
 
@@ -1221,7 +1253,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3906"
+            line="3927"
             column="13"/>
     </issue>
 
@@ -1237,7 +1269,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="4207"
+            line="4228"
             column="13"/>
     </issue>
 
@@ -1253,7 +1285,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="4412"
+            line="4433"
             column="13"/>
     </issue>
 
@@ -1269,7 +1301,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="4986"
+            line="5009"
             column="13"/>
     </issue>
 
@@ -1285,7 +1317,7 @@
         errorLine2="                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5220"
+            line="5243"
             column="78"/>
     </issue>
 
@@ -1301,7 +1333,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5259"
+            line="5282"
             column="13"/>
     </issue>
 
@@ -1317,7 +1349,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="8069"
+            line="8138"
             column="13"/>
     </issue>
 
@@ -1333,7 +1365,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="8603"
+            line="8672"
             column="13"/>
     </issue>
 
@@ -1349,7 +1381,7 @@
         errorLine2="                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="8632"
+            line="8701"
             column="89"/>
     </issue>
 
@@ -1365,7 +1397,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="10797"
+            line="10866"
             column="71"/>
     </issue>
 
@@ -1381,7 +1413,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11106"
+            line="11175"
             column="13"/>
     </issue>
 
@@ -1397,7 +1429,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11419"
+            line="11488"
             column="13"/>
     </issue>
 
@@ -1413,7 +1445,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11882"
+            line="11951"
             column="13"/>
     </issue>
 
@@ -1429,7 +1461,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11966"
+            line="12035"
             column="13"/>
     </issue>
 
@@ -1445,7 +1477,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12584"
+            line="12653"
             column="13"/>
     </issue>
 
@@ -1461,7 +1493,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12768"
+            line="12837"
             column="13"/>
     </issue>
 
@@ -1477,7 +1509,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12778"
+            line="12847"
             column="17"/>
     </issue>
 
@@ -1493,7 +1525,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12872"
+            line="12941"
             column="13"/>
     </issue>
 
@@ -1509,7 +1541,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12969"
+            line="13038"
             column="13"/>
     </issue>
 
@@ -1525,7 +1557,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12973"
+            line="13042"
             column="13"/>
     </issue>
 
@@ -1541,7 +1573,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="13158"
+            line="13227"
             column="13"/>
     </issue>
 
@@ -1557,7 +1589,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="13171"
+            line="13240"
             column="13"/>
     </issue>
 
@@ -1573,7 +1605,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="13973"
+            line="14042"
             column="13"/>
     </issue>
 
@@ -1589,7 +1621,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="14082"
+            line="14151"
             column="13"/>
     </issue>
 
@@ -1605,7 +1637,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="14945"
+            line="15014"
             column="13"/>
     </issue>
 
@@ -1621,7 +1653,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15236"
+            line="15307"
             column="31"/>
     </issue>
 
@@ -1637,7 +1669,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15377"
+            line="15448"
             column="13"/>
     </issue>
 
@@ -1653,7 +1685,7 @@
         errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="16674"
+            line="16745"
             column="16"/>
     </issue>
 
@@ -1669,8 +1701,40 @@
         errorLine2="                                                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="16680"
+            line="16751"
             column="121"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        severity="Warning"
+        message="Unnecessary; `SDK_INT` is always >= 24"
+        category="Performance"
+        priority="6"
+        summary="Obsolete SDK_INT Version Check"
+        explanation="This check flags version checks that are not necessary, because the `minSdkVersion` (or surrounding known API level) is already at least as high as the version checked for.&#xA;&#xA;Similarly, it also looks for resources in `-vNN` folders, such as `values-v14` where the version qualifier is less than or equal to the `minSdkVersion`, where the contents should be merged into the best folder."
+        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) periodRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
+            line="18829"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        severity="Warning"
+        message="Unnecessary; `SDK_INT` is always >= 24"
+        category="Performance"
+        priority="6"
+        summary="Obsolete SDK_INT Version Check"
+        explanation="This check flags version checks that are not necessary, because the `minSdkVersion` (or surrounding known API level) is already at least as high as the version checked for.&#xA;&#xA;Similarly, it also looks for resources in `-vNN` folders, such as `values-v14` where the version qualifier is less than or equal to the `minSdkVersion`, where the contents should be merged into the best folder."
+        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) metrics.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
+            line="18873"
+            column="13"/>
     </issue>
 
     <issue
@@ -1685,7 +1749,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="18869"
+            line="19127"
             column="13"/>
     </issue>
 
@@ -1701,7 +1765,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="19517"
+            line="19939"
             column="13"/>
     </issue>
 
@@ -1717,7 +1781,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="19535"
+            line="19957"
             column="13"/>
     </issue>
 
@@ -1733,7 +1797,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="19892"
+            line="20314"
             column="13"/>
     </issue>
 
@@ -1749,7 +1813,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20324"
+            line="20746"
             column="17"/>
     </issue>
 
@@ -1765,7 +1829,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20591"
+            line="21013"
             column="13"/>
     </issue>
 
@@ -1781,7 +1845,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20689"
+            line="21111"
             column="75"/>
     </issue>
 
@@ -1797,7 +1861,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20724"
+            line="21146"
             column="31"/>
     </issue>
 
@@ -1813,7 +1877,7 @@
         errorLine2="                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20724"
+            line="21146"
             column="143"/>
     </issue>
 
@@ -1829,7 +1893,7 @@
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20726"
+            line="21148"
             column="49"/>
     </issue>
 
@@ -1845,7 +1909,7 @@
         errorLine2="                                                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20726"
+            line="21148"
             column="132"/>
     </issue>
 
@@ -1861,7 +1925,7 @@
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="22456"
+            line="22878"
             column="27"/>
     </issue>
 
@@ -1877,7 +1941,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="24863"
+            line="25285"
             column="13"/>
     </issue>
 
@@ -1893,7 +1957,7 @@
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="25477"
+            line="25899"
             column="27"/>
     </issue>
 
@@ -1909,7 +1973,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="25552"
+            line="25974"
             column="20"/>
     </issue>
 
@@ -2561,7 +2625,7 @@
         errorLine2="                             ^">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1689"
+            line="1694"
             column="30"/>
     </issue>
 
@@ -2577,7 +2641,7 @@
         errorLine2="        ^">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2577"
+            line="2587"
             column="9"/>
     </issue>
 
@@ -2593,7 +2657,7 @@
         errorLine2="                             ^">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2577"
+            line="2587"
             column="30"/>
     </issue>
 
@@ -2609,7 +2673,7 @@
         errorLine2="                                 ~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="16794"
+            line="16865"
             column="34"/>
     </issue>
 
@@ -2659,7 +2723,7 @@
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="9063"
+            line="9132"
             column="21"/>
     </issue>
 
@@ -2677,7 +2741,7 @@
         errorLine2="                                                            ~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="9068"
+            line="9137"
             column="61"/>
     </issue>
 
@@ -2695,7 +2759,7 @@
         errorLine2="                                                                                         ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="9068"
+            line="9137"
             column="90"/>
     </issue>
 
@@ -2713,7 +2777,7 @@
         errorLine2="                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="9159"
+            line="9228"
             column="1417"/>
     </issue>
 
@@ -2731,7 +2795,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="9339"
+            line="9408"
             column="58"/>
     </issue>
 
@@ -2749,7 +2813,7 @@
         errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="10770"
+            line="10839"
             column="60"/>
     </issue>
 
@@ -2767,7 +2831,7 @@
         errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20425"
+            line="20847"
             column="29"/>
     </issue>
 
@@ -2785,7 +2849,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20529"
+            line="20951"
             column="44"/>
     </issue>
 
@@ -2803,7 +2867,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20555"
+            line="20977"
             column="58"/>
     </issue>
 
@@ -2821,7 +2885,7 @@
         errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="26941"
+            line="27363"
             column="40"/>
     </issue>
 
@@ -2869,7 +2933,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1840"
+            line="1845"
             column="30"/>
     </issue>
 
@@ -2885,7 +2949,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="1855"
+            line="1860"
             column="30"/>
     </issue>
 
@@ -2901,7 +2965,7 @@
         errorLine2="                                                              ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2106"
+            line="2116"
             column="63"/>
     </issue>
 
@@ -2917,7 +2981,7 @@
         errorLine2="                                                            ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2128"
+            line="2138"
             column="61"/>
     </issue>
 
@@ -2933,7 +2997,7 @@
         errorLine2="                                    ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2133"
+            line="2143"
             column="37"/>
     </issue>
 
@@ -2949,7 +3013,7 @@
         errorLine2="                                    ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2145"
+            line="2155"
             column="37"/>
     </issue>
 
@@ -2965,7 +3029,7 @@
         errorLine2="                                 ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2148"
+            line="2158"
             column="34"/>
     </issue>
 
@@ -2981,7 +3045,7 @@
         errorLine2="                                                                                                            ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2891"
+            line="2907"
             column="109"/>
     </issue>
 
@@ -2997,7 +3061,7 @@
         errorLine2="                                                                                                               ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2900"
+            line="2916"
             column="112"/>
     </issue>
 
@@ -3013,7 +3077,7 @@
         errorLine2="                                                                                                               ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="2909"
+            line="2925"
             column="112"/>
     </issue>
 
@@ -3029,7 +3093,7 @@
         errorLine2="                                                          ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3374"
+            line="3395"
             column="59"/>
     </issue>
 
@@ -3045,7 +3109,7 @@
         errorLine2="                                                                                                                     ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3557"
+            line="3578"
             column="118"/>
     </issue>
 
@@ -3061,7 +3125,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="3905"
+            line="3926"
             column="30"/>
     </issue>
 
@@ -3077,7 +3141,7 @@
         errorLine2="                                ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="4944"
+            line="4967"
             column="33"/>
     </issue>
 
@@ -3093,7 +3157,7 @@
         errorLine2="                             ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5755"
+            line="5778"
             column="30"/>
     </issue>
 
@@ -3109,7 +3173,7 @@
         errorLine2="                               ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="5772"
+            line="5795"
             column="32"/>
     </issue>
 
@@ -3125,7 +3189,7 @@
         errorLine2="                                 ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="8068"
+            line="8137"
             column="34"/>
     </issue>
 
@@ -3141,7 +3205,7 @@
         errorLine2="                                                                                          ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="8068"
+            line="8137"
             column="91"/>
     </issue>
 
@@ -3157,7 +3221,7 @@
         errorLine2="                                ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="9859"
+            line="9928"
             column="33"/>
     </issue>
 
@@ -3173,7 +3237,7 @@
         errorLine2="                                ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="10797"
+            line="10866"
             column="33"/>
     </issue>
 
@@ -3189,7 +3253,7 @@
         errorLine2="                                                                                                                 ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11112"
+            line="11181"
             column="114"/>
     </issue>
 
@@ -3205,7 +3269,7 @@
         errorLine2="                                 ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11115"
+            line="11184"
             column="34"/>
     </issue>
 
@@ -3221,7 +3285,7 @@
         errorLine2="                               ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11118"
+            line="11187"
             column="32"/>
     </issue>
 
@@ -3237,7 +3301,7 @@
         errorLine2="                                         ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11231"
+            line="11300"
             column="42"/>
     </issue>
 
@@ -3253,7 +3317,7 @@
         errorLine2="                                                                                   ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11296"
+            line="11365"
             column="84"/>
     </issue>
 
@@ -3269,7 +3333,7 @@
         errorLine2="                                                                                 ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11297"
+            line="11366"
             column="82"/>
     </issue>
 
@@ -3285,7 +3349,7 @@
         errorLine2="                                                              ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11315"
+            line="11384"
             column="63"/>
     </issue>
 
@@ -3301,7 +3365,7 @@
         errorLine2="                                                              ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11328"
+            line="11397"
             column="63"/>
     </issue>
 
@@ -3317,7 +3381,7 @@
         errorLine2="                                                                                   ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11367"
+            line="11436"
             column="84"/>
     </issue>
 
@@ -3333,7 +3397,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11587"
+            line="11656"
             column="30"/>
     </issue>
 
@@ -3349,7 +3413,7 @@
         errorLine2="                                                                                                                                                                                        ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="11648"
+            line="11717"
             column="185"/>
     </issue>
 
@@ -3365,7 +3429,7 @@
         errorLine2="                                                                                       ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12149"
+            line="12218"
             column="88"/>
     </issue>
 
@@ -3381,7 +3445,7 @@
         errorLine2="                                                                                                    ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12434"
+            line="12503"
             column="101"/>
     </issue>
 
@@ -3397,7 +3461,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12636"
+            line="12705"
             column="30"/>
     </issue>
 
@@ -3413,7 +3477,7 @@
         errorLine2="                                                                                          ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="12890"
+            line="12959"
             column="91"/>
     </issue>
 
@@ -3429,7 +3493,7 @@
         errorLine2="                                       ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="14247"
+            line="14316"
             column="40"/>
     </issue>
 
@@ -3445,7 +3509,7 @@
         errorLine2="                                                                                                              ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="14280"
+            line="14349"
             column="111"/>
     </issue>
 
@@ -3461,7 +3525,7 @@
         errorLine2="                                                                                            ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15347"
+            line="15418"
             column="93"/>
     </issue>
 
@@ -3477,7 +3541,7 @@
         errorLine2="                                                                                                                            ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15357"
+            line="15428"
             column="125"/>
     </issue>
 
@@ -3493,7 +3557,7 @@
         errorLine2="                                                                                        ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15393"
+            line="15464"
             column="89"/>
     </issue>
 
@@ -3509,7 +3573,7 @@
         errorLine2="                                                                                                  ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15394"
+            line="15465"
             column="99"/>
     </issue>
 
@@ -3525,7 +3589,7 @@
         errorLine2="                                                                                                                            ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15402"
+            line="15473"
             column="125"/>
     </issue>
 
@@ -3541,7 +3605,7 @@
         errorLine2="                                                                                                                                                   ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15403"
+            line="15474"
             column="148"/>
     </issue>
 
@@ -3557,7 +3621,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="15411"
+            line="15482"
             column="30"/>
     </issue>
 
@@ -3573,7 +3637,7 @@
         errorLine2="                                                                                                        ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="16469"
+            line="16540"
             column="105"/>
     </issue>
 
@@ -3589,7 +3653,7 @@
         errorLine2="                             ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="18751"
+            line="18963"
             column="30"/>
     </issue>
 
@@ -3605,7 +3669,7 @@
         errorLine2="                                ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="19534"
+            line="19956"
             column="33"/>
     </issue>
 
@@ -3621,7 +3685,7 @@
         errorLine2="                                          ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="19891"
+            line="20313"
             column="43"/>
     </issue>
 
@@ -3637,7 +3701,7 @@
         errorLine2="                             ~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="20390"
+            line="20812"
             column="30"/>
     </issue>
 
@@ -3653,7 +3717,7 @@
         errorLine2="                                                                                                                                                                                                                          ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="22210"
+            line="22632"
             column="219"/>
     </issue>
 
@@ -3669,7 +3733,7 @@
         errorLine2="                                                                                                               ~~~~~">
         <location
             file="/home/runner/work/modiriat/modiriat/MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java"
-            line="25604"
+            line="26026"
             column="112"/>
     </issue>
 
