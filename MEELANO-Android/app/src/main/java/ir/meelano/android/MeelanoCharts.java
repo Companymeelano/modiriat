@@ -373,7 +373,7 @@ final class MeelanoCharts {
             if ((n - 1) % every != 0 && (Float.isNaN(lastX) || Math.abs(lastX - xs[n - 1]) >= labelWidth + dp(8))) drawX(canvas, n - 1, xs[n - 1], w, h);
 
             int s = selected >= 0 ? Math.min(n - 1, selected) : latestIndex(n);
-            paint.setShader(null); paint.setStyle(Paint.Style.FILL); paint.setColor(alpha(muted, 90));
+            paint.setShader(null); paint.setStyle(Paint.Style.FILL); paint.setColor(withAlpha(muted, 90));
             canvas.drawLine(xs[s], top, xs[s], bottom, paint);
             drawMarker(canvas, xs[s], secondaryY[s], secondaryColor, sc);
             drawMarker(canvas, xs[s], primaryY[s], accent, sc);

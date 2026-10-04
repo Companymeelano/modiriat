@@ -19383,7 +19383,9 @@ public class MainActivity extends Activity {
         if (mode == 2) return formatNumber(row.opt("value")) + "٪";
         if (mode == 3) return "پیگیری";
         if (mode == 4) return "تعداد " + formatNumber(row.opt("count")) + "\n" + compactMoney(row.opt("amount"));
-        return compactMoney(row.opt("value", row.opt("amount", 0)));
+        Object value = row.opt("value");
+        if (value == null || JSONObject.NULL.equals(value)) value = row.opt("amount");
+        return compactMoney(value);
     }
 
     private String reportHint(String key, JSONObject row, int mode) {
