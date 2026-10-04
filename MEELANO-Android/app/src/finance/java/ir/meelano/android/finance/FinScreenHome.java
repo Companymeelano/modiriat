@@ -53,16 +53,22 @@ public class FinScreenHome extends FinScreen {
 
     @Override protected void fetch() {
         final String base = "home:" + host.today();
-        db.read(key(base), 60_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = FinQueries.home(c, today);
-            payload.put("alerts", FinQueries.alerts(c, today));
-            payload.put("mismatchList", FinQueries.receiptMismatches(c, MeelanoJalaliMonthStart(payload), today, 12));
-            payload.put("topDebtors", FinQueries.topDebtors(c, 6));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, env -> render(env));
+        db.read(key(base), 60_000L, c -> payload(c), env -> render(env));
+    }
+
+    /**
+     * The complete home payload, read from the database. The post-login preload calls this same
+     * method, so a screen can never show something different from what the prefetch read.
+     */
+    public static JSONArray payload(Connection c) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = FinQueries.home(c, today);
+        payload.put("alerts", FinQueries.alerts(c, today));
+        payload.put("mismatchList", FinQueries.receiptMismatches(c, MeelanoJalaliMonthStart(payload), today, 12));
+        payload.put("topDebtors", FinQueries.topDebtors(c, 6));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private static String MeelanoJalaliMonthStart(JSONObject payload) {

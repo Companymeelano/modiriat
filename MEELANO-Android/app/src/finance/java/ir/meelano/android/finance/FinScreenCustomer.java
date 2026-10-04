@@ -35,19 +35,22 @@ public class FinScreenCustomer extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 90_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = FinQueries.customerSummary(c, shmo, today);
-            payload.put("today", today);
-            payload.put("statement", FinQueries.customerStatement(c, shmo, FinFmt.addDays(today, -120), today, 120));
-            payload.put("invoices", FinQueries.openInvoices(c, shmo));
-            payload.put("cheques", FinQueries.customerCheques(c, shmo, today));
-            payload.put("activity", FinQueries.customerActivity(c, shmo, 40));
-            payload.put("followups", FinQueries.followUps(c, shmo, 20));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 90_000L, c -> payload(c, shmo), this::render);
+    }
+
+    /** One customer file: balance, statement, open invoices and cheques — read from the database. */
+    public static JSONArray payload(Connection c, int shmo) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = FinQueries.customerSummary(c, shmo, today);
+        payload.put("today", today);
+        payload.put("statement", FinQueries.customerStatement(c, shmo, FinFmt.addDays(today, -120), today, 120));
+        payload.put("invoices", FinQueries.openInvoices(c, shmo));
+        payload.put("cheques", FinQueries.customerCheques(c, shmo, today));
+        payload.put("activity", FinQueries.customerActivity(c, shmo, 40));
+        payload.put("followups", FinQueries.followUps(c, shmo, 20));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env) {

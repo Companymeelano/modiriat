@@ -46,17 +46,20 @@ public class FinScreenCash extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 90_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = FinQueries.cashSummary(c, today);
-            payload.put("today", today);
-            payload.put("movements", FinQueries.cashMovements(c, host.periodFrom(), host.periodTo(), 80, 0));
-            payload.put("settlements", FinQueries.settlements(c, host.periodFrom(), host.periodTo(), 60));
-            payload.put("operators", FinQueries.userSettlement(c, host.periodFrom(), host.periodTo()));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 90_000L, c -> payload(c, host.periodFrom(), host.periodTo()), this::render);
+    }
+
+    /** The cash book, its hand-overs and per-operator settlement — all from the database. The post-login preload calls this same method. */
+    public static JSONArray payload(Connection c, String from, String to) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = FinQueries.cashSummary(c, today);
+        payload.put("today", today);
+        payload.put("movements", FinQueries.cashMovements(c, from, to, 80, 0));
+        payload.put("settlements", FinQueries.settlements(c, from, to, 60));
+        payload.put("operators", FinQueries.userSettlement(c, from, to));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env) {

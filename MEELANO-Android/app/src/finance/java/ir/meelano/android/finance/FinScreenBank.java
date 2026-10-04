@@ -39,18 +39,21 @@ public class FinScreenBank extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 120_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = new JSONObject();
-            payload.put("today", today);
-            payload.put("movements", FinQueries.bankMovements(c, bankRdf, host.periodFrom(), host.periodTo(), 120));
-            payload.put("unlinked", FinQueries.bankWithoutReceipt(c, host.periodFrom(), host.periodTo(), 40));
-            payload.put("daily", FinQueries.bankDaily(c, host.periodFrom(), host.periodTo()));
-            payload.put("cases", FinQueries.reconCases(c, 40));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 120_000L, c -> payload(c, bankRdf, host.periodFrom(), host.periodTo()), this::render);
+    }
+
+    /** One account: its movement, unlinked rows and open cases — read from the database. */
+    public static JSONArray payload(Connection c, int bankRdf, String from, String to) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = new JSONObject();
+        payload.put("today", today);
+        payload.put("movements", FinQueries.bankMovements(c, bankRdf, from, to, 120));
+        payload.put("unlinked", FinQueries.bankWithoutReceipt(c, from, to, 40));
+        payload.put("daily", FinQueries.bankDaily(c, from, to));
+        payload.put("cases", FinQueries.reconCases(c, 40));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     /** Daily in/out of this account, plus a donut of the settled vs unsettled volume. */

@@ -39,11 +39,12 @@ android {
         finance {
             dimension 'edition'
             applicationId 'ir.meelano.atiran.finance'
-            versionCode 7
-            versionName '1.2.3'
+            versionCode 8
+            versionName '1.2.4'
             // Charts + themed buttons + reworked data paths; self-diagnosing startup (1.1.1);
             // health/loading screen (1.2.0); crash-proof interface (1.2.1); guarded custom drawing
-            // with software-rendering fallback and a code-by-code review of the sign-in path (1.2.3).
+            // with software fallback (1.2.3); direct sign-in on the same path as the other Meelano
+            // applications and a full database preload after login (1.2.4).
         }
     }
 

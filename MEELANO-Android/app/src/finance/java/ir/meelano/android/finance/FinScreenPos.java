@@ -37,16 +37,19 @@ public class FinScreenPos extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 90_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = FinQueries.posSummary(c, host.periodFrom(), host.periodTo());
-            payload.put("today", today);
-            payload.put("rows", FinQueries.posTransactions(c, host.periodFrom(), host.periodTo(), "", "", 60, 0));
-            payload.put("unlinked", FinQueries.posWithoutReceipt(c, 30));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 90_000L, c -> payload(c, host.periodFrom(), host.periodTo()), this::render);
+    }
+
+    /** POS transactions of the period, read from the database. The post-login preload calls this same method. */
+    public static JSONArray payload(Connection c, String from, String to) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = FinQueries.posSummary(c, from, to);
+        payload.put("today", today);
+        payload.put("rows", FinQueries.posTransactions(c, from, to, "", "", 60, 0));
+        payload.put("unlinked", FinQueries.posWithoutReceipt(c, 30));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env) {

@@ -80,25 +80,32 @@ public class FinScreenCheques extends FinScreen {
     @Override protected void fetch() {
         final String m = mode;
         final boolean issued = issuedView;
-        db.read(key(cacheKey() + (issued ? ":out" : ":in")), 120_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = new JSONObject();
-            payload.put("today", today);
-            payload.put("issuedView", issued);
-            if (issued) {
-                payload.put("census", FinQueries.paidChequeCensus(c));
-                payload.put("rows", FinQueries.paidCheques(c, host.periodFrom(), host.periodTo(), "", 60, 0));
-                payload.put("statusNames", new JSONArray());
-            } else {
-                payload.put("census", FinQueries.chequeStatusCensus(c, true, today));
-                payload.put("rows", FinQueries.cheques(c, host.periodFrom(), host.periodTo(), m, "", 60, 0));
-                payload.put("statusNames", FinQueries.checkStatusNames(c));
-                payload.put("calendar", FinQueries.calendar(c, today, FinFmt.addDays(today, 30), today, 40));
-            }
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, env -> render(env, issued));
+        db.read(key(cacheKey() + (issued ? ":out" : ":in")), 120_000L,
+                c -> payload(c, host.periodFrom(), host.periodTo(), m, issued), env -> render(env, issued));
+    }
+
+    /**
+     * The cheque centre payload (received or issued view), read from the database. The post-login
+     * preload calls this same method.
+     */
+    public static JSONArray payload(Connection c, String from, String to, String mode, boolean issued) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = new JSONObject();
+        payload.put("today", today);
+        payload.put("issuedView", issued);
+        if (issued) {
+            payload.put("census", FinQueries.paidChequeCensus(c));
+            payload.put("rows", FinQueries.paidCheques(c, from, to, "", 60, 0));
+            payload.put("statusNames", new JSONArray());
+        } else {
+            payload.put("census", FinQueries.chequeStatusCensus(c, true, today));
+            payload.put("rows", FinQueries.cheques(c, from, to, mode, "", 60, 0));
+            payload.put("statusNames", FinQueries.checkStatusNames(c));
+            payload.put("calendar", FinQueries.calendar(c, today, FinFmt.addDays(today, 30), today, 40));
+        }
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env, boolean issued) {

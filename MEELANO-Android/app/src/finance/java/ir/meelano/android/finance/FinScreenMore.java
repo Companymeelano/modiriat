@@ -36,14 +36,17 @@ public class FinScreenMore extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 120_000L, c -> {
-            JSONObject payload = new JSONObject();
-            payload.put("today", FinQueries.serverToday(c));
-            payload.put("activity", FinQueries.activity(c, 30));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 120_000L, c -> payload(c), this::render);
+    }
+
+    /** The audit trail of what this app wrote, read from the database. The post-login preload calls this same method. */
+    public static JSONArray payload(Connection c) throws Exception {
+        JSONObject payload = new JSONObject();
+        payload.put("today", FinQueries.serverToday(c));
+        payload.put("activity", FinQueries.activity(c, 30));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env) {
@@ -75,6 +78,7 @@ public class FinScreenMore extends FinScreen {
                 v -> host.open(new FinScreenProblems(host))), ui.lp(-1, -2));
         body.addView(modules, ui.lp(-1, -2));
 
+        account();
         themes();
         support();
         activity(p);
@@ -92,6 +96,55 @@ public class FinScreenMore extends FinScreen {
         return ui.listRow(glyph + "  " + title, allowed ? sub : "بدون دسترسی برای این نقش",
                 allowed ? "" : "محدود", allowed ? "" : "بدون دسترسی",
                 allowed ? ui.goldAccent : FinUi.WARNING, click);
+    }
+
+    /**
+     * The signed-in account, exactly as the database described it at sign-in: where the row was found,
+     * the real display name, the ids that Atiran rows point at, the role and its source. Nothing on
+     * this card is derived from the typed username alone.
+     */
+    private void account() {
+        LinearLayout card = section("☺", "حساب کاربری",
+                "همهٔ این مقدارها هنگام ورود از دیتابیس آتیران خوانده شده‌اند");
+        FinSession s = FinSession.get();
+        if (s == null) {
+            card.addView(ui.text("حسابی وارد نشده است.", 12f, ui.textDim, false), ui.lp(-1, -2));
+            body.addView(card, ui.lp(-1, -2));
+            return;
+        }
+        String source = "visitors".equals(s.source) ? "جدول اپراتورها (visitors)"
+                : "sys_users".equals(s.source) ? "کاربران آتیران (sys_users)" : s.source;
+        card.addView(row2("نام کاربری", FinFmt.faNumber(s.username)), ui.lp(-1, -2));
+        card.addView(row2("نام نمایشی", FinFmt.faNumber(s.displayName)), ui.lp(-1, -2));
+        card.addView(row2("جدول حساب", source), ui.lp(-1, -2));
+        card.addView(row2("شناسه اپراتور (vis_rdf)", s.visitorId == null ? "—" : FinFmt.faNumber(s.visitorId)), ui.lp(-1, -2));
+        card.addView(row2("شناسه کاربر آتیران", s.atiranUserId == null ? "—" : FinFmt.faNumber(s.atiranUserId)), ui.lp(-1, -2));
+        card.addView(row2("نقش", s.roleLabel + " (" + s.roleKey + ")"), ui.lp(-1, -2));
+        card.addView(row2("منبع نقش", s.roleFromDatabase ? "جدول‌های دسترسی دیتابیس" : "قاعدهٔ هویت/پیش‌فرض"), ui.lp(-1, -2));
+        card.addView(row2("تعداد دسترسی‌ها", FinFmt.faNumber(s.permissions.size())), ui.lp(-1, -2));
+        card.addView(row2("زمان ورود", clock(s.loginAt)), ui.lp(-1, -2));
+        card.addView(ui.text("پیش‌بارگذاری: پس از ورود، همهٔ بخش‌ها یک‌بار از دیتابیس خوانده و ذخیره می‌شوند "
+                + "تا هر صفحه بلافاصله با داده واقعی باز شود.", 11f, ui.textFaint, false), ui.lp(-1, -2));
+        body.addView(card, ui.lp(-1, -2));
+    }
+
+    private android.view.View row2(String label, String value) {
+        LinearLayout row = ui.row();
+        row.setPadding(0, ui.dp(4), 0, ui.dp(4));
+        row.addView(ui.text(label, 11.5f, ui.textDim, false), ui.lp(0, -2, 1f));
+        row.addView(ui.text(value == null || value.isEmpty() ? "—" : value, 12f, ui.textColor, true), ui.lp(-2, -2));
+        return row;
+    }
+
+    private String clock(long at) {
+        try {
+            if (at <= 0) return "—";
+            String time = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(new java.util.Date(at));
+            String date = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(new java.util.Date(at));
+            return FinFmt.faNumber(time) + " · " + FinFmt.faNumber(date);
+        } catch (Throwable t) {
+            return "—";
+        }
     }
 
     /** Theme chooser with a live colour preview of every palette. */

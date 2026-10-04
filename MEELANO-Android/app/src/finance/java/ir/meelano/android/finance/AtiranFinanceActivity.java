@@ -487,11 +487,6 @@ public class AtiranFinanceActivity extends Activity {
                 return;
             }
         }
-        if (FinAuth.lockedOut(this)) {
-            sink.message("ورود موقتاً قفل است؛ " + FinFmt.faNumber(FinAuth.lockRemainingMs(this) / 60000L + 1)
-                    + " دقیقه دیگر تلاش کنید.", true);
-            return;
-        }
         sink.busy(true);
         sink.elapsed(0);
         sink.status("در حال بررسی روی سرور آتیران…");
@@ -517,7 +512,9 @@ public class AtiranFinanceActivity extends Activity {
                     if (r.ok && r.session != null) {
                         try { r.session.remember(AtiranFinanceActivity.this); } catch (Throwable ignored) { }
                         FinCrash.step(AtiranFinanceActivity.this, "login-ok:" + FinSession.roleKey());
-                        sink.message("خوش آمدید " + FinSession.displayOrUser(), false);
+                        logProfile(r.profile);
+                        sink.message("خوش آمدید " + FinSession.displayOrUser() + " · نقش "
+                                + FinSession.roleLabelFor(FinSession.roleKey()) + " (" + sourceLabel(r.profile) + ")", false);
                         sink.success();
                     } else {
                         String message = r.message == null || r.message.isEmpty() ? "ورود ناموفق بود." : r.message;
@@ -625,7 +622,8 @@ public class AtiranFinanceActivity extends Activity {
         toggleRow.addView(toggle, ui.lp(-2, -2));
         card.addView(toggleRow, ui.lp(-1, -2));
 
-        loginHint = ui.text("نام کاربری و رمز عبور حساب آتیران خود را وارد کنید.", 11.5f, ui.textDim, false);
+        loginHint = ui.text("نام کاربری و رمز عبور حساب آتیران خود را وارد کنید؛ ورود مستقیم روی همان مسیر "
+                + "برنامه‌های دیگر: جدول اپراتورها و سپس کاربران آتیران.", 11.5f, ui.textDim, false);
         loginHint.setPadding(0, ui.dp(6), 0, 0);
         card.addView(loginHint, ui.lp(-1, -2));
 
@@ -636,11 +634,6 @@ public class AtiranFinanceActivity extends Activity {
         loginState = ui.text("", 12f, FinUi.DANGER, false);
         loginState.setPadding(0, ui.dp(8), 0, 0);
         card.addView(loginState, ui.lp(-1, -2));
-
-        if (FinAuth.lockedOut(this)) {
-            long left = FinAuth.lockRemainingMs(this) / 60000L + 1;
-            loginState.setText("ورود موقتاً قفل است؛ " + FinFmt.faNumber(left) + " دقیقه دیگر تلاش کنید.");
-        }
 
         loginButton = ui.primaryButton("ورود به آتیران مالی", ui.goldAccent, null);
         LinearLayout.LayoutParams lp2 = ui.lp(-1, -2);
@@ -883,6 +876,54 @@ public class AtiranFinanceActivity extends Activity {
         updateBackCallback();
         loadServerDate();
         probeConnection();
+        preloadAllData();
+    }
+
+    /** Writes what the database said about the signed-in account into the boot trail (no password). */
+    private void logProfile(JSONObject profile) {
+        try {
+            if (profile == null) return;
+            FinCrash.log(this, "login-profile:" + profile.optString("table", "?")
+                    + ":" + profile.optString("roleKey", "?")
+                    + ":" + profile.optString("roleSource", "?")
+                    + ":" + profile.optString("matchedColumn", "-")
+                    + ":visitor=" + profile.opt("visitorId") + ":user=" + profile.opt("atiranUserId"), null);
+        } catch (Throwable ignored) { }
+    }
+
+    /** Human wording of where the account row was found. */
+    private String sourceLabel(JSONObject profile) {
+        String table = profile == null ? "" : profile.optString("table", "");
+        if ("visitors".equalsIgnoreCase(table)) return "جدول اپراتورها";
+        if ("sys_users".equalsIgnoreCase(table)) return "کاربران آتیران";
+        return "دیتابیس آتیران";
+    }
+
+    private volatile boolean preloadStarted;
+
+    /**
+     * Reads every module of the application from the database right after sign-in, one query after
+     * another, and leaves the result in the cache so no screen has to wait for its first paint. It is
+     * an optimisation on top of the screens' own reads: if it fails, every screen still reads for
+     * itself and shows its own error card.
+     */
+    private void preloadAllData() {
+        if (db == null || preloadStarted) return;
+        preloadStarted = true;
+        final String from = periodFrom(), to = periodTo(), today = today();
+        Thread t = new Thread(() -> {
+            try {
+                FinPrefetch.warmAll(db, from, to, today, (label, rows, ms, error) -> {
+                    if (error != null) FinCrash.log(AtiranFinanceActivity.this, "prefetch-fail:" + label, error);
+                    else FinCrash.step(AtiranFinanceActivity.this, "prefetch:" + label + ":" + (rows < 0 ? "cached" : rows + ":" + ms + "ms"));
+                });
+                FinCrash.step(AtiranFinanceActivity.this, "prefetch-done");
+            } catch (Throwable e) {
+                FinCrash.log(AtiranFinanceActivity.this, "prefetch", e.getClass().getSimpleName());
+            }
+        }, "fin-prefetch");
+        t.setDaemon(true);
+        t.start();
     }
 
     /** The header carries the operator identity, the real role and the connection state. */

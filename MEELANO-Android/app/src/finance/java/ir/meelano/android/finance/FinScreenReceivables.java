@@ -44,19 +44,22 @@ public class FinScreenReceivables extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 120_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = FinQueries.receivableTotals(c, today);
-            payload.put("today", today);
-            payload.put("bands", FinQueries.agingBands(c, today));
-            payload.put("debtors", FinQueries.receivables(c, today, 40, 0));
-            payload.put("queue", FinQueries.openInvoiceQueue(c, 25));
-            payload.put("topDebtors", FinQueries.topDebtors(c, 8));
-            payload.put("followups", FinQueries.followUps(c, 0, 25));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 120_000L, c -> payload(c), this::render);
+    }
+
+    /** Receivable totals, aging bands, debtors and follow-ups, read from the database. The post-login preload calls this same method. */
+    public static JSONArray payload(Connection c) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = FinQueries.receivableTotals(c, today);
+        payload.put("today", today);
+        payload.put("bands", FinQueries.agingBands(c, today));
+        payload.put("debtors", FinQueries.receivables(c, today, 40, 0));
+        payload.put("queue", FinQueries.openInvoiceQueue(c, 25));
+        payload.put("topDebtors", FinQueries.topDebtors(c, 8));
+        payload.put("followups", FinQueries.followUps(c, 0, 25));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env) {

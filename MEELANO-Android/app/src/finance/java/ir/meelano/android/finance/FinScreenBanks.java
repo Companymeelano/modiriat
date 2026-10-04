@@ -33,22 +33,25 @@ public class FinScreenBanks extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 300_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = FinQueries.home(c, today);
-            payload.put("today", today);
-            payload.put("banks", FinQueries.banks(c));
-            payload.put("daily", FinQueries.bankDaily(c, FinFmt.addDays(today, -30), today));
-            payload.put("posBanks", FinDb.select(c, "SELECT pd.PosBankRdf AS bank, ISNULL(b.BANKNAME, N'(بینام)') AS bank_name, "
-                    + "COUNT(*) AS n, ISNULL(SUM(pd.MabPos),0) AS total FROM dbo.PosDetails pd WITH (NOLOCK) "
-                    + "INNER JOIN dbo.dar d WITH (NOLOCK) ON d.ghno=pd.ghno AND d.p=0 "
-                    + "LEFT JOIN dbo.BANK b WITH (NOLOCK) ON b.RDF=pd.PosBankRdf "
-                    + "WHERE d.[date]>=? AND d.[date]<=? GROUP BY pd.PosBankRdf, b.BANKNAME ORDER BY total DESC",
-                    FinFmt.addDays(today, -30), today));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 300_000L, c -> payload(c), this::render);
+    }
+
+    /** Every account, its movement and its POS share — all from the database. The post-login preload calls this same method. */
+    public static JSONArray payload(Connection c) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = FinQueries.home(c, today);
+        payload.put("today", today);
+        payload.put("banks", FinQueries.banks(c));
+        payload.put("daily", FinQueries.bankDaily(c, FinFmt.addDays(today, -30), today));
+        payload.put("posBanks", FinDb.select(c, "SELECT pd.PosBankRdf AS bank, ISNULL(b.BANKNAME, N'(بینام)') AS bank_name, "
+                + "COUNT(*) AS n, ISNULL(SUM(pd.MabPos),0) AS total FROM dbo.PosDetails pd WITH (NOLOCK) "
+                + "INNER JOIN dbo.dar d WITH (NOLOCK) ON d.ghno=pd.ghno AND d.p=0 "
+                + "LEFT JOIN dbo.BANK b WITH (NOLOCK) ON b.RDF=pd.PosBankRdf "
+                + "WHERE d.[date]>=? AND d.[date]<=? GROUP BY pd.PosBankRdf, b.BANKNAME ORDER BY total DESC",
+                FinFmt.addDays(today, -30), today));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     private void render(JSONObject env) {

@@ -17,8 +17,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -185,6 +187,119 @@ public final class FinDb {
     // ------------------------------------------------------------------ queries
 
     /** Binds parameters positionally; supported types only, never string-concatenated into SQL. */
+    // ------------------------------------------------------------------ schema introspection
+    //
+    // The sign-in path of the other Meelano applications never guesses a column name: it reads the
+    // real column list of dbo.visitors / dbo.sys_users and then builds its statement from what the
+    // server actually has. The very same helpers are used here so both login paths behave alike.
+
+    /** True when the connected SQL Server understands TRY_CONVERT (2012 or newer). */
+    private static volatile boolean tryConvertOk = false;
+    private static volatile boolean tryConvertKnown = false;
+
+    public static String textExpr(Connection c, String alias, String col, int len) {
+        String prefix = alias == null || alias.isEmpty() ? "" : alias + ".";
+        if (!tryConvertKnown) {
+            try (PreparedStatement ps = c.prepareStatement("SELECT CONVERT(nvarchar(64), SERVERPROPERTY('ProductVersion'))")) {
+                try (ResultSet r = ps.executeQuery()) {
+                    if (r.next()) {
+                        String v = r.getString(1);
+                        int dot = v == null ? -1 : v.indexOf('.');
+                        String major = dot > 0 ? v.substring(0, dot) : (v == null ? "" : v);
+                        int n;
+                        try { n = Integer.parseInt(major.trim()); } catch (Exception e) { n = 0; }
+                        tryConvertOk = n >= 11;   // 11 = SQL Server 2012
+                    }
+                }
+            } catch (Throwable ignored) { }
+            tryConvertKnown = true;
+        }
+        return (tryConvertOk ? "TRY_CONVERT(nvarchar(" + len + ")," : "CONVERT(nvarchar(" + len + "),")
+                + prefix + "[" + col + "])";
+    }
+
+    public static boolean tableExists(Connection c, String table) {
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT 1 FROM sys.tables t JOIN sys.schemas s ON s.schema_id=t.schema_id "
+                        + "WHERE s.name=N'dbo' AND t.name=?")) {
+            ps.setString(1, table);
+            try (ResultSet r = ps.executeQuery()) { return r.next(); }
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** The real column list of a table or view, exactly as the database reports it. */
+    public static Set<String> columns(Connection c, String table) {
+        Set<String> set = new HashSet<>();
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT x.name FROM sys.columns x JOIN sys.objects o ON o.object_id=x.object_id "
+                        + "JOIN sys.schemas s ON s.schema_id=o.schema_id "
+                        + "WHERE s.name=N'dbo' AND o.type IN (N'U',N'V') AND o.name=? ORDER BY x.column_id")) {
+            ps.setString(1, table);
+            try (ResultSet r = ps.executeQuery()) { while (r.next()) set.add(r.getString(1)); }
+        } catch (Throwable ignored) { }
+        return set;
+    }
+
+    /** Column names compared without case, underscore, dash or the zero-width non-joiner. */
+    private static String columnKey(String v) {
+        if (v == null) return "";
+        StringBuilder b = new StringBuilder(v.length());
+        for (char ch : v.toLowerCase(Locale.US).toCharArray()) {
+            if (ch == '_' || ch == '-' || ch == ' ' || ch == '\u200c' || ch == '.') continue;
+            b.append(ch == '\u064a' ? '\u06cc' : ch == '\u0643' ? '\u06a9' : ch);
+        }
+        return b.toString();
+    }
+
+    public static String resolveColumn(Set<String> cols, String... candidates) {
+        if (cols == null || candidates == null) return null;
+        for (String cand : candidates) {
+            for (String col : cols) if (col != null && col.equalsIgnoreCase(cand)) return col;
+        }
+        for (String cand : candidates) {
+            String key = columnKey(cand);
+            if (key.isEmpty()) continue;
+            for (String col : cols) if (columnKey(col).equals(key)) return col;
+        }
+        return null;
+    }
+
+    public static List<String> uniqueColumns(Set<String> cols, String... candidates) {
+        List<String> out = new ArrayList<>();
+        if (cols == null || candidates == null) return out;
+        for (String cand : candidates) {
+            String col = resolveColumn(cols, cand);
+            if (col != null && !out.contains(col)) out.add(col);
+        }
+        return out;
+    }
+
+    /**
+     * Keeps a freshly read payload in the memory cache only. It is used by the post-login preload:
+     * every screen then opens with data that has just been read from the database, and nothing extra
+     * is written to disk.
+     */
+    public void warm(String key, JSONArray rows) {
+        if (key == null || rows == null) return;
+        try {
+            JSONObject result = new JSONObject();
+            result.put("rows", rows);
+            result.put("stale", false);
+            result.put("at", System.currentTimeMillis());
+            cache.put(key, copy(result));
+            cacheTime.put(key, System.currentTimeMillis());
+        } catch (Throwable ignored) { }
+    }
+
+    /** True when a fresh copy of this key is already in the memory cache. */
+    public boolean fresh(String key, long ttlMs) {
+        JSONObject mem = cache.get(key);
+        Long t = cacheTime.get(key);
+        return mem != null && t != null && System.currentTimeMillis() - t < ttlMs;
+    }
+
     static void bind(PreparedStatement ps, Object[] args) throws SQLException {
         if (args == null) return;
         for (int i = 0; i < args.length; i++) {

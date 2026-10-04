@@ -29,18 +29,21 @@ public class FinScreenProblems extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 60_000L, c -> {
-            String today = FinQueries.serverToday(c);
-            JSONObject payload = new JSONObject();
-            payload.put("today", today);
-            payload.put("mismatches", FinQueries.receiptMismatches(c, host.periodFrom(), host.periodTo(), 40));
-            payload.put("mismatchCount", FinQueries.mismatchCount(c, host.periodFrom(), host.periodTo()));
-            payload.put("pos", FinQueries.posWithoutReceipt(c, 40));
-            payload.put("bank", FinQueries.bankWithoutReceipt(c, host.periodFrom(), host.periodTo(), 40));
-            JSONArray a = new JSONArray();
-            a.put(payload);
-            return a;
-        }, this::render);
+        db.read(key(cacheKey()), 60_000L, c -> payload(c, host.periodFrom(), host.periodTo()), this::render);
+    }
+
+    /** Open reconciliation work of the period, read from the database. The post-login preload calls this same method. */
+    public static JSONArray payload(Connection c, String from, String to) throws Exception {
+        String today = FinQueries.serverToday(c);
+        JSONObject payload = new JSONObject();
+        payload.put("today", today);
+        payload.put("mismatches", FinQueries.receiptMismatches(c, from, to, 40));
+        payload.put("mismatchCount", FinQueries.mismatchCount(c, from, to));
+        payload.put("pos", FinQueries.posWithoutReceipt(c, 40));
+        payload.put("bank", FinQueries.bankWithoutReceipt(c, from, to, 40));
+        JSONArray a = new JSONArray();
+        a.put(payload);
+        return a;
     }
 
     /** Open work at a glance: how much of every kind, and how much money is behind it. */
