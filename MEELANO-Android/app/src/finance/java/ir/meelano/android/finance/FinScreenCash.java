@@ -35,21 +35,12 @@ public class FinScreenCash extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("صندوق و تسویه کاربران", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip(FinFmt.periodLabel(host.periodKey()), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
-        LinearLayout periods = ui.row();
-        periods.setPadding(0, ui.dp(6), 0, 0);
-        for (String k : new String[]{"today", "7d", "30d", "month"}) {
-            boolean active = k.equals(host.periodKey());
-            LinearLayout chip = ui.chip(FinFmt.periodLabel(k), active ? ui.goldAccent : ui.textFaint);
-            chip.setOnClickListener(v -> host.setPeriod(k));
-            LinearLayout.LayoutParams p = ui.lp(-2, -2);
-            p.leftMargin = ui.dp(4);
-            periods.addView(chip, p);
-        }
-        addCard(periods, 6);
+        add(hero("صندوق و تسویه کاربران", "دفتر صندوق COW و تسویه هر اپراتور: مورد انتظار در برابر تحویل‌شده", FinUi.INFO));
+        final String[] keys = {"today", "7d", "30d", "month"};
+        String[] labels = new String[keys.length];
+        int active = 0;
+        for (int i = 0; i < keys.length; i++) { labels[i] = FinFmt.periodLabel(keys[i]); if (keys[i].equals(host.periodKey())) active = i; }
+        addCard(ui.segmented(labels, active, FinUi.INFO, index -> host.setPeriod(keys[index])), 6);
         body = ui.column();
         add(body);
     }
@@ -94,8 +85,24 @@ public class FinScreenCash extends FinScreen {
         body.addView(k2, top(8));
 
         LinearLayout month = section("▦", "جمع ماه جاری صندوق", "ورود/خروج از ابتدای ماه شمسی");
-        month.addView(ui.tableRow(new String[]{"ورود", money(d(p, "inMonth")), "خروج", money(d(p, "outMonth"))},
-                new float[]{0.7f, 1.3f, 0.7f, 1.3f}, false, ui.goldAccent), ui.lp(-1, -2));
+        FinCharts.Ring ring = ui.ringChart();
+        double inMonth = d(p, "inMonth"), outMonth = d(p, "outMonth");
+        ring.data(outMonth, inMonth <= 0 ? Math.max(1, outMonth) : inMonth, "نسبت خروج به ورود ماه", outMonth > inMonth ? FinUi.WARNING : FinUi.SUCCESS);
+        ring.note("ورود " + compact(inMonth));
+        LinearLayout ringRow = ui.row();
+        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(ui.dp(148), ui.dp(148));
+        rlp.gravity = android.view.Gravity.CENTER_HORIZONTAL;
+        ringRow.addView(ring, rlp);
+        java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+        items.add(new FinCharts.Legend("ورود ماه (BED)", money(inMonth), FinUi.SUCCESS));
+        items.add(new FinCharts.Legend("خروج ماه (BES)", money(outMonth), FinUi.DANGER));
+        LinearLayout legend = ui.legend(items, inMonth + outMonth);
+        LinearLayout.LayoutParams llp = ui.lp(0, -2, 1f);
+        llp.leftMargin = ui.dp(10);
+        ringRow.addView(legend, llp);
+        month.addView(ringRow, ui.lp(-1, -2));
+        month.addView(ui.tableRow(new String[]{"ورود", money(inMonth), "خروج", money(outMonth)},
+                new float[]{0.7f, 1.3f, 0.7f, 1.3f}, false, ui.goldAccent), top(6));
         body.addView(month, top(12));
 
         kinds(p);
@@ -112,7 +119,24 @@ public class FinScreenCash extends FinScreen {
             body.addView(card, top(12));
             return;
         }
-        card.addView(ui.tableHeader(new String[]{"نوع", "تعداد", "ورود", "خروج"}), ui.lp(-1, -2));
+        int n = Math.min(7, rows.length());
+        String[] labels = new String[n];
+        double[] values = new double[n];
+        String[] notes = new String[n];
+        int[] colors = new int[n];
+        int[] palette = ui.palette();
+        for (int x = 0; x < n; x++) {
+            JSONObject r = rows.optJSONObject(x);
+            if (r == null) r = new JSONObject();
+            labels[x] = FinQueries.cashKindLabel(i(r, "act_id"));
+            values[x] = d(r, "in_amount") + d(r, "out_amount");
+            notes[x] = fa(i(r, "n")) + " ردیف · ورود " + compact(d(r, "in_amount")) + " · خروج " + compact(d(r, "out_amount"));
+            colors[x] = palette[x % palette.length];
+        }
+        FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
+        bars.data(labels, values, colors, notes);
+        addBars(card, bars, n);
+        card.addView(ui.tableHeader(new String[]{"نوع", "تعداد", "ورود", "خروج"}), top(8));
         for (int x = 0; x < rows.length(); x++) {
             JSONObject r = rows.optJSONObject(x);
             if (r == null) continue;
@@ -131,7 +155,26 @@ public class FinScreenCash extends FinScreen {
             body.addView(card, top(12));
             return;
         }
-        card.addView(ui.tableHeader(new String[]{"اپراتور", "نقد", "چک", "POS", "تحویل", "تفاوت"}), ui.lp(-1, -2));
+        int on = Math.min(8, rows.length());
+        String[] oLabels = new String[on];
+        double[] oValues = new double[on];
+        String[] oNotes = new String[on];
+        int[] oColors = new int[on];
+        int[] oPalette = ui.palette();
+        for (int x = 0; x < on; x++) {
+            JSONObject r = rows.optJSONObject(x);
+            if (r == null) r = new JSONObject();
+            double expected = d(r, "cash") + d(r, "checks") + d(r, "pos");
+            double actual = d(r, "delivered");
+            oLabels[x] = s(r, "vis_name", "—");
+            oValues[x] = expected;
+            oNotes[x] = "تحویل‌شده " + compact(actual) + " ریال · تفاوت " + ((expected - actual) > 0 ? "+" : "") + compact(expected - actual);
+            oColors[x] = Math.abs(expected - actual) < 1000 ? FinUi.SUCCESS : oPalette[(x + 1) % oPalette.length];
+        }
+        FinCharts.Bars operatorBars = ui.barsChart(FinUi.FormatterKind.MONEY);
+        operatorBars.data(oLabels, oValues, oColors, oNotes);
+        addBars(card, operatorBars, on);
+        card.addView(ui.tableHeader(new String[]{"اپراتور", "نقد", "چک", "POS", "تحویل", "تفاوت"}), top(8));
         for (int x = 0; x < rows.length(); x++) {
             JSONObject r = rows.optJSONObject(x);
             if (r == null) continue;

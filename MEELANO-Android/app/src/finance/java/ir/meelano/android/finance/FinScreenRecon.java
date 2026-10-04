@@ -33,10 +33,7 @@ public class FinScreenRecon extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("مغایرت‌گیری بانکی", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip("Statement → Match → Resolve → Confirm", ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("مغایرت‌گیری بانکی", "Statement → Match → Resolve → Confirm روی ردیف‌های واقعی بانک و قبض", FinUi.MANAGER));
         body = ui.column();
         add(body);
     }
@@ -82,6 +79,22 @@ public class FinScreenRecon extends FinScreen {
             else if ("review".equals(st)) review++;
             else resolved++;
         }
+
+        LinearLayout chart = section("◎", "وضعیت پرونده‌ها", "پرونده‌های ثبت‌شده در meelano_fin_recon");
+        int[] palette = ui.palette();
+        FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.COUNT);
+        donut.data(new String[]{"باز", "در بررسی", "بسته‌شده"}, new double[]{open, review, Math.max(0, resolved)},
+                new int[]{palette[5], palette[3], palette[1]}, "پرونده‌ها");
+        donut.empty("هنوز پرونده مغایرتی ثبت نشده است.");
+        java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+        items.add(new FinCharts.Legend("باز", FinFmt.count(open), palette[5]));
+        items.add(new FinCharts.Legend("در بررسی", FinFmt.count(review), palette[3]));
+        items.add(new FinCharts.Legend("بسته‌شده", FinFmt.count(Math.max(0, resolved)), palette[1]));
+        chart.addView(ui.donutWithLegend(donut, items, open + review + resolved, 152), ui.lp(-1, -2));
+        chart.addView(ui.miniStat("منبع بازها: مغایرت قبض", FinFmt.count(mismatches.length()) + " مورد", palette[5]), top(6));
+        chart.addView(ui.miniStat("منبع بازها: POS بدون قبض", FinFmt.count(posUnlinked.length()) + " مورد", palette[3]), ui.lp(-1, -2));
+        chart.addView(ui.miniStat("منبع بازها: گردش بانکی بدون قبض", FinFmt.count(bankUnlinked.length()) + " مورد", palette[2]), ui.lp(-1, -2));
+        body.addView(chart, top(12));
 
         LinearLayout k = ui.row();
         k.addView(ui.kpiTile("باز", fa(open), "پرونده", "در انتظار بررسی", FinUi.DANGER, null), ui.lp(0, -2, 1f));

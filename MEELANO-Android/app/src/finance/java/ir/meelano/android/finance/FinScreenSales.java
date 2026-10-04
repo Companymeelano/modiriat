@@ -3,9 +3,13 @@ package ir.meelano.android.finance;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * «فروش در برابر وصول» — the financial tab.
@@ -28,30 +32,23 @@ public class FinScreenSales extends FinScreen {
     @Override protected String cacheKey() { return "sales:" + host.periodFrom() + ":" + host.periodTo(); }
 
     @Override protected void populate() {
-        header();
+        add(hero("فروش در برابر وصول", "هر عدد جمع واقعی فاکتورهای sailfact و قبض‌های dar است", ui.goldAccent));
+        periodRow();
         card = ui.column();
         add(card);
     }
 
     private LinearLayout card;
 
-    private void header() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("فروش در برابر وصول", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip(FinFmt.periodLabel(host.periodKey()), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
-        LinearLayout periods = ui.row();
-        periods.setPadding(0, ui.dp(6), 0, 0);
-        String[] keys = {"today", "yesterday", "7d", "30d", "month", "lastmonth"};
-        for (String k : keys) {
-            boolean active = k.equals(host.periodKey());
-            LinearLayout cell = ui.chip(FinFmt.periodLabel(k), active ? ui.goldAccent : ui.textFaint);
-            cell.setOnClickListener(v -> host.setPeriod(k));
-            LinearLayout.LayoutParams p = ui.lp(-2, -2);
-            p.leftMargin = ui.dp(4);
-            periods.addView(cell, p);
+    private void periodRow() {
+        final String[] keys = {"today", "yesterday", "7d", "30d", "month", "lastmonth"};
+        String[] labels = new String[keys.length];
+        int active = 0;
+        for (int i = 0; i < keys.length; i++) {
+            labels[i] = FinFmt.periodLabel(keys[i]);
+            if (keys[i].equals(host.periodKey())) active = i;
         }
-        addCard(periods, 6);
+        addCard(ui.segmented(labels, active, ui.goldAccent, index -> host.setPeriod(keys[index])), 6);
     }
 
     @Override protected void fetch() {
@@ -86,32 +83,83 @@ public class FinScreenSales extends FinScreen {
         double uncollected = d(p, "uncollected");
 
         LinearLayout k = ui.row();
-        k.addView(ui.kpiTile("فروش دوره", compact(sales), FinFmt.CURRENCY, i(p, "salesCount") + " فاکتور", ui.goldAccent, v -> showInvoices()), ui.lp(0, -2, 1f));
+        k.addView(ui.kpiTile("فروش دوره", compact(sales), "ریال", i(p, "salesCount") + " فاکتور", ui.goldAccent, v -> showInvoices()), ui.lp(0, -2, 1f));
         k.addView(ui.spacer(8), ui.lp(ui.dp(8), -2));
-        k.addView(ui.kpiTile("وصول دوره", compact(receipts), FinFmt.CURRENCY, i(p, "receiptsCount") + " قبض", FinUi.SUCCESS, null), ui.lp(0, -2, 1f));
+        k.addView(ui.kpiTile("وصول دوره", compact(receipts), "ریال", i(p, "receiptsCount") + " قبض", FinUi.SUCCESS, null), ui.lp(0, -2, 1f));
         card.addView(k, ui.lp(-1, -2));
 
         LinearLayout k2 = ui.row();
+        k2.addView(ui.kpiTile("نسبت وصول", FinFmt.percent(receipts, sales), "", "وصول ÷ فروش دوره", FinUi.INFO,
+                trend(p, "receipts", "byDay"), null), ui.lp(0, -2, 1f));
+        k2.addView(ui.spacer(8), ui.lp(ui.dp(8), -2));
+        k2.addView(ui.kpiTile("وصول‌نشده", compact(uncollected), "ریال", i(p, "uncollectedCount") + " فاکتور باز", FinUi.WARNING,
+                trend(p, "sales", "byDay"), v -> host.open(new FinScreenReceivables(host))), ui.lp(0, -2, 1f));
         LinearLayout.LayoutParams top = ui.lp(-1, -2);
         top.topMargin = ui.dp(8);
-        k2.addView(ui.kpiTile("نسبت وصول", FinFmt.percent(receipts, sales), "", "وصول ÷ فروش دوره", FinUi.INFO, null), ui.lp(0, -2, 1f));
-        k2.addView(ui.spacer(8), ui.lp(ui.dp(8), -2));
-        k2.addView(ui.kpiTile("وصول‌نشده", compact(uncollected), FinFmt.CURRENCY, i(p, "uncollectedCount") + " فاکتور باز", FinUi.WARNING, v -> host.open(new FinScreenReceivables(host))), ui.lp(0, -2, 1f));
         card.addView(k2, top);
 
-        LinearLayout mix = section("⇄", "ترکیب وصول", "نقد / چک / POS");
-        mix.addView(ui.tableHeader(new String[]{"روش", "مبلغ", "تعداد"}), ui.lp(-1, -2));
-        mix.addView(table(new String[]{"نقد (dar.naghd)", money(cash), fa(i(p, "cashCount"))}), ui.lp(-1, -2));
-        mix.addView(table(new String[]{"چک (dar.mabcheck)", money(check), fa(i(p, "checkFiles"))}), ui.lp(-1, -2));
-        mix.addView(table(new String[]{"POS (PosDetails)", money(pos), fa(i(p, "posCount"))}), ui.lp(-1, -2));
-        mix.addView(ui.divider());
-        mix.addView(table(new String[]{"جمع قبض‌ها (dar.mab)", money(receipts), fa(i(p, "receiptsCount"))}), ui.lp(-1, -2));
+        mixture(cash, check, pos, receipts, p);
+        byDay(p);
+        byVisitor(p);
+        mismatches(p);
+    }
+
+    /** Sparkline series for a KPI tile: the per-day column of the period table. */
+    private double[] trend(JSONObject p, String key, String rowsKey) {
+        JSONArray rows = arr(p, rowsKey);
+        if (rows.length() < 2) return null;
+        double[] v = new double[rows.length()];
+        for (int i = 0; i < rows.length(); i++) v[i] = rows.optJSONObject(i) == null ? 0 : rows.optJSONObject(i).optDouble(key, 0d);
+        return v;
+    }
+
+    private void mixture(double cash, double check, double pos, double receipts, JSONObject p) {
+        LinearLayout mix = section("⇄", "ترکیب وصول", "نقد / چک / POS در برابر جمع قبض‌ها");
+        List<FinCharts.Legend> items = new ArrayList<>();
+        int[] palette = ui.palette();
+        items.add(new FinCharts.Legend("نقد (dar.naghd)", money(cash), palette[1]));
+        items.add(new FinCharts.Legend("چک (dar.mabcheck)", money(check), palette[0]));
+        items.add(new FinCharts.Legend("POS (PosDetails)", money(pos), palette[2]));
+
+        FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.MONEY);
+        donut.data(new String[]{"نقد", "چک", "POS"}, new double[]{cash, check, pos}, new int[]{palette[1], palette[0], palette[2]}, "ترکیب وصول");
+        double componentSum = cash + check + pos;
+        mix.addView(ui.donutWithLegend(donut, items, componentSum, 168), ui.lp(-1, -2));
+
+        mix.addView(ui.divider(), top(6));
+        mix.addView(ui.miniStat("جمع اجزا (نقد + چک + POS)", money(componentSum) + " ریال", ui.goldAccent), ui.lp(-1, -2));
+        mix.addView(ui.miniStat("جمع قبض‌ها (dar.mab)", money(receipts) + " ریال", FinUi.INFO), ui.lp(-1, -2));
+        mix.addView(ui.miniStat("تفاوت", money(componentSum - receipts) + " ریال",
+                Math.abs(componentSum - receipts) > 1 ? FinUi.WARNING : FinUi.SUCCESS), ui.lp(-1, -2));
         mix.addView(ui.text("نقد + چک + POS معمولاً کمی با جمع قبض تفاوت دارد؛ موارد واقعی در بخش مغایرت‌ها فهرست می‌شود.",
                 11f, ui.textFaint, false), ui.lp(-1, -2));
         addCard(mix, 12);
+    }
 
-        byVisitor(p);
-        mismatches(p);
+    private void byDay(JSONObject p) {
+        JSONArray rows = arr(p, "byDay");
+        LinearLayout card5 = section("▤", "روند روزانه فروش و وصول", "روزهای بازه انتخاب‌شده — برای دیدن مقدار هر روز روی نمودار بزنید");
+        if (rows.length() < 2) {
+            card5.addView(stateText("برای این بازه روند روزانه‌ای وجود ندارد (بازه یک‌روزه است یا داده‌ای ثبت نشده).", ui.textDim));
+            addCard(card5, 12);
+            return;
+        }
+        int n = Math.min(31, rows.length());
+        String[] labels = new String[n];
+        double[] salesV = new double[n];
+        double[] receiptV = new double[n];
+        // Oldest on the left of the array; the chart itself draws right → left (RTL).
+        for (int i = 0; i < n; i++) {
+            JSONObject r = rows.optJSONObject(n - 1 - i);   // rows are newest-first
+            if (r == null) r = new JSONObject();
+            labels[i] = FinFmt.faNumber(s(r, "date", "").replace("1405/", "").replace("1406/", "").replace("1404/", ""));
+            salesV[i] = d(r, "sales");
+            receiptV[i] = d(r, "receipts");
+        }
+        FinCharts.Columns cols = ui.columnsChart(FinUi.FormatterKind.MONEY);
+        cols.data(labels, new double[][]{salesV, receiptV}, new int[]{ui.goldAccent, FinUi.SUCCESS}, new String[]{"فروش", "وصول"});
+        addChart(card5, cols, 220);
+        addCard(card5, 12);
     }
 
     private void byVisitor(JSONObject p) {
@@ -119,15 +167,47 @@ public class FinScreenSales extends FinScreen {
         LinearLayout card5 = section("☺", "عملکرد اپراتورها", "فاکتور و وصول به تفکیک ویزیتور");
         if (rows.length() == 0) {
             card5.addView(stateText("در این بازه فروشی برای اپراتوری ثبت نشده است.", ui.textDim));
-        } else {
-            card5.addView(ui.tableHeader(new String[]{"اپراتور", "فاکتور", "فروش", "وصول"}), ui.lp(-1, -2));
-            for (int x = 0; x < rows.length() && x < 12; x++) {
-                JSONObject r = rows.optJSONObject(x);
-                if (r == null) continue;
-                double sales = d(r, "sales");
-                double receipts = d(r, "receipts");
-                card5.addView(table(new String[]{s(r, "vis_name", "—"), fa(i(r, "invoices")), compact(sales), compact(receipts)}), ui.lp(-1, -2));
-            }
+            addCard(card5, 12);
+            return;
+        }
+        List<String[]> active = new ArrayList<>();
+        for (int x = 0; x < rows.length(); x++) {
+            JSONObject r = rows.optJSONObject(x);
+            if (r == null) continue;
+            if (d(r, "sales") <= 0 && d(r, "receipts") <= 0) continue;
+            active.add(new String[]{s(r, "vis_name", "—"), fa(i(r, "invoices")), String.valueOf(d(r, "sales")), String.valueOf(d(r, "receipts"))});
+        }
+        if (active.isEmpty()) {
+            card5.addView(stateText("در این بازه فروشی برای اپراتوری ثبت نشده است.", ui.textDim));
+            addCard(card5, 12);
+            return;
+        }
+        int n = Math.min(7, active.size());
+        String[] labels = new String[n];
+        double[] values = new double[n];
+        String[] notes = new String[n];
+        int[] palette = ui.palette();
+        int[] colors = new int[n];
+        for (int x = 0; x < n; x++) {
+            String[] r = active.get(x);
+            labels[x] = r[0];
+            values[x] = Double.parseDouble(r[2]);
+            notes[x] = r[1] + " فاکتور · وصول " + FinFmt.compact(Double.parseDouble(r[3])) + " ریال";
+            colors[x] = palette[x % palette.length];
+        }
+        FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
+        bars.data(labels, values, colors, notes);
+        addBars(card5, bars, n);
+
+        card5.addView(ui.tableHeader(new String[]{"اپراتور", "فاکتور", "فروش", "وصول"}), top(10));
+        for (int x = 0; x < active.size() && x < 12; x++) {
+            String[] r = active.get(x);
+            double sales = Double.parseDouble(r[2]);
+            double receipts = Double.parseDouble(r[3]);
+            // The row is tinted by how much of that operator's sale has actually been collected.
+            int accent = sales <= 0 ? ui.textDim : (receipts >= sales ? FinUi.SUCCESS : FinUi.WARNING);
+            card5.addView(ui.tableRow(new String[]{r[0], r[1], compact(sales), compact(receipts), FinFmt.percent(receipts, sales)},
+                    new float[]{1.5f, 0.6f, 1f, 1f, 0.7f}, false, accent), ui.lp(-1, -2));
         }
         addCard(card5, 12);
     }
@@ -146,7 +226,7 @@ public class FinScreenSales extends FinScreen {
                 card6.addView(ui.listRow("تفاوت " + money(diff) + " " + FinFmt.CURRENCY, sub,
                         money(d(r, "mab")), diff > 0 ? "نیازمند بررسی" : "مغایرت", FinUi.DANGER, v -> openMismatch(r)), ui.lp(-1, -2));
             }
-            card6.addView(ui.button("مشاهده همه در مرکز مغایرت‌ها", ui.goldAccent, false, v -> host.open(new FinScreenProblems(host))), ui.lp(-1, -2));
+            card6.addView(ui.ghostButton("≠  مشاهده همه در مرکز مغایرت‌ها", ui.goldAccent, v -> host.open(new FinScreenProblems(host))), top(8));
         }
         addCard(card6, 12);
     }
@@ -173,7 +253,9 @@ public class FinScreenSales extends FinScreen {
         }, null);
     }
 
-    private View table(String[] cells) {
-        return ui.tableRow(cells, new float[]{1.6f, 1f, 0.7f}, false, ui.goldAccent);
+    private LinearLayout.LayoutParams top(int dp) {
+        LinearLayout.LayoutParams p = ui.lp(-1, -2);
+        p.topMargin = ui.dp(dp);
+        return p;
     }
 }

@@ -38,10 +38,7 @@ public class FinScreenReceivables extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("مطالبات و سنی‌بندی", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip("مانده واقعی مشتریان", ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("مطالبات و سنی‌بندی", "مانده واقعی CUSTOMERS.man که با دفتر cust_act تطبیق داده شده است", FinUi.WARNING));
         body = ui.column();
         add(body);
     }
@@ -54,6 +51,7 @@ public class FinScreenReceivables extends FinScreen {
             payload.put("bands", FinQueries.agingBands(c, today));
             payload.put("debtors", FinQueries.receivables(c, today, 40, 0));
             payload.put("queue", FinQueries.openInvoiceQueue(c, 25));
+            payload.put("topDebtors", FinQueries.topDebtors(c, 8));
             payload.put("followups", FinQueries.followUps(c, 0, 25));
             JSONArray a = new JSONArray();
             a.put(payload);
@@ -87,10 +85,28 @@ public class FinScreenReceivables extends FinScreen {
         top.topMargin = ui.dp(8);
         body.addView(k2, top);
 
+        overview(p);
         bands(p);
         debtors(p);
         queue(p);
         followups(p);
+    }
+
+    /** Aging as bars plus a debt/credit donut — the shape of the portfolio at a glance. */
+    private void overview(JSONObject p) {
+        LinearLayout card = section("◎", "نمای کلی مطالبات", "مانده بدهکاران در برابر بستانکاران");
+        double debt = d(p, "balanceTotal"), credit = Math.abs(d(p, "creditTotal"));
+        int[] palette = ui.palette();
+        FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.MONEY);
+        donut.data(new String[]{"بدهکار", "بستانکار"}, new double[]{debt, credit}, new int[]{palette[5], palette[1]}, "جمع مانده");
+        java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+        items.add(new FinCharts.Legend("بدهکاران", money(debt), palette[5]));
+        items.add(new FinCharts.Legend("بستانکاران", money(credit), palette[1]));
+        card.addView(ui.donutWithLegend(donut, items, debt + credit, 164), ui.lp(-1, -2));
+        card.addView(ui.miniStat("چک‌های در دست (سررسیدنشده)", money(d(p, "checksSecuring")) + " ریال", FinUi.SUCCESS), top(6));
+        card.addView(ui.miniStat("چک‌های سررسیدشده", money(d(p, "checksDueNow")) + " ریال", FinUi.WARNING), ui.lp(-1, -2));
+        card.addView(ui.miniStat("پیگیری‌های باز", fa(i(p, "followupsOpen")) + " مورد", ui.goldAccent), ui.lp(-1, -2));
+        addCard(card, 12);
     }
 
     private void bands(JSONObject p) {
@@ -99,6 +115,24 @@ public class FinScreenReceivables extends FinScreen {
         card.addView(ui.tableHeader(new String[]{"بازه", "تعداد", "مبلغ"}), ui.lp(-1, -2));
         String[] order = {"0-7", "8-30", "31-60", "61-90", "90+"};
         String[] labels = {"۰ تا ۷ روز", "۸ تا ۳۰ روز", "۳۱ تا ۶۰ روز", "۶۱ تا ۹۰ روز", "بیش از ۹۰ روز"};
+        double[] amounts = new double[order.length];
+        String[] notes = new String[order.length];
+        int[] colors = new int[order.length];
+        int[] palette = ui.palette();
+        for (int x = 0; x < order.length; x++) {
+            int n = 0; double amount = 0;
+            for (int y = 0; y < rows.length(); y++) {
+                JSONObject r = rows.optJSONObject(y);
+                if (r != null && order[x].equals(r.optString("band"))) { n = i(r, "n"); amount = d(r, "amount"); }
+            }
+            amounts[x] = amount;
+            notes[x] = FinFmt.count(n) + " فاکتور باز";
+            colors[x] = n == 0 ? ui.textFaint : (x >= 3 ? FinUi.DANGER : (x == 2 ? FinUi.WARNING : palette[x % palette.length]));
+        }
+        FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
+        bars.data(labels, amounts, colors, notes);
+        bars.empty("در حال حاضر فاکتور بازی برای سنی‌بندی وجود ندارد.");
+        addBars(card, bars, order.length);
         for (int x = 0; x < order.length; x++) {
             int n = 0;
             double amount = 0;
@@ -120,10 +154,26 @@ public class FinScreenReceivables extends FinScreen {
 
     private void debtors(JSONObject p) {
         JSONArray rows = arr(p, "debtors");
-        LinearLayout card = section("☰", "بدهکاران بزرگ", "پایین‌ترین ۴۰ مشتری بر اساس مانده");
+        LinearLayout card = section("☰", "بدهکاران بزرگ", "بزرگ‌ترین مانده‌ها؛ ۴۰ مشتری اول از راست به چپ مرتب شده‌اند");
         if (rows.length() == 0) {
             card.addView(stateText("مشتری بدهکاری وجود ندارد.", ui.textDim));
         } else {
+            int n = Math.min(8, rows.length());
+            String[] labels = new String[n];
+            double[] values = new double[n];
+            String[] notes = new String[n];
+            int[] colors = new int[n];
+            int[] palette = ui.palette();
+            for (int x = 0; x < n; x++) {
+                JSONObject r = rows.optJSONObject(x);
+                labels[x] = s(r, "MONAME", "—");
+                values[x] = d(r, "man");
+                notes[x] = "کد " + fa(i(r, "SHMO")) + " · " + fa(i(r, "open_count")) + " فاکتور باز";
+                colors[x] = palette[x % palette.length];
+            }
+            FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
+            bars.data(labels, values, colors, notes);
+            addBars(card, bars, n);
             for (int x = 0; x < rows.length() && x < 25; x++) {
                 JSONObject r = rows.optJSONObject(x);
                 if (r == null) continue;

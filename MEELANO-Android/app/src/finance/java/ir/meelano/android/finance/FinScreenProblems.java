@@ -23,10 +23,7 @@ public class FinScreenProblems extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("کارهای باز و مغایرت‌ها", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip(FinFmt.periodLabel(host.periodKey()), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("کارهای باز و مغایرت‌ها", "سه منبع واقعی باز: اجزای قبض، POS بدون قبض و گردش بانکی بدون قبض", FinUi.DANGER));
         body = ui.column();
         add(body);
     }
@@ -44,6 +41,42 @@ public class FinScreenProblems extends FinScreen {
             a.put(payload);
             return a;
         }, this::render);
+    }
+
+    /** Open work at a glance: how much of every kind, and how much money is behind it. */
+    private void openWork(JSONObject p, JSONArray mismatches, JSONArray pos, JSONArray bank) {
+        double mismatchAmount = 0;
+        for (int x = 0; x < mismatches.length(); x++) {
+            JSONObject r = mismatches.optJSONObject(x);
+            if (r != null) mismatchAmount += Math.abs(d(r, "difference"));
+        }
+        double posAmount = 0;
+        for (int x = 0; x < pos.length(); x++) {
+            JSONObject r = pos.optJSONObject(x);
+            if (r != null) posAmount += d(r, "MabPos");
+        }
+        double bankAmount = 0;
+        for (int x = 0; x < bank.length(); x++) {
+            JSONObject r = bank.optJSONObject(x);
+            if (r != null) bankAmount += Math.abs(d(r, "act_bed") - d(r, "act_bes"));
+        }
+        LinearLayout card = section("◎", "نمای کلی کارهای باز", "تعداد موارد و مبلغ درگیر");
+        int[] palette = ui.palette();
+        double[] counts = new double[]{i(p, "mismatchCount"), pos.length(), bank.length()};
+        String[] labels = new String[]{"مغایرت قبض", "POS بدون قبض", "بانک بدون قبض"};
+        int[] colors = new int[]{palette[5], palette[3], palette[2]};
+        FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.COUNT);
+        donut.data(labels, counts, colors, "موارد باز");
+        donut.empty("هیچ کار بازی وجود ندارد.");
+        java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+        items.add(new FinCharts.Legend("مغایرت قبض", FinFmt.count(Math.round(counts[0])), colors[0]));
+        items.add(new FinCharts.Legend("POS بدون قبض", FinFmt.count(Math.round(counts[1])), colors[1]));
+        items.add(new FinCharts.Legend("بانک بدون قبض", FinFmt.count(Math.round(counts[2])), colors[2]));
+        card.addView(ui.donutWithLegend(donut, items, counts[0] + counts[1] + counts[2], 158), ui.lp(-1, -2));
+        card.addView(ui.miniStat("مبلغ درگیر در مغایرت‌های قبض", money(mismatchAmount) + " ریال", palette[5]), top(6));
+        card.addView(ui.miniStat("مبلغ POS بدون قبض (نمونه)", money(posAmount) + " ریال", palette[3]), ui.lp(-1, -2));
+        card.addView(ui.miniStat("مبلغ گردش بانکی بدون قبض (نمونه)", money(bankAmount) + " ریال", palette[2]), ui.lp(-1, -2));
+        body.addView(card, top(12));
     }
 
     private void render(JSONObject env) {
@@ -69,6 +102,8 @@ public class FinScreenProblems extends FinScreen {
         k.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
         k.addView(ui.kpiTile("گردش بانکی بدون قبض", fa(bank.length()), "مورد", "ban_act", FinUi.INFO, null), ui.lp(0, -2, 1f));
         body.addView(k, ui.lp(-1, -2));
+
+        openWork(p, mismatches, pos, bank);
 
         LinearLayout c1 = section("≠", "مغایرت اجزای دریافت", "از قبض‌های بازه انتخاب‌شده");
         if (mismatches.length() == 0) {

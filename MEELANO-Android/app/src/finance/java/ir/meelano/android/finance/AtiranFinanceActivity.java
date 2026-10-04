@@ -4,16 +4,19 @@ import ir.meelano.android.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Intent;
+import android.content.Context;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
+import android.text.method.PasswordTransformationMethod;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -35,9 +38,9 @@ import java.util.Deque;
  * It owns three things:
  *  • the real sign-in (Atiran visitors / sys_users + the project's access-control role, seen
  *    through {@link FinAuth} and {@link FinSession});
- *  • the shell: header with the live operator, role chip and connection state, plus the bottom
- *    navigation  خانه | مالی | چک‌ها | مطالبات | بیشتر , and a screen stack for drill-downs
- *    (KPI → list → detail → source record);
+ *  • the shell: gradient header with the live operator, real role, server date and connection state,
+ *    plus the bottom navigation  خانه | مالی | چک‌ها | مطالبات | بیشتر  and a screen stack for
+ *    drill-downs (KPI → list → detail → source record);
  *  • the shared state every screen reads: server date, period filter, database handle and theme.
  *
  * Nothing here invents data. Screens load real rows through {@link FinQueries}; a value that has no
@@ -73,6 +76,7 @@ public class AtiranFinanceActivity extends Activity {
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
+        FinApp.attach(this);
         if (!FinSession.isLoggedIn()) {
             buildLogin();
             return;
@@ -109,31 +113,46 @@ public class AtiranFinanceActivity extends Activity {
     /** Shows a modal technical-free summary of a record (drill-down "details" step). */
     public void details(String title, String[][] pairs, String note) {
         LinearLayout col = ui.column();
-        ScrollView sc = ui.scroll();
-        sc.addView(col);
+        col.setPadding(ui.dp(6), ui.dp(4), ui.dp(6), ui.dp(4));
+        int index = 0;
         for (String[] p : pairs) {
             if (p == null || p.length < 2) continue;
-            col.addView(kvLine(p[0], p[1]));
+            col.addView(kvLine(p[0], p[1], index++ % 2 == 0), ui.lp(-1, -2));
         }
         if (note != null && !note.isEmpty()) {
             TextView n = ui.text(note, 11.5f, ui.textDim, false);
-            n.setPadding(0, ui.dp(8), 0, 0);
-            col.addView(n);
+            n.setPadding(0, ui.dp(10), 0, 0);
+            col.addView(n, ui.lp(-1, -2));
         }
-        new AlertDialog.Builder(this)
+        ScrollView sc = ui.scroll();
+        sc.addView(col);
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(title)
                 .setView(sc)
                 .setPositiveButton("بستن", null)
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(ui.rounded(ui.surface, 20, ui.stroke, 1));
+            }
+            Button ok = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            if (ok != null) { ok.setTextColor(ui.goldAccent); ok.setAllCaps(false); ok.setTypeface(ui.boldFace()); }
+            int titleId = getResources().getIdentifier("alertTitle", "id", "android");
+            TextView t = titleId == 0 ? null : dialog.findViewById(titleId);
+            if (t != null) { t.setTextColor(ui.textColor); t.setTypeface(ui.boldFace()); t.setGravity(Gravity.START); }
+        });
+        dialog.show();
     }
 
-    private View kvLine(String k, String v) {
+    private View kvLine(String k, String v, boolean shaded) {
         LinearLayout r = ui.row();
-        r.setPadding(ui.dp(14), ui.dp(6), ui.dp(14), ui.dp(6));
-        r.addView(ui.text(k, 12.5f, ui.textDim, false), ui.lp(0, -2, 1f));
-        TextView t = ui.text(v, 13f, ui.textColor, true);
-        t.setGravity(Gravity.END);
-        r.addView(t, ui.lp(0, -2, 1f));
+        r.setPadding(ui.dp(12), ui.dp(7), ui.dp(12), ui.dp(7));
+        if (shaded) r.setBackground(ui.rounded(ui.surface2, 10, 0, 0));
+        TextView label = ui.text(k, 12.5f, ui.textDim, false);
+        r.addView(label, ui.lp(0, -2, 1f));
+        TextView value = ui.text(v, 13f, ui.textColor, true);
+        value.setGravity(Gravity.END);
+        r.addView(value, ui.lp(0, -2, 1.2f));
         return r;
     }
 
@@ -156,34 +175,56 @@ public class AtiranFinanceActivity extends Activity {
         ui.applySystemBars();
 
         LinearLayout root = ui.column();
-        root.setBackgroundColor(ui.bg);
+        root.setBackground(ui.gradient(ui.bg, FinUi.mix(ui.bg, ui.goldAccent, 0.14f), 0));
         root.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.setPadding(ui.dp(20), ui.dp(28), ui.dp(20), ui.dp(20));
+        root.setPadding(ui.dp(20), ui.dp(28), ui.dp(20), ui.dp(24));
 
-        root.addView(ui.image(R.drawable.fin_login_logo), ui.lp(ui.dp(148), ui.dp(148)));
-        TextView name = ui.text("آتیران مالی", 24f, ui.goldAccent, true);
+        FinCharts.Logo logo = new FinCharts.Logo(this, ui.goldAccent, ui.silver, ui.surface, ui.bg);
+        LinearLayout.LayoutParams logoLp = ui.lp(ui.dp(116), ui.dp(116));
+        logoLp.gravity = Gravity.CENTER_HORIZONTAL;
+        root.addView(logo, logoLp);
+
+        TextView name = ui.text("آتیران مالی", 25f, ui.goldAccent, true);
         name.setGravity(Gravity.CENTER);
         root.addView(name, ui.lp(-1, -2));
         TextView sub = ui.text("مرکز عملیات مالی، خزانه، مطالبات و مغایرت", 12.5f, ui.textDim, false);
         sub.setGravity(Gravity.CENTER);
         root.addView(sub, ui.lp(-1, -2));
+        LinearLayout badges = ui.row();
+        badges.setGravity(Gravity.CENTER);
+        badges.setPadding(0, ui.dp(10), 0, 0);
+        badges.addView(ui.chip("نسخه " + FinSession.appVersion(), ui.goldAccent), ui.lp(-2, -2));
+        badges.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
+        badges.addView(ui.chip("خزانه · مطالبات · مغایرت · POS", ui.textFaint), ui.lp(-2, -2));
+        root.addView(badges, ui.lp(-1, -2));
         addSpace(root, 18);
 
-        LinearLayout card = ui.card();
+        LinearLayout card = ui.gradientCard(ui.goldAccent, 20);
         card.addView(ui.sectionTitle("ورود", "با حساب واقعی آتیران", "🔐"), ui.lp(-1, -2));
 
         JSONObject last = FinSession.lastUser(this);
-        EditText user = ui.field(getString(R.string.fin_username));
+        EditText user = fieldWithGlyph(card, "♙", getString(R.string.fin_username), false);
         user.setInputType(InputType.TYPE_CLASS_TEXT);
         String lastUser = last.optString("username", "");
         if (!lastUser.isEmpty()) user.setText(lastUser);
-        card.addView(user, ui.lp(-1, -2));
 
-        EditText pass = ui.field(getString(R.string.fin_password));
-        pass.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        LinearLayout.LayoutParams pp = ui.lp(-1, -2);
-        pp.topMargin = ui.dp(8);
-        card.addView(pass, pp);
+        EditText pass = fieldWithGlyph(card, "🔒", getString(R.string.fin_password), true);
+        pass.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        final boolean[] visible = {false};
+        TextView toggle = ui.text("نمایش", 11f, ui.goldAccent, true);
+        toggle.setPadding(ui.dp(8), ui.dp(4), ui.dp(2), ui.dp(4));
+        toggle.setOnClickListener(v -> {
+            visible[0] = !visible[0];
+            pass.setInputType(visible[0]
+                    ? InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                    : InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            pass.setSelection(pass.getText().length());
+            toggle.setText(visible[0] ? "پنهان" : "نمایش");
+        });
+        LinearLayout toggleRow = ui.row();
+        toggleRow.setGravity(Gravity.END);
+        toggleRow.addView(toggle, ui.lp(-2, -2));
+        card.addView(toggleRow, ui.lp(-1, -2));
 
         TextView state = ui.text("", 12f, FinUi.DANGER, false);
         state.setPadding(0, ui.dp(8), 0, 0);
@@ -191,24 +232,26 @@ public class AtiranFinanceActivity extends Activity {
 
         if (FinAuth.lockedOut(this)) {
             long left = FinAuth.lockRemainingMs(this) / 60000L + 1;
-            state.setText("ورود موقتاً قفل است؛ " + left + " دقیقه دیگر تلاش کنید.");
+            state.setText("ورود موقتاً قفل است؛ " + FinFmt.faNumber(left) + " دقیقه دیگر تلاش کنید.");
         }
 
-        Button login = ui.button("ورود", ui.goldAccent, true, null);
+        Button login = ui.primaryButton("ورود به آتیران مالی", ui.goldAccent, null);
         LinearLayout.LayoutParams lp2 = ui.lp(-1, -2);
-        lp2.topMargin = ui.dp(10);
+        lp2.topMargin = ui.dp(12);
         card.addView(login, lp2);
-        login.setOnClickListener(v -> {
+
+        Runnable attempt = () -> {
             String u = user.getText().toString().trim();
             String p = pass.getText().toString();
             if (u.isEmpty() || p.isEmpty()) {
                 state.setText("نام کاربری و رمز عبور را وارد کنید.");
                 return;
             }
-            if (FinAuth.lockedOut(this)) {
+            if (FinAuth.lockedOut(AtiranFinanceActivity.this)) {
                 state.setText("ورود موقتاً قفل است. کمی بعد تلاش کنید.");
                 return;
             }
+            state.setTextColor(ui.textDim);
             state.setText("در حال بررسی روی سرور آتیران…");
             login.setEnabled(false);
             final String su = u, sp = p;
@@ -228,21 +271,58 @@ public class AtiranFinanceActivity extends Activity {
                         r.session.remember(AtiranFinanceActivity.this);
                         buildShell();
                     } else {
+                        state.setTextColor(FinUi.DANGER);
                         state.setText(r.message == null || r.message.isEmpty() ? "ورود ناموفق بود." : r.message);
                         pass.setText("");
                     }
                 });
             });
+        };
+        login.setOnClickListener(v -> attempt.run());
+        pass.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) { attempt.run(); return true; }
+            return false;
         });
         root.addView(card, ui.lp(-1, -2));
 
         TextView env = ui.text(FinEnv.describe(), 11f, ui.textFaint, false);
         env.setGravity(Gravity.CENTER);
+        env.setPadding(0, ui.dp(14), 0, 0);
         root.addView(env, ui.lp(-1, -2));
 
         ScrollView sc = ui.scroll();
         sc.addView(root);
         setContentView(sc);
+    }
+
+    /**
+     * A field with a glyph badge: rounded container, accent icon, borderless input. It is the same
+     * pattern on every form of the app, so the keyboard never covers a one-line field.
+     */
+    private EditText fieldWithGlyph(LinearLayout parent, String glyph, String hint, boolean password) {
+        LinearLayout box = ui.row();
+        box.setBackground(ui.rounded(ui.surface2, 14, ui.stroke, 1));
+        box.setPadding(ui.dp(10), ui.dp(4), ui.dp(12), ui.dp(4));
+        LinearLayout.LayoutParams boxLp = ui.lp(-1, ui.dp(54));
+        boxLp.topMargin = ui.dp(6);
+        TextView badge = ui.text(glyph, 14f, ui.goldAccent, true);
+        badge.setGravity(Gravity.CENTER);
+        box.addView(badge, ui.lp(ui.dp(26), -2));
+        EditText e = new EditText(this);
+        e.setHint(hint);
+        e.setHintTextColor(ui.textFaint);
+        e.setTextColor(ui.textColor);
+        e.setTextSize(15f);
+        e.setTypeface(ui.regularFace());
+        e.setTextDirection(View.TEXT_DIRECTION_RTL);
+        e.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        e.setPadding(ui.dp(4), 0, 0, 0);
+        e.setSingleLine(true);
+        if (password) e.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        if (password) e.setTransformationMethod(PasswordTransformationMethod.getInstance());
+        box.addView(e, ui.lp(0, -2, 1f));
+        parent.addView(box, boxLp);
+        return e;
     }
 
     private void addSpace(LinearLayout parent, int dp) {
@@ -270,7 +350,7 @@ public class AtiranFinanceActivity extends Activity {
         root.addView(contentHost, ui.lp(-1, 0, 1f));
 
         navBar = ui.row();
-        navBar.setBackgroundColor(ui.surface);
+        navBar.setBackground(ui.gradient(ui.surface, FinUi.mix(ui.surface, ui.goldAccent, 0.08f), 0));
         navBar.setPadding(ui.dp(6), ui.dp(6), ui.dp(6), ui.dp(6));
         root.addView(navBar, ui.lp(-1, -2));
 
@@ -287,7 +367,9 @@ public class AtiranFinanceActivity extends Activity {
     public void renderHeader(String connectionNote, boolean loading) {
         if (headerBar == null) return;
         headerBar.removeAllViews();
-        headerBar.setBackgroundColor(ui.surface);
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{FinUi.mix(ui.surface, ui.goldAccent, 0.10f), ui.surface, FinUi.mix(ui.surface, ui.goldAccent, 0.05f)});
+        headerBar.setBackground(bg);
         headerBar.setPadding(ui.dp(14), ui.dp(12), ui.dp(14), ui.dp(10));
 
         LinearLayout top = ui.row();
@@ -309,13 +391,17 @@ public class AtiranFinanceActivity extends Activity {
 
         LinearLayout meta = ui.row();
         meta.setPadding(0, ui.dp(8), 0, 0);
-        meta.addView(ui.chip("تاریخ سرور: " + FinFmt.faNumber(serverToday == null ? "…" : serverToday), dateColor()), ui.lp(-2, -2));
+        meta.addView(ui.chip("تاریخ سرور " + FinFmt.faNumber(serverToday == null ? "…" : serverToday), dateColor()), ui.lp(-2, -2));
         meta.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
-        meta.addView(ui.chip("بازه: " + FinFmt.periodLabel(periodKey), ui.goldAccent), ui.lp(-2, -2));
+        meta.addView(ui.chip("بازه " + FinFmt.periodLabel(periodKey), ui.goldAccent), ui.lp(-2, -2));
         View filler = ui.spacer(1);
         meta.addView(filler, ui.lp(0, -2, 1f));
         meta.addView(ui.chip("نسخه " + FinSession.appVersion(), ui.textFaint), ui.lp(-2, -2));
         headerBar.addView(meta, ui.lp(-1, -2));
+
+        View line = new View(this);
+        line.setBackgroundColor(FinUi.alpha(ui.goldAccent, 90));
+        headerBar.addView(line, ui.lp(-1, Math.max(1, ui.dp(0.8f))));
     }
 
     private int dateColor() {
@@ -335,12 +421,16 @@ public class AtiranFinanceActivity extends Activity {
             boolean active = t[0].equals(tab);
             LinearLayout cell = ui.column();
             cell.setGravity(Gravity.CENTER);
-            cell.setPadding(0, ui.dp(8), 0, ui.dp(8));
-            cell.setBackground(ui.rounded(active ? FinUi.mix(ui.surface, ui.goldAccent, 0.18f) : ui.surface,
-                    12, active ? ui.goldAccent : 0, 1));
+            cell.setPadding(0, ui.dp(7), 0, ui.dp(7));
+            GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    active ? new int[]{FinUi.mix(ui.surface2, ui.goldAccent, 0.30f), FinUi.mix(ui.surface, ui.goldAccent, 0.12f)}
+                            : new int[]{ui.surface, ui.surface});
+            bg.setCornerRadius(ui.dp(14));
+            if (active) bg.setStroke(Math.max(1, ui.dp(1)), FinUi.alpha(ui.goldAccent, 170));
+            cell.setBackground(bg);
             TextView g = ui.text(t[2], 15f, active ? ui.goldAccent : ui.textFaint, true);
             g.setGravity(Gravity.CENTER);
-            TextView l = ui.text(t[1], 11f, active ? ui.textColor : ui.textDim, active);
+            TextView l = ui.text(t[1], 10.5f, active ? ui.textColor : ui.textDim, active);
             l.setGravity(Gravity.CENTER);
             cell.addView(g, ui.lp(-1, -2));
             cell.addView(l, ui.lp(-1, -2));
@@ -348,6 +438,8 @@ public class AtiranFinanceActivity extends Activity {
                 if (!t[0].equals(tab)) showTab(t[0], true);
             });
             cell.setClickable(true);
+            cell.setFocusable(true);
+            ui.applyTouch(cell);
             LinearLayout.LayoutParams p = ui.lp(0, -2, 1f);
             p.leftMargin = ui.dp(3);
             p.rightMargin = ui.dp(3);
@@ -381,6 +473,11 @@ public class AtiranFinanceActivity extends Activity {
         View v = screen.build();
         contentHost.removeAllViews();
         contentHost.addView(v, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        if (animate) {
+            v.setAlpha(0f);
+            v.setTranslationX(ui.dp(16));
+            v.animate().alpha(1f).translationX(0f).setDuration(180).start();
+        }
         screen.load(false);
     }
 
@@ -486,13 +583,7 @@ public class AtiranFinanceActivity extends Activity {
             JSONObject health = db.health();
             main.post(() -> {
                 hasCache = health.optBoolean("ok", false);
-                renderHeader(hasCache ? ("متصل · " + health.optInt("ms", 0) + "ms") : "بدون اتصال", false);
-                FinScreen c = current;
-                if (c != null && !hasCache && !db.lastError().isEmpty()) {
-                    // A failed probe does not overwrite the screen with fake numbers; the screen shows
-                    // the offline card through its own stale envelope.
-                    renderHeader("آفلاین — آخرین نسخه", false);
-                }
+                renderHeader(hasCache ? ("متصل · " + FinFmt.faNumber(health.optInt("ms", 0)) + "ms") : "آفلاین — آخرین نسخه", false);
             });
         });
     }

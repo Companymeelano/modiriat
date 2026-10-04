@@ -1,7 +1,9 @@
 package ir.meelano.android.finance;
 
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
 
 import org.json.JSONArray;
@@ -28,10 +30,7 @@ public class FinScreenMore extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("همه بخش‌ها", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip(FinSession.roleLabelFor(FinSession.roleKey()), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("همه بخش‌ها", "دسترسی هر بخش بر پایه نقش واقعی خوانده‌شده از جدول دسترسی است", ui.goldAccent));
         body = ui.column();
         add(body);
     }
@@ -94,22 +93,48 @@ public class FinScreenMore extends FinScreen {
                 allowed ? ui.goldAccent : FinUi.WARNING, click);
     }
 
+    /** Theme chooser with a live colour preview of every palette. */
     private void themes() {
         LinearLayout card = section("◐", "پوسته برنامه", "پوسته فعلی: " + host.ui().theme().labelFa);
-        LinearLayout row = ui.row();
-        for (FinTheme t : FinTheme.all()) {
+        LinearLayout grid = ui.column();
+        LinearLayout row = null;
+        FinTheme[] all = FinTheme.all();
+        for (int i = 0; i < all.length; i++) {
+            if (i % 2 == 0) { row = ui.row(); grid.addView(row, ui.lp(-1, -2)); }
+            FinTheme t = all[i];
             boolean active = t.key.equals(host.ui().theme().key);
-            LinearLayout chip = ui.chip(t.labelFa, active ? ui.goldAccent : ui.textFaint);
-            chip.setOnClickListener(v -> {
+            LinearLayout cell = ui.column();
+            GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{t.surface, t.surface2});
+            bg.setCornerRadius(ui.dp(14));
+            bg.setStroke(Math.max(1, ui.dp(active ? 2 : 1)), active ? t.gold : ui.stroke);
+            cell.setBackground(bg);
+            cell.setPadding(ui.dp(10), ui.dp(10), ui.dp(10), ui.dp(10));
+            cell.addView(ui.text((active ? "✓  " : "") + t.labelFa, 12.5f, t.text, true), ui.lp(-1, -2));
+            LinearLayout swatches = ui.row();
+            swatches.setPadding(0, ui.dp(6), 0, 0);
+            int[] dots = {t.gold, t.surface2, t.textDim, FinUi.SUCCESS, FinUi.WARNING, FinUi.DANGER};
+            for (int d = 0; d < dots.length; d++) {
+                View dot = new View(host);
+                dot.setBackground(ui.rounded(dots[d], 999, 0, 0));
+                LinearLayout.LayoutParams dlp = ui.lp(ui.dp(16), ui.dp(16));
+                dlp.leftMargin = ui.dp(d == 0 ? 0 : 4);
+                swatches.addView(dot, dlp);
+            }
+            cell.addView(swatches, ui.lp(-1, -2));
+            cell.setOnClickListener(v -> {
+                if (t.key.equals(host.ui().theme().key)) return;
                 FinTheme.set(host, t.key);
                 host.toast("پوسته «" + t.labelFa + "» فعال شد.");
                 host.reload();
             });
-            LinearLayout.LayoutParams lp = ui.lp(-2, -2);
-            lp.leftMargin = ui.dp(4);
-            row.addView(chip, lp);
+            ui.applyTouch(cell);
+            LinearLayout.LayoutParams lp = ui.lp(0, -2, 1f);
+            lp.leftMargin = ui.dp(i % 2 == 0 ? 0 : 5);
+            if (row != null) row.addView(cell, lp);
+            LinearLayout.LayoutParams gap = ui.lp(-1, ui.dp(5));
+            grid.addView(new View(host), gap);
         }
-        card.addView(row, ui.lp(-1, -2));
+        card.addView(grid, ui.lp(-1, -2));
         card.addView(ui.text("رنگ‌های معنایی (موفق/هشدار/خطا/مدیریت) در همه پوسته‌ها یکسان می‌مانند؛ فقط سطوح و رنگ تأکیدی تغییر می‌کند.",
                 11f, ui.textFaint, false), ui.lp(-1, -2));
         body.addView(card, top(12));

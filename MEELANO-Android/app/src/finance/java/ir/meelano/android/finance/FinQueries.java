@@ -160,16 +160,45 @@ public final class FinQueries {
                 + "WHERE NOT EXISTS (SELECT 1 FROM dbo.dar d WITH (NOLOCK) WHERE d.ghno=pd.ghno AND d.p=0)"));
 
         JSONArray labels = new JSONArray(), salesSeries = new JSONArray(), receiptSeries = new JSONArray();
+        // Two grouped queries instead of one query per day: the same numbers, far less work on the
+        // server for the 14-day trend the home screen and the daily report both draw.
+        java.util.Map<String, Double> salesByDay = daySeries(c,
+                "SELECT [date] AS d, ISNULL(SUM([all]),0) AS v FROM dbo.sailfact WITH (NOLOCK) "
+                        + "WHERE active='t' AND [date]>=? AND [date]<=? GROUP BY [date]", FinFmt.addDays(today, -13), today);
+        java.util.Map<String, Double> receiptByDay = daySeries(c,
+                "SELECT [date] AS d, ISNULL(SUM(mab),0) AS v FROM dbo.dar WITH (NOLOCK) "
+                        + "WHERE p=0 AND ISNULL(Active,1)=1 AND [date]>=? AND [date]<=? GROUP BY [date]", FinFmt.addDays(today, -13), today);
         for (int i = 13; i >= 0; i--) {
             String day = FinFmt.addDays(today, -i);
             labels.put(FinFmt.shortDate(day));
-            salesSeries.put(sum(c, "SELECT ISNULL(SUM([all]),0) AS v FROM dbo.sailfact WITH (NOLOCK) WHERE active='t' AND [date]=?", day));
-            receiptSeries.put(sum(c, "SELECT ISNULL(SUM(mab),0) AS v FROM dbo.dar WITH (NOLOCK) WHERE p=0 AND ISNULL(Active,1)=1 AND [date]=?", day));
+            salesSeries.put(salesByDay.containsKey(day) ? salesByDay.get(day) : 0d);
+            receiptSeries.put(receiptByDay.containsKey(day) ? receiptByDay.get(day) : 0d);
         }
         o.put("labels", labels);
         o.put("salesSeries", salesSeries);
         o.put("receiptSeries", receiptSeries);
         return o;
+    }
+
+    /** Reads a grouped {@code date → sum} result into a map so a trend needs two queries, not thirty. */
+    private static java.util.Map<String, Double> daySeries(Connection c, String sql, String from, String to) throws Exception {
+        java.util.Map<String, Double> map = new java.util.HashMap<>();
+        JSONArray rows = select(c, sql, from, to);
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject r = rows.optJSONObject(i);
+            if (r == null) continue;
+            String day = r.optString("d", "");
+            if (!day.isEmpty()) map.put(day, r.optDouble("v", 0d));
+        }
+        return map;
+    }
+
+    /** The largest debtor balances, for the collection chart on the home screen. */
+    public static JSONArray topDebtors(Connection c, int limit) throws Exception {
+        return select(c, "SELECT TOP (" + clamp(limit, 1, 40) + ") SHMO, MONAME, ISNULL(man,0) AS man, cell, "
+                + "ISNULL(black_list,0) AS black_list, "
+                + "(SELECT COUNT(*) FROM dbo.sailfact s WITH (NOLOCK) WHERE s.shmo=CUSTOMERS.SHMO AND s.active='t' AND ISNULL(s.bamandeh,0)<>0) AS open_invoices "
+                + "FROM dbo.CUSTOMERS WITH (NOLOCK) WHERE ISNULL(man,0)>0 ORDER BY ISNULL(man,0) DESC");
     }
 
     /** Real alerts — every line is backed by a query against live data, none is decorative. */

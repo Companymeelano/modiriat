@@ -51,6 +51,12 @@ jobs:
             echo "::error title=Finance build::$(echo "$line" | cut -c1-260)"
           done
 
+      - name: Finance unit tests (informative, never blocks the APK)
+        if: success()
+        continue-on-error: true
+        working-directory: MEELANO-Android
+        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testFinanceDebugUnitTest 2>&1 | tail -40
+
       - name: Publish build diagnostics to the branch
         if: failure() && github.event_name == 'push'
         run: |
@@ -93,6 +99,11 @@ jobs:
           mkdir -p apk-finance
           cp MEELANO-Android/app/build/outputs/apk/finance/debug/*.apk apk-finance/AtiranFinance-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/finance/release/*.apk apk-finance/AtiranFinance-release.apk
+          FIN_VERSION=$(grep -A 6 "finance {" MEELANO-Android/app/build.gradle | grep -oP "versionName\s+'\K[0-9.]+" | head -1)
+          FIN_CODE=$(grep -A 6 "finance {" MEELANO-Android/app/build.gradle | grep -oP "versionCode\s+\K[0-9]+" | head -1)
+          printf '{\"versionCode\": %s, \"versionName\": \"%s\", \"url\": \"https://github.com/%s/raw/%s/apk-finance/AtiranFinance-release.apk\"}\n' \
+            "${FIN_CODE:-2}" "${FIN_VERSION:-1.1.0}" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > apk-finance/latest-finance.json
+          cat apk-finance/latest-finance.json
           cd apk-finance
           for f in *.apk; do
             echo "::notice title=apksigner $f::$(("$APKSIGNER" verify --verbose --print-certs "$f" | grep -E 'Verified using|Signer #1 certificate SHA-256' | tr '\n' ';'))"

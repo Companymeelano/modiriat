@@ -39,8 +39,9 @@ android {
         finance {
             dimension 'edition'
             applicationId 'ir.meelano.atiran.finance'
-            versionCode 1
-            versionName '1.0.0'
+            // Charts, themed buttons and the reworked data paths of the financial cockpit.
+            versionCode 2
+            versionName '1.1.0'
         }
     }
 

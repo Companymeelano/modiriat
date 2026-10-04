@@ -101,6 +101,70 @@ public abstract class FinScreen {
         return card;
     }
 
+    /**
+     * Hero header of a screen: the brand emblem, the screen title, a one-line explanation and the
+     * server date. It is the first thing an operator sees and it carries the live date, so the whole
+     * screen can be trusted to talk about the same day.
+     */
+    protected LinearLayout hero(String title, String subtitle, int accent) {
+        LinearLayout card = ui.gradientCard(accent, 18);
+        LinearLayout row = ui.row();
+        FinCharts.Logo logo = new FinCharts.Logo(ui.ctx(), accent, ui.silver, ui.surface, ui.bg);
+        row.addView(logo, new LinearLayout.LayoutParams(ui.dp(52), ui.dp(52)));
+        LinearLayout copy = ui.column();
+        copy.setPadding(ui.dp(11), 0, 0, 0);
+        copy.addView(ui.text(title, 16.5f, ui.textColor, true), ui.lp(-1, -2));
+        if (subtitle != null && !subtitle.isEmpty()) {
+            TextView s = ui.text(subtitle, 11.5f, ui.textDim, false);
+            s.setMaxLines(2);
+            copy.addView(s, ui.lp(-1, -2));
+        }
+        row.addView(copy, ui.lp(0, -2, 1f));
+        card.addView(row, ui.lp(-1, -2));
+        LinearLayout meta = ui.row();
+        meta.setPadding(0, ui.dp(9), 0, 0);
+        meta.addView(ui.chip("تاریخ سرور " + FinFmt.faNumber(host.clockLabel()), accent), ui.lp(-2, -2));
+        meta.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
+        meta.addView(ui.chip(FinFmt.periodLabel(host.periodKey()), ui.textFaint), ui.lp(-2, -2));
+        card.addView(meta, ui.lp(-1, -2));
+        return card;
+    }
+
+    /** Adds a chart to a card with a responsive height (taller on a tablet, never cramped on a phone). */
+    protected void addChart(LinearLayout card, View chart, int heightDp) {
+        int widthDp = 0;
+        try { widthDp = host.getResources().getConfiguration().screenWidthDp; } catch (Exception ignored) { }
+        int height = widthDp >= 600 ? Math.round(heightDp * 1.2f) : (widthDp > 0 && widthDp < 340 ? Math.round(heightDp * 0.9f) : heightDp);
+        LinearLayout.LayoutParams lp = ui.lp(-1, ui.dp(height));
+        lp.topMargin = ui.dp(8);
+        card.addView(chart, lp);
+    }
+
+    /** Adds a horizontal bar chart that is exactly as tall as its rows. */
+    protected void addBars(LinearLayout card, View bars, int rows) {
+        LinearLayout.LayoutParams lp = ui.lp(-1, ui.barsHeight(Math.max(1, rows)));
+        lp.topMargin = ui.dp(8);
+        card.addView(bars, lp);
+    }
+
+    /** A row of filter values rendered as the segmented pills of the design kit. */
+    protected LinearLayout filters(String[][] spec, String active, int accent, final Pick pick) {
+        LinearLayout row = ui.row();
+        for (int i = 0; i < spec.length; i++) {
+            final String id = spec[i][0];
+            boolean on = id.equals(active);
+            TextView cell = ui.pillChip(spec[i][1], on, accent, v -> pick.pick(id));
+            cell.setMaxLines(1);
+            LinearLayout.LayoutParams lp = ui.lp(0, -2, 1f);
+            lp.leftMargin = ui.dp(3);
+            lp.rightMargin = ui.dp(3);
+            row.addView(cell, lp);
+        }
+        return row;
+    }
+
+    protected interface Pick { void pick(String id); }
+
     protected TextView stateText(String text, int color) {
         TextView t = ui.text(text, 12.5f, color, false);
         t.setPadding(0, ui.dp(8), 0, ui.dp(8));

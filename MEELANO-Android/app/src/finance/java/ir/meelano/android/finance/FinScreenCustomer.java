@@ -29,10 +29,7 @@ public class FinScreenCustomer extends FinScreen {
     @Override protected String cacheKey() { return "cust:" + shmo + ":" + host.periodFrom(); }
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("پرونده مشتری", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip("کد " + fa(shmo), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("پرونده مشتری", "کد " + fa(shmo) + " — مانده، صورت‌حساب، فاکتورهای باز و چک‌ها", ui.goldAccent));
         body = ui.column();
         add(body);
     }
@@ -93,6 +90,8 @@ public class FinScreenCustomer extends FinScreen {
         if (i(p, "hesab_status") != 0) card.addView(ui.chip("وضعیت حساب: کد " + fa(i(p, "hesab_status")), FinUi.WARNING), ui.lp(-2, -2));
         body.addView(card, top(12));
 
+        movementChart(arr(p, "statement"));
+
         body.addView(block("◷", "فاکتورهای باز", "sailfact با bamandeh <> 0", arr(p, "invoices"), 20, (r) -> new String[]{
                 "فاکتور " + fa(i(r, "shfacfo")),
                 "تاریخ " + s(r, "date", "—") + " · مانده " + money(d(r, "remaining")),
@@ -127,6 +126,40 @@ public class FinScreenCustomer extends FinScreen {
                 money(d(r, "amount")),
                 s(r, "status", "")
         }, ui.textDim, "activity"), top(12));
+    }
+
+    /** Daily debit/credit of this customer's ledger (cust_act) for the last 120 days. */
+    private void movementChart(JSONArray statement) {
+        if (statement.length() < 2) return;
+        java.util.LinkedHashMap<String, double[]> byDate = new java.util.LinkedHashMap<>();
+        for (int x = 0; x < statement.length(); x++) {
+            JSONObject r = statement.optJSONObject(x);
+            if (r == null) continue;
+            String date = s(r, "date", "");
+            if (date.isEmpty()) continue;
+            double[] cell = byDate.get(date);
+            if (cell == null) { cell = new double[2]; byDate.put(date, cell); }
+            cell[0] += d(r, "act_bed");
+            cell[1] += d(r, "act_bes");
+        }
+        if (byDate.size() < 2) return;
+        java.util.List<String> dates = new java.util.ArrayList<>(byDate.keySet());
+        java.util.Collections.sort(dates);
+        int n = Math.min(30, dates.size());
+        String[] labels = new String[n];
+        double[] debit = new double[n], credit = new double[n];
+        for (int i = 0; i < n; i++) {
+            String date = dates.get(n - 1 - i);           // oldest first; the chart draws right → left
+            double[] cell = byDate.get(date);
+            labels[i] = FinFmt.faNumber(date.length() >= 5 ? date.substring(date.length() - 5) : date);
+            debit[i] = cell[0];
+            credit[i] = cell[1];
+        }
+        LinearLayout card = section("▤", "گردش روزانه حساب", "بدهکار و بستانکار هر روز از دفتر cust_act");
+        FinCharts.Columns cols = ui.columnsChart(FinUi.FormatterKind.MONEY);
+        cols.data(labels, new double[][]{debit, credit}, new int[]{FinUi.WARNING, FinUi.SUCCESS}, new String[]{"بدهکار", "بستانکار"});
+        addChart(card, cols, 190);
+        body.addView(card, top(12));
     }
 
     private interface Row {

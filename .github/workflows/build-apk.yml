@@ -148,6 +148,9 @@ jobs:
           cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk "out/MEELANO-Staff-v$APP_VERSION-debug.apk"
           cp MEELANO-Android/app/build/outputs/apk/tax/release/*.apk "out/MEELANO-Tax-v$APP_VERSION-release.apk"
           cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk "out/MEELANO-Tax-v$APP_VERSION-debug.apk"
+          FIN_VERSION=$(grep -A 6 "finance {" MEELANO-Android/app/build.gradle | grep -oP "versionName\s+'\K[0-9.]+" | head -1)
+          cp MEELANO-Android/app/build/outputs/apk/finance/release/*.apk "out/AtiranFinance-v${FIN_VERSION:-1.1.0}-release.apk" || true
+          cp MEELANO-Android/app/build/outputs/apk/finance/debug/*.apk "out/AtiranFinance-v${FIN_VERSION:-1.1.0}-debug.apk" || true
           cp MEELANO-Android/app/build/outputs/apk/visitor/debug/*.apk app-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/store/debug/*.apk app-store-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk app-staff-debug.apk

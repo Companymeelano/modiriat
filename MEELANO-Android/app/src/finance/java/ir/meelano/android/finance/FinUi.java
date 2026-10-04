@@ -6,7 +6,9 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -16,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -28,6 +31,8 @@ import java.util.Locale;
  *
  * Surfaces, strokes, text and the accent come from {@link FinTheme}, so the four enterprise themes
  * recolour the entire application; the semantic status colours below are identical in every theme.
+ * Charts come from {@link FinCharts} and are created here so a screen never has to know about
+ * colours, fonts or numbers.
  */
 public final class FinUi {
 
@@ -74,6 +79,8 @@ public final class FinUi {
     public FinTheme theme() { return theme; }
     public Context ctx() { return a; }
     public int dp(float v) { return Math.round(v * density); }
+    public Typeface boldFace() { return bold; }
+    public Typeface regularFace() { return regular; }
 
     // ------------------------------------------------------------------ primitives
 
@@ -131,6 +138,18 @@ public final class FinUi {
     public LinearLayout cardTone(int accent) {
         LinearLayout c = column();
         c.setBackground(rounded(mix(surface, accent, 0.10f), 16, mix(stroke, accent, 0.45f), 1));
+        c.setPadding(dp(14), dp(12), dp(14), dp(12));
+        return c;
+    }
+
+    /** A card with a gentle two-stop tonal gradient — used for the KPI row and the hero header. */
+    public LinearLayout gradientCard(int accent, float radius) {
+        LinearLayout c = column();
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{mix(surface, accent, 0.16f), mix(surface2, accent, 0.05f)});
+        g.setCornerRadius(dp(radius));
+        g.setStroke(Math.max(1, dp(1)), mix(stroke, accent, 0.45f));
+        c.setBackground(g);
         c.setPadding(dp(14), dp(12), dp(14), dp(12));
         return c;
     }
@@ -202,22 +221,93 @@ public final class FinUi {
         return "•";
     }
 
-    /** A KPI tile with value, unit, secondary line and a tap target for the drill-down. */
+    /** Number that shrinks to fit its tile instead of being cut on a small phone. */
+    public static final class FitText extends TextView {
+        private final float maxSp, minSp;
+        private boolean adjusting = false;
+
+        public FitText(Context c, float maxSp, float minSp) {
+            super(c);
+            this.maxSp = maxSp;
+            this.minSp = Math.min(minSp, maxSp);
+            setTextSize(maxSp);
+        }
+
+        @Override protected void onSizeChanged(int w, int h, int oldW, int oldH) {
+            super.onSizeChanged(w, h, oldW, oldH);
+            fit(w - getPaddingLeft() - getPaddingRight());
+        }
+
+        @Override protected void onTextChanged(CharSequence text, int start, int before, int count) {
+            super.onTextChanged(text, start, before, count);
+            fit(getWidth() - getPaddingLeft() - getPaddingRight());
+        }
+
+        private void fit(int width) {
+            if (width <= 0 || adjusting) return;
+            adjusting = true;
+            try {
+                float size = maxSp;
+                setTextSize(size);
+                if (!isSingleLine()) { while (size > minSp && getLineCount() > 2) { size -= 0.5f; setTextSize(size); } }
+                else {
+                    String value = getText() == null ? "" : getText().toString();
+                    while (size > minSp && getPaint().measureText(value) > width) { size -= 0.5f; setTextSize(size); }
+                }
+            } catch (Exception ignored) {
+            } finally {
+                adjusting = false;
+            }
+        }
+    }
+
+    /** One-line figure that shrinks to fit instead of being cut. */
+    public TextView fitText(String value, float maxSp, float minSp, int color) {
+        FitText t = new FitText(a, maxSp, Math.min(maxSp, minSp));
+        t.setText(value == null ? "" : value);
+        t.setTextColor(color);
+        t.setTypeface(bold);
+        t.setIncludeFontPadding(false);
+        t.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        t.setTextDirection(View.TEXT_DIRECTION_RTL);
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.END);
+        return t;
+    }
+
+    /**
+     * A KPI tile: title, big value, unit, note, and (optionally) a sparkline of the recent shape.
+     * The whole tile is a 48dp+ touch target that opens its own drill-down.
+     */
     public LinearLayout kpiTile(String title, String value, String unit, String note, int accent, View.OnClickListener tap) {
+        return kpiTile(title, value, unit, note, accent, null, tap);
+    }
+
+    public LinearLayout kpiTile(String title, String value, String unit, String note, int accent, double[] trend, View.OnClickListener tap) {
         LinearLayout c = column();
-        c.setBackground(rounded(mix(surface, accent, 0.12f), 16, mix(stroke, accent, 0.55f), 1));
-        c.setPadding(dp(12), dp(10), dp(12), dp(10));
-        c.setMinimumHeight(dp(92));
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{mix(surface, accent, 0.15f), mix(surface2, accent, 0.03f)});
+        g.setCornerRadius(dp(16));
+        g.setStroke(Math.max(1, dp(1)), mix(stroke, accent, 0.5f));
+        c.setBackground(g);
+        c.setPadding(dp(12), dp(10), dp(12), dp(11));
+        c.setMinimumHeight(dp(96));
+
+        LinearLayout accentBar = row();
+        View bar = new View(a);
+        bar.setBackground(rounded(accent, 999, 0, 0));
+        accentBar.addView(bar, lp(dp(22), dp(3)));
+        c.addView(accentBar, lp(-1, -2));
 
         LinearLayout head = row();
-        head.addView(text("◆", 11f, accent, true), lp(-2, -2));
+        head.setPadding(0, dp(6), 0, 0);
+        head.addView(text("◆", 10.5f, accent, true), lp(-2, -2));
         head.addView(text("  " + title, 11.5f, textDim, false), lp(0, -2, 1f));
         c.addView(head, lp(-1, -2));
 
         LinearLayout valueRow = row();
-        TextView v = text(value, 19f, textColor, true);
-        v.setSingleLine(true);
-        v.setEllipsize(TextUtils.TruncateAt.END);
+        valueRow.setPadding(0, dp(2), 0, 0);
+        TextView v = fitText(value, 19f, 11.5f, textColor);
         valueRow.addView(v, lp(0, -2, 1f));
         if (unit != null && !unit.isEmpty()) valueRow.addView(text(" " + unit, 10.5f, textFaint, false), lp(-2, -2));
         c.addView(valueRow, lp(-1, -2));
@@ -227,27 +317,112 @@ public final class FinUi {
             n.setMaxLines(2);
             c.addView(n, lp(-1, -2));
         }
+        if (trend != null && trend.length > 1) {
+            FinCharts.Spark spark = new FinCharts.Spark(a, alpha(accent, 255));
+            spark.data(trend);
+            LinearLayout.LayoutParams slp = lp(-1, dp(26));
+            slp.topMargin = dp(6);
+            c.addView(spark, slp);
+        }
         if (tap != null) {
             c.setOnClickListener(tap);
             c.setClickable(true);
             c.setFocusable(true);
+            applyTouch(c);
+            LinearLayout foot = row();
+            foot.setGravity(Gravity.END);
+            TextView more = text("مشاهده جزئیات ›", 10.5f, accent, true);
+            more.setGravity(Gravity.END);
+            foot.addView(more, lp(-1, -2));
+            c.addView(foot, lp(-1, -2));
         }
         return c;
     }
 
-    public Button button(String label, int accent, boolean primary, View.OnClickListener click) {
+    /** Compact metric line used inside cards (label · value · optional chip). */
+    public LinearLayout miniStat(String label, String value, int accent) {
+        LinearLayout r = row();
+        r.setPadding(0, dp(5), 0, dp(5));
+        r.addView(text(label, 12f, textDim, false), lp(0, -2, 1f));
+        TextView v = text(value, 12.5f, mix(accent, textColor, 0.15f), true);
+        v.setGravity(Gravity.END);
+        r.addView(v, lp(0, -2, 1f));
+        return r;
+    }
+
+    /** Gradient primary button: the main action of a screen. */
+    public Button primaryButton(String label, int accent, View.OnClickListener click) {
         Button b = new Button(a);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTypeface(primary ? bold : regular);
-        b.setTextSize(13f);
-        b.setTextColor(primary ? bestOn(accent) : textColor);
-        b.setBackground(rounded(primary ? accent : surface2, 12, primary ? 0 : stroke, 1));
-        b.setPadding(dp(14), dp(10), dp(14), dp(10));
-        b.setMinimumHeight(dp(48));
-        b.setOnClickListener(click);
+        b.setTypeface(bold);
+        b.setTextSize(13.5f);
+        b.setTextColor(bestOn(accent));
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{mix(accent, android.graphics.Color.WHITE, 0.16f), accent});
+        g.setCornerRadius(dp(14));
+        b.setBackground(g);
+        b.setPadding(dp(12), dp(10), dp(12), dp(10));
+        b.setMinHeight(dp(50));
+        b.setSingleLine(true);
+        b.setEllipsize(TextUtils.TruncateAt.END);
+        if (click != null) b.setOnClickListener(click);
+        applyTouch(b);
         return b;
     }
+
+    /** Outlined secondary button: everything that is not the main action. */
+    public Button ghostButton(String label, int accent, View.OnClickListener click) {
+        Button b = new Button(a);
+        b.setText(label);
+        b.setAllCaps(false);
+        b.setTypeface(regular);
+        b.setTextSize(13f);
+        b.setTextColor(mix(accent, textColor, 0.25f));
+        b.setBackground(rounded(mix(surface2, accent, 0.08f), 14, mix(stroke, accent, 0.55f), 1));
+        b.setPadding(dp(12), dp(10), dp(12), dp(10));
+        b.setMinHeight(dp(48));
+        b.setSingleLine(true);
+        b.setEllipsize(TextUtils.TruncateAt.END);
+        if (click != null) b.setOnClickListener(click);
+        applyTouch(b);
+        return b;
+    }
+
+    /** Legacy button entry point kept for the screens that still call it. */
+    public Button button(String label, int accent, boolean primary, View.OnClickListener click) {
+        return primary ? primaryButton(label, accent, click) : ghostButton(label, accent, click);
+    }
+
+    /** Filter pill: filled when active, outlined when not; a segmented row is a row of these. */
+    public TextView pillChip(String label, boolean active, int accent, View.OnClickListener click) {
+        TextView t = text(label, 11.5f, active ? bestOn(accent) : mix(accent, textColor, 0.2f), active);
+        t.setGravity(Gravity.CENTER);
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.END);
+        t.setPadding(dp(10), dp(8), dp(10), dp(8));
+        t.setBackground(active ? rounded(accent, 999, 0, 0) : rounded(mix(surface2, accent, 0.05f), 999, mix(stroke, accent, 0.4f), 1));
+        t.setMinHeight(dp(38));
+        if (click != null) t.setOnClickListener(click);
+        applyTouch(t);
+        return t;
+    }
+
+    /** A row of equal-weight segmented filters — the period selector of every report. */
+    public LinearLayout segmented(String[] labels, int selectedIndex, int accent, OnPick pick) {
+        LinearLayout row = row();
+        for (int i = 0; i < labels.length; i++) {
+            final int index = i;
+            TextView cell = pillChip(labels[i], i == selectedIndex, accent, v -> pick.pick(index));
+            LinearLayout.LayoutParams p = lp(0, -2, 1f);
+            p.leftMargin = dp(i == 0 ? 0 : 3);
+            p.rightMargin = dp(i == labels.length - 1 ? 0 : 3);
+            row.addView(cell, p);
+        }
+        return row;
+    }
+
+    public interface OnPick { void pick(int index); }
 
     public EditText field(String hint) {
         EditText e = new EditText(a);
@@ -290,7 +465,11 @@ public final class FinUi {
     /** A tappable list row with a title, a subtitle line and a trailing value + status. */
     public LinearLayout listRow(String title, String sub, String trailing, String status, int accent, View.OnClickListener tap) {
         LinearLayout r = row();
-        r.setBackground(rounded(surface, 13, stroke, 1));
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{mix(surface, accent, 0.05f), surface});
+        g.setCornerRadius(dp(13));
+        g.setStroke(Math.max(1, dp(1)), mix(stroke, accent, 0.28f));
+        r.setBackground(g);
         r.setPadding(dp(12), dp(10), dp(12), dp(10));
         r.setMinimumHeight(dp(56));
 
@@ -302,7 +481,7 @@ public final class FinUi {
         LinearLayout right = column();
         right.setGravity(Gravity.END);
         if (trailing != null && !trailing.isEmpty()) {
-            TextView t = text(trailing, 13f, accent, true);
+            TextView t = text(trailing, 13f, mix(accent, textColor, 0.2f), true);
             t.setGravity(Gravity.END);
             right.addView(t, lp(-1, -2));
         }
@@ -317,37 +496,140 @@ public final class FinUi {
             r.setOnClickListener(tap);
             r.setClickable(true);
             r.setFocusable(true);
+            applyTouch(r);
         }
         return r;
     }
 
-    /** Simple bar chart drawn with plain views (no chart library in this code base). */
-    public LinearLayout barChart(String[] labels, double[] values, int accent) {
+    /** Legend under a donut or beside a bar chart: colour · name · value · share. */
+    public LinearLayout legend(List<FinCharts.Legend> items, double total) {
         LinearLayout col = column();
-        double max = 0;
-        for (double v : values) max = Math.max(max, Math.abs(v));
-        if (max <= 0) return col;
-        for (int i = 0; i < labels.length && i < values.length; i++) {
+        if (items == null) return col;
+        for (FinCharts.Legend item : items) {
             LinearLayout r = row();
-            TextView lab = text(labels[i], 10.5f, textDim, false);
-            lab.setSingleLine(true);
-            r.addView(lab, lp(dp(78), -2));
-            LinearLayout track = row();
-            track.setBackground(rounded(surface2, 6, 0, 0));
-            View bar = new View(a);
-            bar.setBackground(rounded(accent, 6, 0, 0));
-            int widthPct = (int) Math.max(2, Math.round(Math.abs(values[i]) / max * 100));
-            track.addView(bar, lp(0, dp(10), widthPct));
-            r.addView(track, lp(0, -2, 1f));
-            TextView val = text(FinFmt.compact(values[i]), 10.5f, silver, true);
-            val.setGravity(Gravity.END);
-            val.setSingleLine(true);
-            r.addView(val, lp(dp(76), -2));
-            LinearLayout.LayoutParams rp = lp(-1, -2);
-            rp.bottomMargin = dp(4);
-            col.addView(r, rp);
+            r.setPadding(0, dp(5), 0, dp(5));
+            View dot = new View(a);
+            dot.setBackground(rounded(item.color, 999, 0, 0));
+            LinearLayout.LayoutParams dlp = lp(dp(11), dp(11));
+            dlp.leftMargin = dp(2);
+            dlp.rightMargin = dp(8);
+            r.addView(dot, dlp);
+            TextView name = text(item.label, 11.5f, textColor, true);
+            name.setMaxLines(2);
+            name.setEllipsize(TextUtils.TruncateAt.END);
+            r.addView(name, lp(0, -2, 1f));
+            TextView value = fitText(item.value, 11.5f, 9f, textDim);
+            value.setGravity(Gravity.END);
+            r.addView(value, lp(-2, -2));
+            if (total > 0) {
+                double share = 0;
+                try {
+                    share = Double.parseDouble(item.value.replace(",", "").replace(" ", "")) / total * 100d;
+                } catch (Exception ignored) { }
+                if (share > 0 && share <= 100) {
+                    TextView pc = text(FinFmt.faNumber(Math.round(share) + "٪"), 10.5f, mix(item.color, textColor, 0.2f), true);
+                    pc.setGravity(Gravity.CENTER);
+                    pc.setBackground(rounded(alpha(item.color, 40), 999, 0, 0));
+                    pc.setPadding(dp(7), dp(3), dp(7), dp(3));
+                    LinearLayout.LayoutParams pp = lp(-2, -2);
+                    pp.leftMargin = dp(6);
+                    r.addView(pc, pp);
+                }
+            }
+            col.addView(r, lp(-1, -2));
         }
         return col;
+    }
+
+    /** Legend plus donut side by side on wide screens, stacked on phones. */
+    public LinearLayout donutWithLegend(FinCharts.Donut donut, java.util.List<FinCharts.Legend> items, double total, int donutDp) {
+        LinearLayout wrap = row();
+        int widthDp = 0;
+        try { widthDp = a.getResources().getConfiguration().screenWidthDp; } catch (Exception ignored) { }
+        boolean wide = widthDp >= 600;
+        wrap.setOrientation(wide ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
+        wrap.setGravity(Gravity.CENTER_VERTICAL);
+        int size = dp(donutDp);
+        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(size, size);
+        dlp.gravity = Gravity.CENTER_HORIZONTAL;
+        wrap.addView(donut, dlp);
+        LinearLayout legendBox = legend(items, total);
+        LinearLayout.LayoutParams llp = wide ? lp(0, -2, 1f) : lp(-1, -2);
+        if (wide) llp.leftMargin = dp(12); else llp.topMargin = dp(10);
+        wrap.addView(legendBox, llp);
+        return wrap;
+    }
+
+    // ------------------------------------------------------------------ charts (created here so screens stay colour-free)
+
+    /** Distinct but theme-consistent colours for chart segments. */
+    public int[] palette() {
+        return new int[]{goldAccent, SUCCESS, INFO, WARNING, MANAGER, DANGER, goldSoft, silver};
+    }
+
+    private int gridColor() { return mix(surface2, textColor, 0.14f); }
+
+    public FinCharts.Area areaChart(FormatterKind kind) {
+        FinCharts.Area chart = new FinCharts.Area(a, textColor, textDim, gridColor(), bold);
+        chart.formatter(formatterFor(kind));
+        return chart;
+    }
+
+    public FinCharts.Columns columnsChart(FormatterKind kind) {
+        FinCharts.Columns chart = new FinCharts.Columns(a, textColor, textDim, gridColor(), bold);
+        chart.formatter(formatterFor(kind));
+        return chart;
+    }
+
+    public FinCharts.Bars barsChart(FormatterKind kind) {
+        FinCharts.Bars chart = new FinCharts.Bars(a, textColor, textDim, gridColor(), bold);
+        chart.formatter(formatterFor(kind));
+        return chart;
+    }
+
+    public FinCharts.Donut donutChart(FormatterKind kind) {
+        FinCharts.Donut chart = new FinCharts.Donut(a, textColor, textDim, gridColor(), bold);
+        chart.formatter(formatterFor(kind));
+        return chart;
+    }
+
+    public FinCharts.Ring ringChart() {
+        return new FinCharts.Ring(a, textColor, textDim, gridColor(), bold);
+    }
+
+    public FinCharts.Spark spark(int accent) { return new FinCharts.Spark(a, accent); }
+
+    public enum FormatterKind { MONEY, COUNT }
+
+    public static FinCharts.Formatter formatterFor(FormatterKind kind) {
+        return kind == FormatterKind.COUNT ? FinCharts.COUNT : FinCharts.COMPACT;
+    }
+
+    /** Kept for compatibility: the old view-based bar chart delegated to the real chart engine. */
+    public View barChart(String[] labels, double[] values, int accent) {
+        FinCharts.Bars bars = barsChart(FormatterKind.MONEY);
+        bars.data(labels, values, null, null);
+        bars.setLayoutParams(lp(-1, FinCharts.Bars.heightFor(labels == null ? 0 : labels.length, density)));
+        return bars;
+    }
+
+    /** Fixed height (dp) for a bars chart with {@code rows} rows. */
+    public int barsHeight(int rows) { return Math.max(dp(56), FinCharts.Bars.heightFor(rows, a.getResources().getDisplayMetrics().density)); }
+
+    // ------------------------------------------------------------------ motion & misc
+
+    /** Small press feedback, disabled automatically when the device asks for reduced motion. */
+    public void applyTouch(View v) {
+        if (v == null) return;
+        v.setOnTouchListener((view, event) -> {
+            if (event == null) return false;
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                view.animate().scaleX(0.975f).scaleY(0.975f).alpha(0.94f).setDuration(90).start();
+            } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+                view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(130).start();
+            }
+            return false;
+        });
     }
 
     public static int mix(int a, int b, float ratio) {
@@ -356,6 +638,11 @@ public final class FinUi {
         int br = (b >> 16) & 0xFF, bgc = (b >> 8) & 0xFF, bb = b & 0xFF;
         return 0xFF000000 | (Math.round(ar + (br - ar) * r) << 16) | (Math.round(ag + (bgc - ag) * r) << 8)
                 | Math.round(ab + (bb - ab) * r);
+    }
+
+    public static int alpha(int color, int amount) {
+        return android.graphics.Color.argb(amount, android.graphics.Color.red(color),
+                android.graphics.Color.green(color), android.graphics.Color.blue(color));
     }
 
     /** Keeps text readable on a coloured chip. */
@@ -421,4 +708,10 @@ public final class FinUi {
     public int bg() { return bg; }
 
     public int surfaceColor() { return surface; }
+
+    /** Text size in sp that respects the user's font scale (used by the charts' labels). */
+    public float sp(float value) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, a.getResources().getDisplayMetrics())
+                / a.getResources().getDisplayMetrics().density;
+    }
 }

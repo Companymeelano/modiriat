@@ -26,21 +26,12 @@ public class FinScreenPos extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("مرکز POS", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip(FinFmt.periodLabel(host.periodKey()), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
-        LinearLayout periods = ui.row();
-        periods.setPadding(0, ui.dp(6), 0, 0);
-        for (String k : new String[]{"today", "7d", "30d", "month"}) {
-            boolean active = k.equals(host.periodKey());
-            LinearLayout chip = ui.chip(FinFmt.periodLabel(k), active ? ui.goldAccent : ui.textFaint);
-            chip.setOnClickListener(v -> host.setPeriod(k));
-            LinearLayout.LayoutParams p = ui.lp(-2, -2);
-            p.leftMargin = ui.dp(4);
-            periods.addView(chip, p);
-        }
-        addCard(periods, 6);
+        add(hero("مرکز POS", "تراکنش‌های کارت‌خوان، تسویه هر بانک و هر اپراتور، و موارد بدون قبض", FinUi.MANAGER));
+        final String[] keys = {"today", "7d", "30d", "month"};
+        String[] labels = new String[keys.length];
+        int active = 0;
+        for (int i = 0; i < keys.length; i++) { labels[i] = FinFmt.periodLabel(keys[i]); if (keys[i].equals(host.periodKey())) active = i; }
+        addCard(ui.segmented(labels, active, FinUi.MANAGER, index -> host.setPeriod(keys[index])), 6);
         body = ui.column();
         add(body);
     }
@@ -82,8 +73,7 @@ public class FinScreenPos extends FinScreen {
         k2.addView(ui.kpiTile("بدون قبض", fa(i(p, "withoutReceipt")), "تراکنش", "نیازمند مغایرت‌گیری", FinUi.DANGER, v -> host.open(new FinScreenProblems(host))), ui.lp(0, -2, 1f));
         body.addView(k2, top(8));
 
-        group("▤", "به تفکیک بانک", arr(p, "byBank"), "bank_name", "total", "n");
-        group("☺", "به تفکیک اپراتور", arr(p, "byUser"), "user_name", "total", "n");
+        posCharts(p);
 
         LinearLayout list = section("☰", "تراکنش‌های POS", "PosDetails متصل به قبض، به ترتیب جدیدترین");
         JSONArray rows = arr(p, "rows");
@@ -130,6 +120,78 @@ public class FinScreenPos extends FinScreen {
             }
         }
         body.addView(ul, top(12));
+    }
+
+    /** Donut by bank, bars by operator and a two-series column chart of the daily volume. */
+    private void posCharts(JSONObject p) {
+        JSONArray byBank = arr(p, "byBank");
+        int[] palette = ui.palette();
+        if (byBank.length() > 0) {
+            LinearLayout card = section("▤", "به تفکیک بانک", "جمع و تعداد تراکنش‌های متصل به قبض");
+            int n = Math.min(7, byBank.length());
+            String[] labels = new String[n];
+            double[] values = new double[n];
+            int[] colors = new int[n];
+            double total = 0;
+            for (int x = 0; x < n; x++) {
+                JSONObject r = byBank.optJSONObject(x);
+                if (r == null) r = new JSONObject();
+                labels[x] = s(r, "bank_name", "—");
+                values[x] = d(r, "total");
+                colors[x] = palette[x % palette.length];
+                total += values[x];
+            }
+            FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.MONEY);
+            donut.data(labels, values, colors, "POS");
+            java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+            for (int x = 0; x < n; x++) items.add(new FinCharts.Legend(labels[x], money(values[x]), colors[x]));
+            card.addView(ui.donutWithLegend(donut, items, total, 164), ui.lp(-1, -2));
+            addCard(card, 12);
+        }
+
+        JSONArray byUser = arr(p, "byUser");
+        if (byUser.length() > 0) {
+            LinearLayout card = section("☺", "به تفکیک اپراتور", "PosDetails.UserID = visitors.vis_rdf");
+            int n = Math.min(8, byUser.length());
+            String[] labels = new String[n];
+            double[] values = new double[n];
+            String[] notes = new String[n];
+            int[] colors = new int[n];
+            for (int x = 0; x < n; x++) {
+                JSONObject r = byUser.optJSONObject(x);
+                if (r == null) r = new JSONObject();
+                String name = s(r, "user_name", "—");
+                labels[x] = name.trim().isEmpty() ? "ثبت‌نشده" : name;
+                values[x] = d(r, "total");
+                notes[x] = fa(i(r, "n")) + " تراکنش";
+                colors[x] = palette[(x + 3) % palette.length];
+            }
+            FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
+            bars.data(labels, values, colors, notes);
+            addBars(card, bars, n);
+            addCard(card, 12);
+        }
+
+        JSONArray byDay = arr(p, "byDay");
+        if (byDay.length >= 2) {
+            LinearLayout card = section("▦", "روند روزانه POS", "جمع تراکنش‌های متصل به قبض در هر روز");
+            int n = Math.min(30, byDay.length);
+            String[] labels = new String[n];
+            double[] values = new double[n];
+            double[] counts = new double[n];
+            for (int i = 0; i < n; i++) {
+                JSONObject r = byDay.optJSONObject(n - 1 - i);   // newest-first → oldest-first
+                if (r == null) r = new JSONObject();
+                String date = s(r, "jalali_date", "");
+                labels[i] = FinFmt.faNumber(date.length() >= 5 ? date.substring(date.length() - 5) : date);
+                values[i] = d(r, "total");
+                counts[i] = d(r, "n");
+            }
+            FinCharts.Columns cols = ui.columnsChart(FinUi.FormatterKind.MONEY);
+            cols.data(labels, new double[][]{values}, new int[]{FinUi.MANAGER}, new String[]{"POS"});
+            addChart(card, cols, 200);
+            addCard(card, 12);
+        }
     }
 
     private void group(String glyph, String title, JSONArray rows, String nameKey, String amountKey, String countKey) {

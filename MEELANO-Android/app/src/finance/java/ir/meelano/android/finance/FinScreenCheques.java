@@ -2,6 +2,7 @@ package ir.meelano.android.finance;
 
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,25 +30,19 @@ public class FinScreenCheques extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("مرکز چک", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip("دریافتی", ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("مرکز چک", "وضعیت‌ها، سررسیدها و مبالغ چک‌های دریافتی و پرداختی از جدول‌های خود آتیران", ui.goldAccent));
 
         LinearLayout tabs = ui.row();
-        tabs.setPadding(0, ui.dp(6), 0, 0);
-        LinearLayout rec = ui.chip("چک‌های دریافتی", !issuedView ? ui.goldAccent : ui.textFaint);
-        rec.setOnClickListener(v -> { if (issuedView) { issuedView = false; mode = FinQueries.MODE_ALL; rebuild(); } });
-        LinearLayout iss = ui.chip("چک‌های پرداختی", issuedView ? ui.goldAccent : ui.textFaint);
-        iss.setOnClickListener(v -> { if (!issuedView) { issuedView = true; rebuild(); } });
-        tabs.addView(rec, ui.lp(-2, -2));
-        LinearLayout.LayoutParams ip = ui.lp(-2, -2);
-        ip.leftMargin = ui.dp(6);
-        tabs.addView(iss, ip);
+        tabs.addView(ui.pillChip("◫  چک‌های دریافتی", !issuedView, ui.goldAccent, v -> {
+            if (issuedView) { issuedView = false; mode = FinQueries.MODE_ALL; rebuild(); }
+        }), ui.lp(0, -2, 1f));
+        tabs.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
+        tabs.addView(ui.pillChip("⎋  چک‌های پرداختی", issuedView, ui.goldAccent, v -> {
+            if (!issuedView) { issuedView = true; rebuild(); }
+        }), ui.lp(0, -2, 1f));
         addCard(tabs, 6);
 
         if (!issuedView) {
-            LinearLayout modes = ui.row();
             String[][] spec = {
                     {FinQueries.MODE_ALL, "همه"},
                     {FinQueries.MODE_DUE_TODAY, "سررسید امروز"},
@@ -56,15 +51,19 @@ public class FinScreenCheques extends FinScreen {
                     {FinQueries.MODE_TREASURY, "در خزانه"},
                     {FinQueries.MODE_RETURNED, "برگشتی"}
             };
-            for (String[] m : spec) {
-                boolean active = m[0].equals(mode);
-                LinearLayout chip = ui.chip(m[1], active ? ui.goldAccent : ui.textFaint);
-                chip.setOnClickListener(v -> { mode = m[0]; rebuild(); });
-                LinearLayout.LayoutParams p = ui.lp(-2, -2);
-                p.leftMargin = ui.dp(4);
-                modes.addView(chip, p);
+            // Two rows of three so every filter is reachable with one thumb.
+            for (int rowIndex = 0; rowIndex < 2; rowIndex++) {
+                LinearLayout row = ui.row();
+                for (int c = 0; c < 3; c++) {
+                    String[] m = spec[rowIndex * 3 + c];
+                    TextView cell = ui.pillChip(m[1], m[0].equals(mode), ui.goldAccent, v -> { mode = m[0]; rebuild(); });
+                    LinearLayout.LayoutParams p = ui.lp(0, -2, 1f);
+                    p.leftMargin = ui.dp(c == 0 ? 0 : 3);
+                    p.rightMargin = ui.dp(c == 2 ? 0 : 3);
+                    row.addView(cell, p);
+                }
+                addCard(row, rowIndex == 0 ? 6 : 4);
             }
-            addCard(modes, 6);
         }
 
         body = ui.column();
@@ -116,8 +115,9 @@ public class FinScreenCheques extends FinScreen {
 
         LinearLayout census = section("▦", issued ? "وضعیت چک‌های پرداختی" : "وضعیت چک‌های دریافتی",
                 "نام‌ها از جدول‌های وضعیت خود آتیران خوانده می‌شود");
-        census.addView(ui.tableHeader(new String[]{"وضعیت", "تعداد", "مبلغ", "معوق"}), ui.lp(-1, -2));
         JSONArray rows = arr(p, "census");
+        censusChart(census, rows, issued);
+        census.addView(ui.tableHeader(new String[]{"وضعیت", "تعداد", "مبلغ", "معوق"}), top(8));
         if (rows.length() == 0) {
             census.addView(stateText("چکی با وضعیت ثبت‌شده وجود ندارد.", ui.textDim));
         } else {
@@ -160,6 +160,42 @@ public class FinScreenCheques extends FinScreen {
 
         if (!issued) calendar(p);
         statusLegend(p);
+    }
+
+    /** Donut of the cheque count and bars of the amount, per real Atiran status. */
+    private void censusChart(LinearLayout card, JSONArray rows, boolean issued) {
+        if (rows.length() == 0) return;
+        int n = Math.min(7, rows.length());
+        String[] labels = new String[n];
+        double[] counts = new double[n];
+        double[] amounts = new double[n];
+        int[] colors = new int[n];
+        int[] palette = ui.palette();
+        double totalCount = 0;
+        for (int x = 0; x < n; x++) {
+            JSONObject r = rows.optJSONObject(x);
+            if (r == null) r = new JSONObject();
+            labels[x] = issued ? ("وضعیت " + fa(i(r, "status_id"))) : s(r, "status_name", "بدون نام");
+            counts[x] = i(r, "n");
+            amounts[x] = d(r, "total");
+            colors[x] = palette[x % palette.length];
+            totalCount += counts[x];
+        }
+        FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.COUNT);
+        donut.data(labels, counts, colors, "تعداد چک");
+        java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+        for (int x = 0; x < n; x++) items.add(new FinCharts.Legend(labels[x], FinFmt.count(Math.round(counts[x])), colors[x]));
+        card.addView(ui.donutWithLegend(donut, items, totalCount, 158), ui.lp(-1, -2));
+
+        FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
+        String[] barLabels = new String[n];
+        String[] notes = new String[n];
+        for (int x = 0; x < n; x++) {
+            barLabels[x] = labels[x];
+            notes[x] = FinFmt.count(Math.round(counts[x])) + " چک" + (i(rows.optJSONObject(x), "overdue") > 0 ? " · معوق " + FinFmt.count(i(rows.optJSONObject(x), "overdue")) : "");
+        }
+        bars.data(barLabels, amounts, colors, notes);
+        addBars(card, bars, n);
     }
 
     private void calendar(JSONObject p) {

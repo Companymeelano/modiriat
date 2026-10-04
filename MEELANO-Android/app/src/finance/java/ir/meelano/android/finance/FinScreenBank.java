@@ -32,10 +32,8 @@ public class FinScreenBank extends FinScreen {
     @Override protected String cacheKey() { return "bank:" + bankRdf + ":" + host.periodFrom(); }
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("جزئیات حساب", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip(bankName.isEmpty() ? ("حساب " + fa(bankRdf)) : bankName, ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero(bankName.isEmpty() ? ("حساب " + fa(bankRdf)) : bankName,
+                "گردش واقعی ban_act برای بازه " + host.periodFrom() + " تا " + host.periodTo(), ui.goldAccent));
         body = ui.column();
         add(body);
     }
@@ -53,6 +51,50 @@ public class FinScreenBank extends FinScreen {
             a.put(payload);
             return a;
         }, this::render);
+    }
+
+    /** Daily in/out of this account, plus a donut of the settled vs unsettled volume. */
+    private void bankCharts(JSONObject p, double in, double out) {
+        JSONArray daily = arr(p, "daily");
+        if (daily.length >= 2) {
+            LinearLayout card = section("▤", "روند روزانه حساب", "واریز و برداشت هر روز در بازه انتخاب‌شده");
+            int n = Math.min(30, daily.length);
+            String[] labels = new String[n];
+            double[] inV = new double[n], outV = new double[n];
+            for (int i = 0; i < n; i++) {
+                JSONObject r = daily.optJSONObject(n - 1 - i);   // newest-first → oldest-first
+                if (r == null) r = new JSONObject();
+                String date = s(r, "act_date", "");
+                labels[i] = FinFmt.faNumber(date.length() >= 5 ? date.substring(date.length() - 5) : date);
+                inV[i] = d(r, "in_amount");
+                outV[i] = d(r, "out_amount");
+            }
+            FinCharts.Columns cols = ui.columnsChart(FinUi.FormatterKind.MONEY);
+            cols.data(labels, new double[][]{inV, outV}, new int[]{FinUi.SUCCESS, FinUi.DANGER}, new String[]{"واریز", "برداشت"});
+            addChart(card, cols, 200);
+            body.addView(card, top(12));
+        }
+
+        double unlinked = 0;
+        JSONArray unlinkedRows = arr(p, "unlinked");
+        for (int x = 0; x < unlinkedRows.length(); x++) {
+            JSONObject r = unlinkedRows.optJSONObject(x);
+            if (r == null) continue;
+            unlinked += Math.abs(d(r, "act_bed") - d(r, "act_bes"));
+        }
+        if (in + out > 0 || unlinked > 0) {
+            LinearLayout card = section("◎", "ترکیب گردش", "واریز، برداشت و گردش بدون قبض مرتبط");
+            int[] palette = ui.palette();
+            FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.MONEY);
+            donut.data(new String[]{"واریز", "برداشت", "بدون قبض"}, new double[]{in, out, unlinked},
+                    new int[]{palette[1], palette[5], palette[3]}, "گردش حساب");
+            java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+            items.add(new FinCharts.Legend("واریز (act_bed)", money(in), palette[1]));
+            items.add(new FinCharts.Legend("برداشت (act_bes)", money(out), palette[5]));
+            items.add(new FinCharts.Legend("بدون قبض مرتبط", money(unlinked), palette[3]));
+            card.addView(ui.donutWithLegend(donut, items, in + out + unlinked, 158), ui.lp(-1, -2));
+            body.addView(card, top(12));
+        }
     }
 
     private void render(JSONObject env) {
@@ -81,6 +123,8 @@ public class FinScreenBank extends FinScreen {
         k.addView(ui.spacer(8), ui.lp(ui.dp(8), -2));
         k.addView(ui.kpiTile("برداشت بازه", compact(out), FinFmt.CURRENCY, "ban_act.act_bes (۱۲۰ ردیف آخر)", FinUi.DANGER, null), ui.lp(0, -2, 1f));
         body.addView(k, ui.lp(-1, -2));
+
+        bankCharts(p, in, out);
 
         LinearLayout list = section("☰", "گردش حساب", host.periodFrom() + " تا " + host.periodTo());
         if (movements.length() == 0) {

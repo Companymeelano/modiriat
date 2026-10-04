@@ -30,10 +30,7 @@ public class FinScreenDaily extends FinScreen {
     private LinearLayout body;
 
     @Override protected void populate() {
-        LinearLayout head = ui.row();
-        head.addView(ui.text("گزارش و بستن روز", 17f, ui.textColor, true), ui.lp(0, -2, 1f));
-        head.addView(ui.chip("امروز " + fa(host.today()), ui.goldAccent), ui.lp(-2, -2));
-        add(head);
+        add(hero("گزارش و بستن روز", "همه اعداد همان روز سرور؛ بستن روز فقط ثبت بازبینی است و هیچ مانده‌ای را تغییر نمی‌دهد", FinUi.SUCCESS));
         body = ui.column();
         add(body);
     }
@@ -52,6 +49,47 @@ public class FinScreenDaily extends FinScreen {
             a.put(payload);
             return a;
         }, this::render);
+    }
+
+    /** The day's shape: 14-day trend, today's collection mix and the collection ratio. */
+    private void dailyCharts(JSONObject p) {
+        LinearLayout trend = section("▤", "روند ۱۴ روز اخیر", "فروش در برابر وصول — تا امروز");
+        JSONArray labels = arr(p, "labels"), sales = arr(p, "salesSeries"), receipts = arr(p, "receiptSeries");
+        if (labels.length() >= 2) {
+            int n = labels.length();
+            String[] lab = new String[n];
+            double[] salesV = new double[n], receiptV = new double[n];
+            for (int x = 0; x < n; x++) {
+                lab[x] = labels.optString(x);
+                salesV[x] = sales.optDouble(x, 0d);
+                receiptV[x] = receipts.optDouble(x, 0d);
+            }
+            FinCharts.Area area = ui.areaChart(FinUi.FormatterKind.MONEY);
+            area.data(lab, new double[][]{salesV, receiptV}, new int[]{ui.goldAccent, FinUi.SUCCESS}, new String[]{"فروش", "وصول"}, true);
+            addChart(trend, area, 190);
+        } else {
+            trend.addView(stateText("داده‌ای برای روند دو هفته اخیر ثبت نشده است.", ui.textDim));
+        }
+        addCard(trend, 12);
+
+        LinearLayout mix = section("◎", "ترکیب وصول امروز", "نقد، چک و POS — با نسبت وصول به فروش");
+        double cash = d(p, "cashToday"), check = d(p, "checkToday"), pos = d(p, "posToday");
+        double received = d(p, "receivedToday"), salesToday = d(p, "salesToday");
+        int[] palette = ui.palette();
+        FinCharts.Donut donut = ui.donutChart(FinUi.FormatterKind.MONEY);
+        donut.data(new String[]{"نقد", "چک", "POS"}, new double[]{cash, check, pos}, new int[]{palette[1], palette[0], palette[2]}, "وصول امروز");
+        java.util.List<FinCharts.Legend> items = new java.util.ArrayList<>();
+        items.add(new FinCharts.Legend("نقد", money(cash), palette[1]));
+        items.add(new FinCharts.Legend("چک", money(check), palette[0]));
+        items.add(new FinCharts.Legend("POS", money(pos), palette[2]));
+        mix.addView(ui.donutWithLegend(donut, items, cash + check + pos, 158), ui.lp(-1, -2));
+        FinCharts.Ring ring = ui.ringChart();
+        ring.data(received, salesToday <= 0 ? Math.max(1, received) : salesToday, "نسبت وصول امروز", received >= salesToday ? FinUi.SUCCESS : FinUi.INFO);
+        ring.note("فروش " + compact(salesToday) + " ریال");
+        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(ui.dp(140), ui.dp(140));
+        rlp.gravity = android.view.Gravity.CENTER_HORIZONTAL;
+        mix.addView(ring, rlp);
+        addCard(mix, 12);
     }
 
     private void render(JSONObject env) {
@@ -77,6 +115,8 @@ public class FinScreenDaily extends FinScreen {
         k2.addView(ui.spacer(8), ui.lp(ui.dp(8), -2));
         k2.addView(ui.kpiTile("POS", compact(d(p, "posToday")), FinFmt.CURRENCY, i(p, "posCountToday") + " تراکنش", FinUi.MANAGER, null), ui.lp(0, -2, 1f));
         body.addView(k2, top(8));
+
+        dailyCharts(p);
 
         LinearLayout checks = section("◫", "چک‌های سررسیدشده تا امروز", arr(p, "checksDueList").length() + " ردیف");
         JSONArray due = arr(p, "checksDueList");
