@@ -137,7 +137,9 @@ import java.util.concurrent.CountDownLatch;
 public class MainActivity extends Activity {
     private static final String PREFS = "meelano_android_direct_sql";
     static final String PREFS_NAME = PREFS;
-    private static final boolean VISITOR_EDITION = true;
+    private static volatile boolean VISITOR_EDITION = true;
+    private boolean MANAGEMENT_EDITION = false;
+    private String reportVisitorPeriod = "month";
     /** Developer credit shown on the login screen and in «درباره برنامه». */
     private static final String DEVELOPER_NAME = "Milad Yaghoobi";
     private static final String DEFAULT_THEME = "azure_diamond";
@@ -330,7 +332,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         try { STORE_EDITION = getResources().getBoolean(R.bool.meelano_store_edition); } catch (Exception ignored) { STORE_EDITION = false; }
         try { STAFF_EDITION = getResources().getBoolean(R.bool.meelano_staff_edition); } catch (Exception ignored) { STAFF_EDITION = false; }
+        try { MANAGEMENT_EDITION = getResources().getBoolean(R.bool.meelano_management_edition); } catch (Exception ignored) { MANAGEMENT_EDITION = false; }
         if (STAFF_EDITION) STORE_EDITION = false;
+        if (MANAGEMENT_EDITION) VISITOR_EDITION = false;
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         loadMeelanoFonts();
         if (VISITOR_EDITION) prepareVisitorEditionDefaults();
@@ -341,7 +345,7 @@ public class MainActivity extends Activity {
         buildFrame();
         MeelanoA11y.install(getWindow().getDecorView());
         registerNetworkReturnListener();
-        showLogin("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید.");
+        showLogin(loginPromptText());
         maybeStartDesignPreview(getIntent());
         if (STAFF_EDITION && getIntent() != null && getIntent().getStringExtra(MeelanoDelivery.EXTRA_PAGE) != null) staffPendingOpen = getIntent().getStringExtra(MeelanoDelivery.EXTRA_PAGE);
         maybeStartDbSelfTest(getIntent());
@@ -372,9 +376,9 @@ public class MainActivity extends Activity {
         }
         String showcaseMode = intent.getStringExtra("meelano_showcase_mode");
         prefs.edit().putString("visitor_showcase_mode", showcaseMode == null || showcaseMode.trim().isEmpty() ? "catalog" : showcaseMode.trim()).commit();
-        if ("login".equals(page)) { showLogin("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید."); return; }
+        if ("login".equals(page)) { showLogin(loginPromptText()); return; }
         if ("loading".equals(page)) {
-            showLogin("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید.");
+            showLogin(loginPromptText());
             showLoginLoadingOverlay("سارا رحیمی/ويزيتور");
             preloadStep("products", "ok", formatNumber(1240) + " کالا");
             preloadStep("customers", "run", "");
@@ -382,7 +386,8 @@ public class MainActivity extends Activity {
             return;
         }
         try { seedDesignPreviewData(); } catch (Exception ignored) { }
-        session = STAFF_EDITION ? new UserSession(4, 4, "اسما حمدانی", "visitor", "") : STORE_EDITION ? new UserSession(6, 3, "فاطمه محمودی", "visitor", "") : new UserSession(1, 7, "سارا رحیمی", "visitor", "");
+        session = MANAGEMENT_EDITION ? new UserSession(1, null, "مدیر آتیران", "admin", "") : STAFF_EDITION ? new UserSession(4, 4, "اسما حمدانی", "visitor", "") : STORE_EDITION ? new UserSession(6, 3, "فاطمه محمودی", "visitor", "") : new UserSession(1, 7, "سارا رحیمی", "visitor", "");
+        if (MANAGEMENT_EDITION) sessionLoginName = "management";
         if (STORE_EDITION) sessionLoginName = "mahmodi";
         if (STAFF_EDITION) sessionLoginName = "asma";
         if (STAFF_EDITION && staffPreviewRoute(page.trim())) return;
@@ -1212,7 +1217,7 @@ public class MainActivity extends Activity {
     private void initNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
-                NotificationChannel ch = new NotificationChannel(NOTIFY_CHANNEL, "هشدارهای مدیریتی پخش درخشان", NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationChannel ch = new NotificationChannel(NOTIFY_CHANNEL, MANAGEMENT_EDITION ? "هشدارهای مدیریتی آتیران" : "هشدارهای مدیریتی پخش درخشان", NotificationManager.IMPORTANCE_DEFAULT);
                 ch.setDescription("یادآوری چک‌ها، مطالبات و هشدارهای مهم داشبورد");
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 if (nm != null) nm.createNotificationChannel(ch);
@@ -1873,9 +1878,14 @@ public class MainActivity extends Activity {
         shell.setPadding(dp(3), dp(3), dp(3), dp(3));
         shell.setBackground(roundedStroke(alpha(Color.WHITE, isLightTheme() ? 70 : 18), 20, alpha(GOLD, isLightTheme() ? 95 : 120)));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) shell.setElevation(dp(7));
-        // App mark = the same gold «D» as the launcher icon, so header, login and home-screen icon match.
+        // Keep the in-app brandmark aligned with the launcher icon for each edition.
         ImageView logo = new ImageView(this);
-        logo.setImageResource(R.drawable.meelano_3d);
+        int logoResource = R.drawable.meelano_3d;
+        if (MANAGEMENT_EDITION) {
+            int atiranLogo = getResources().getIdentifier("atiran_management_icon", "drawable", getPackageName());
+            if (atiranLogo != 0) logoResource = atiranLogo;
+        }
+        logo.setImageResource(logoResource);
         logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
         logo.setContentDescription(editionTitle());
         logo.setBackground(roundedStroke(Color.TRANSPARENT, 14, Color.TRANSPARENT));
@@ -2054,10 +2064,10 @@ public class MainActivity extends Activity {
             titles.setOrientation(LinearLayout.VERTICAL);
             titles.setGravity(Gravity.CENTER_VERTICAL);
             titles.setPadding(dp(10), 0, dp(8), 0);
-            TextView appTitle = text("پخش درخشان", 17.5f, TEXT, Typeface.BOLD);
+            TextView appTitle = text(MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان", 17.5f, TEXT, Typeface.BOLD);
             appTitle.setSingleLine(true);
             appTitle.setShadowLayer(dp(2), 0, dp(1), alpha(Color.WHITE, isLightTheme() ? 90 : 20));
-            subtitle = text("ورود با حساب پخش درخشان", 10.2f, alpha(TEXT, 205), Typeface.NORMAL);
+            subtitle = text(MANAGEMENT_EDITION ? "گزارش‌ها و عملیات مدیریتی" : "ورود با حساب پخش درخشان", 10.2f, alpha(TEXT, 205), Typeface.NORMAL);
             subtitle.setSingleLine(true);
             status = text("", 1, Color.TRANSPARENT, Typeface.NORMAL);
             titles.addView(appTitle, new LinearLayout.LayoutParams(-1, -2));
@@ -2077,7 +2087,7 @@ public class MainActivity extends Activity {
         }
         addHeaderTool(tools, "✺", "انتخاب تم", GOLD, v -> showThemeChooser());
         headerSettingsTool = addHeaderTool(tools, "⚙", "تنظیمات", GOLD, v -> { if (session == null) showLogin("ابتدا وارد شوید."); else showApp("settings"); });
-        headerLogoutTool = addHeaderTool(tools, "⎋", "خروج", DANGER, v -> { if (session == null) showLogin("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید."); else showLogin("از حساب خارج شدید. برای ورود مجدد اطلاعات پخش درخشان را وارد کنید."); });
+        headerLogoutTool = addHeaderTool(tools, "⎋", "خروج", DANGER, v -> { if (session == null) showLogin(loginPromptText()); else showLogin(MANAGEMENT_EDITION ? "از حساب خارج شدید. برای ورود مجدد به مدیریت آتیران، اطلاعات حساب خود را وارد کنید." : "از حساب خارج شدید. برای ورود مجدد اطلاعات پخش درخشان را وارد کنید."); });
         header.addView(tools, new LinearLayout.LayoutParams(-2, dp(VISITOR_EDITION ? 58 : 56)));
         refreshHeaderTools();
         headerWrap.addView(header, new LinearLayout.LayoutParams(-1, dp(VISITOR_EDITION ? 68 : 64)));
@@ -2166,8 +2176,8 @@ public class MainActivity extends Activity {
     }
 
     private String headerSubtitleText() {
-        if (session == null) return STAFF_EDITION ? "ورود امن پرسنل" : STORE_EDITION ? "ورود امن کارکنان فروشگاه" : "ورود امن ویزیتور";
-        return headerPersonName() + (STAFF_EDITION ? " • پرسنل" : STORE_EDITION ? " • کارمند فروشگاه" : " • ویزیتور فعال");
+        if (session == null) return MANAGEMENT_EDITION ? "ورود امن مدیریت" : STAFF_EDITION ? "ورود امن پرسنل" : STORE_EDITION ? "ورود امن کارکنان فروشگاه" : "ورود امن ویزیتور";
+        return headerPersonName() + (MANAGEMENT_EDITION ? " • مدیر سامانه" : STAFF_EDITION ? " • پرسنل" : STORE_EDITION ? " • کارمند فروشگاه" : " • ویزیتور فعال");
     }
 
     private void refreshHeaderName() { if (subtitle != null) subtitle.setText(headerSubtitleText()); }
@@ -2310,7 +2320,7 @@ public class MainActivity extends Activity {
         addThemeOption(box, dialog, THEME_AUTO, "خودکار", "روشن در روز، تیره در شب — هماهنگ با گوشی", new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(5, 8, 18)});
         if (STAFF_EDITION) addThemeOption(box, dialog, "amethyst_pearl", "آمتیست مرواریدی", "تم پیش‌فرض پرسنل • هم‌رنگ آیکون", new int[]{Color.rgb(248, 245, 252), Color.rgb(88, 44, 150), Color.rgb(176, 132, 52)});
         if (STORE_EDITION) addThemeOption(box, dialog, "emerald_royal", "زمرد سلطنتی", "تم پیش‌فرض فروشگاه • هم‌رنگ آیکون", new int[]{Color.rgb(243, 249, 245), Color.rgb(7, 104, 70), Color.rgb(184, 142, 58)});
-        if (VISITOR_EDITION && !STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "azure_diamond", "الماس آبی", "تم پیش‌فرض " + editionTitle(), new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(24, 190, 255)});
+        if ((VISITOR_EDITION || MANAGEMENT_EDITION) && !STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "azure_diamond", MANAGEMENT_EDITION ? "آبی آتیران" : "الماس آبی", "تم پیش‌فرض " + editionTitle(), new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(24, 190, 255)});
         if (!STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "hazelnut_gold", "فندقی طلایی", "هم‌رنگ آیکون برنامه", new int[]{Color.rgb(250, 244, 234), Color.rgb(150, 92, 38), Color.rgb(201, 145, 58)});
         addThemeOption(box, dialog, "pearl_platinum", "روشن ۱", "مروارید پلاتینیوم", new int[]{Color.rgb(245, 247, 251), Color.rgb(168, 122, 44), Color.rgb(48, 96, 176)});
         addThemeOption(box, dialog, "rose_quartz_lux", "روشن ۲", "رز کوارتز لاکچری", new int[]{Color.rgb(255, 247, 248), Color.rgb(177, 102, 82), Color.rgb(111, 90, 174)});
@@ -2385,7 +2395,7 @@ public class MainActivity extends Activity {
         buildFrame();
         session = oldSession;
         if (oldSession == null || "login".equals(page)) {
-            showLogin("تم جدید پخش درخشان اعمال شد. برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید.");
+            showLogin("تم جدید " + editionTitle() + " اعمال شد. " + loginPromptText());
         } else {
             showApp(page == null ? "dashboard" : page);
         }
@@ -2866,6 +2876,12 @@ public class MainActivity extends Activity {
     }
 
 
+    private String loginPromptText() {
+        return MANAGEMENT_EDITION
+                ? "برای ورود به مدیریت آتیران، نام کاربری و رمز عبور خود را وارد کنید."
+                : "برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید.";
+    }
+
     private void showLogin(String message) {
         if (STAFF_EDITION && session != null && !designPreview) staffOnSignedOut();
         if (session != null) autosaveCart(true);
@@ -2876,7 +2892,7 @@ public class MainActivity extends Activity {
         if (visitorCartItems != null) resetCartState();
         setConnectionStatus("idle");
         refreshHeaderTools();
-        subtitle.setText(STAFF_EDITION ? "ورود پرسنل" : STORE_EDITION ? "ورود کارکنان فروشگاه" : VISITOR_EDITION ? "ورود مستقیم ویزیتور" : "ورود با حساب پخش درخشان");
+        subtitle.setText(MANAGEMENT_EDITION ? "ورود مدیریت آتیران" : STAFF_EDITION ? "ورود پرسنل" : STORE_EDITION ? "ورود کارکنان فروشگاه" : VISITOR_EDITION ? "ورود مستقیم ویزیتور" : "ورود با حساب پخش درخشان");
         stage.removeAllViews();
 
         FrameLayout backdrop = new FrameLayout(this);
@@ -2910,7 +2926,7 @@ public class MainActivity extends Activity {
         g3p.setMargins(0, 0, dp(-72), 0);
         backdrop.addView(glow3, g3p);
 
-        TextView watermark = text("پخش درخشان", 42, alpha(GOLD_2, 28), Typeface.BOLD);
+        TextView watermark = text(MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان", 42, alpha(GOLD_2, 28), Typeface.BOLD);
         watermark.setGravity(Gravity.CENTER);
         watermark.setRotation(-9f);
         FrameLayout.LayoutParams wp = new FrameLayout.LayoutParams(-1, dp(86), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
@@ -2934,7 +2950,12 @@ public class MainActivity extends Activity {
         outer.addView(loginCard, new LinearLayout.LayoutParams(-1, -2));
 
         ImageView logo = new ImageView(this);
-        logo.setImageResource(ir.meelano.android.R.drawable.meelano_3d);
+        int logoResource = ir.meelano.android.R.drawable.meelano_3d;
+        if (MANAGEMENT_EDITION) {
+            int atiranLogo = getResources().getIdentifier("atiran_management_icon", "drawable", getPackageName());
+            if (atiranLogo != 0) logoResource = atiranLogo;
+        }
+        logo.setImageResource(logoResource);
         logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         logo.setPadding(dp(5), dp(5), dp(5), dp(5));
         logo.setBackground(roundedStroke(alpha(GOLD, 18), 28, alpha(GOLD, 72)));
@@ -2942,18 +2963,18 @@ public class MainActivity extends Activity {
         logoLp.setMargins(0, 0, 0, dp(8));
         loginCard.addView(logo, logoLp);
 
-        TextView h = text(STAFF_EDITION ? "ورود پرسنل" : STORE_EDITION ? "ورود کارکنان فروشگاه" : VISITOR_EDITION ? "ورود ویزیتور" : "ورود پخش درخشان", 23, TEXT, Typeface.BOLD);
+        TextView h = text(MANAGEMENT_EDITION ? "ورود به مدیریت آتیران" : STAFF_EDITION ? "ورود پرسنل" : STORE_EDITION ? "ورود کارکنان فروشگاه" : VISITOR_EDITION ? "ورود ویزیتور" : "ورود پخش درخشان", 23, TEXT, Typeface.BOLD);
         h.setGravity(Gravity.CENTER);
         loginCard.addView(h, new LinearLayout.LayoutParams(-1, -2));
 
-        TextView sub = text(VISITOR_EDITION ? "با نام کاربری و رمز خود وارد شوید." : "ورود امن به پخش درخشان", 12.5f, MUTED, Typeface.NORMAL);
+        TextView sub = text(MANAGEMENT_EDITION ? "ورود امن با حساب مدیریتی آتیران" : VISITOR_EDITION ? "با نام کاربری و رمز خود وارد شوید." : "ورود امن به پخش درخشان", 12.5f, MUTED, Typeface.NORMAL);
         sub.setGravity(Gravity.CENTER);
         sub.setLineSpacing(dp(2), 1.05f);
         LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, -2);
         sp.setMargins(0, dp(7), 0, dp(14));
         loginCard.addView(sub, sp);
 
-        if (message != null && message.contains("نام کاربری و رمز پخش درخشان را وارد کنید")) message = message.replace("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید.", "").trim();
+        if (message != null && (message.equals(loginPromptText()) || message.contains("برای ورود، نام کاربری و رمز پخش درخشان را وارد کنید"))) message = "";
         if (message != null && !message.trim().isEmpty()) {
             TextView msg = text(message, 12, alpha(TEXT, 215), Typeface.NORMAL);
             msg.setGravity(Gravity.CENTER);
@@ -2964,14 +2985,14 @@ public class MainActivity extends Activity {
             loginCard.addView(msg, mp);
         }
 
-        TextView userLabel = text("نام کاربری پخش درخشان", 12, MUTED, Typeface.BOLD);
+        TextView userLabel = text(MANAGEMENT_EDITION ? "نام کاربری مدیر" : "نام کاربری پخش درخشان", 12, MUTED, Typeface.BOLD);
         loginCard.addView(userLabel, new LinearLayout.LayoutParams(-1, -2));
         EditText username = input("نام کاربری", prefs.getString(KEY_LAST_USER, ""), false);
         LinearLayout.LayoutParams up = new LinearLayout.LayoutParams(-1, dp(54));
         up.setMargins(0, dp(6), 0, dp(12));
         loginCard.addView(username, up);
 
-        TextView passLabel = text("رمز عبور پخش درخشان", 12, MUTED, Typeface.BOLD);
+        TextView passLabel = text(MANAGEMENT_EDITION ? "رمز عبور مدیر" : "رمز عبور پخش درخشان", 12, MUTED, Typeface.BOLD);
         loginCard.addView(passLabel, new LinearLayout.LayoutParams(-1, -2));
         EditText password = input("رمز عبور", "", true);
         password.setImeOptions(EditorInfo.IME_ACTION_DONE);
@@ -3116,7 +3137,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(70), dp(70));
         ip.gravity = Gravity.CENTER_HORIZONTAL;
         box.addView(icon, ip);
-        TextView title = text("قفل سریع و امن پخش درخشان", 18, TEXT, Typeface.BOLD);
+        TextView title = text(MANAGEMENT_EDITION ? "قفل سریع و امن مدیریت آتیران" : "قفل سریع و امن پخش درخشان", 18, TEXT, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2); tp.setMargins(0, dp(8), 0, dp(4));
         box.addView(title, tp);
@@ -3220,11 +3241,11 @@ public class MainActivity extends Activity {
     private void startBiometricQuickLogin() {
         if (VISITOR_EDITION) return;
         if (Build.VERSION.SDK_INT < 28) { showNotice("اثر انگشت روی این نسخه اندروید پشتیبانی نمی‌شود؛ از PIN استفاده کنید.", false); return; }
-        if (storedQuickSession() == null) { showNotice("ابتدا یک‌بار با حساب پخش درخشان وارد شوید.", false); return; }
+        if (storedQuickSession() == null) { showNotice(MANAGEMENT_EDITION ? "ابتدا یک‌بار با حساب مدیریت آتیران وارد شوید." : "ابتدا یک‌بار با حساب پخش درخشان وارد شوید.", false); return; }
         try {
             CancellationSignal signal = new CancellationSignal();
             BiometricPrompt prompt = new BiometricPrompt.Builder(this)
-                    .setTitle("ورود سریع پخش درخشان")
+                    .setTitle(MANAGEMENT_EDITION ? "ورود سریع مدیریت آتیران" : "ورود سریع پخش درخشان")
                     .setSubtitle("تأیید هویت برای ورود به داشبورد")
                     .setNegativeButton("لغو", getMainExecutor(), (d, which) -> {})
                     .build();
@@ -3369,7 +3390,7 @@ public class MainActivity extends Activity {
         pagePill.setPadding(dp(10), dp(3), dp(10), dp(3));
         pagePill.setBackground(luxuryButtonBg(accent, true, 999));
         info.addView(pagePill, new LinearLayout.LayoutParams(-2, dp(28)));
-        TextView hint = text(VISITOR_EDITION ? "  فقط مسیر کاری ویزیتور؛ بدون بخش اضافه" : "  منوی آینده‌نگر پخش درخشان در پایین صفحه", 9.3f, alpha(MUTED, 235), Typeface.BOLD);
+        TextView hint = text(VISITOR_EDITION ? "  فقط مسیر کاری ویزیتور؛ بدون بخش اضافه" : MANAGEMENT_EDITION ? "  منوی مدیریت آتیران در پایین صفحه" : "  منوی آینده‌نگر پخش درخشان در پایین صفحه", 9.3f, alpha(MUTED, 235), Typeface.BOLD);
         hint.setSingleLine(true);
         hint.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
         info.addView(hint, new LinearLayout.LayoutParams(0, dp(28), 1f));
@@ -3684,7 +3705,7 @@ public class MainActivity extends Activity {
     }
 
     private void refreshActivePage() {
-        if ("login".equals(activePage)) showLogin("برای اتصال مجدد، اطلاعات پخش درخشان را وارد کنید.");
+        if ("login".equals(activePage)) showLogin(MANAGEMENT_EDITION ? "برای اتصال مجدد، اطلاعات حساب مدیریت آتیران را وارد کنید." : "برای اتصال مجدد، اطلاعات پخش درخشان را وارد کنید.");
         else showApp(activePage);
     }
 
@@ -3741,7 +3762,7 @@ public class MainActivity extends Activity {
             try { renderCommandCenter(new JSONObject(dashboardCacheJson).optJSONObject("today"), false); return; } catch (Exception ignored) { }
         }
         content.removeAllViews();
-        addHero("فرماندهی هوشمند پخش درخشان", "پیش‌بینی نقدینگی، رادار کالا، تقویم مدیریتی، ریسک مشتری و خروجی عملیاتی در یک صفحه.");
+        addHero(MANAGEMENT_EDITION ? "فرماندهی هوشمند مدیریت آتیران" : "فرماندهی هوشمند پخش درخشان", "پیش‌بینی نقدینگی، رادار کالا، تقویم مدیریتی، ریسک مشتری و خروجی عملیاتی در یک صفحه.");
         addManualRefreshPanel("command", "بروزرسانی دستی فرماندهی", "از داده داشبورد استفاده می‌کند", () -> loadCommandCenter(true));
         addLoading(content, "میلو در حال ساخت اتاق فرمان است…");
         runDb(this::queryDashboard, new DbCallback() {
@@ -3767,7 +3788,7 @@ public class MainActivity extends Activity {
 
     private void renderCommandCenter(JSONObject today, boolean cached) {
         content.removeAllViews();
-        addHero("فرماندهی هوشمند پخش درخشان", cached ? "نمای آفلاین از آخرین داده ذخیره‌شده" : "اتاق تصمیم سریع برای امروز و هفته پیش‌رو");
+        addHero(MANAGEMENT_EDITION ? "فرماندهی هوشمند مدیریت آتیران" : "فرماندهی هوشمند پخش درخشان", cached ? "نمای آفلاین از آخرین داده ذخیره‌شده" : "اتاق تصمیم سریع برای امروز و هفته پیش‌رو");
         addManualRefreshPanel("command", "بروزرسانی دستی فرماندهی", "اطلاعات ثابت است تا خودتان تازه‌سازی کنید", () -> loadCommandCenter(true));
         addCashForecastCard(today);
         addManagementCalendarCard(today);
@@ -3873,14 +3894,14 @@ public class MainActivity extends Activity {
     private void exportTodayCsv(JSONObject today) {
         try {
             File dir = getExternalFilesDir(null); if (dir == null) dir = getFilesDir();
-            File file = new File(dir, "Darakhshan-Today-Command-v3.42.csv");
+            File file = new File(dir, MANAGEMENT_EDITION ? "Atiran-Management-Today-Command.csv" : "Darakhshan-Today-Command-v3.42.csv");
             StringBuilder b = new StringBuilder("section,label,value\n");
             appendCsvMetricRows(b, "sales", today == null ? null : today.optJSONObject("sales"));
             appendCsvMetricRows(b, "purchases", today == null ? null : today.optJSONObject("purchases"));
             appendCsvMetricRows(b, "get_checks", today == null ? null : today.optJSONObject("getChecks"));
             appendCsvMetricRows(b, "put_checks", today == null ? null : today.optJSONObject("putChecks"));
             try (FileOutputStream fos = new FileOutputStream(file)) { fos.write(b.toString().getBytes(StandardCharsets.UTF_8)); }
-            sharePlainText("CSV خلاصه پخش درخشان", "خروجی CSV ساخته شد:\n" + file.getAbsolutePath() + "\n\n" + b.toString(), null);
+            sharePlainText(MANAGEMENT_EDITION ? "CSV خلاصه مدیریت آتیران" : "CSV خلاصه پخش درخشان", "خروجی CSV ساخته شد:\n" + file.getAbsolutePath() + "\n\n" + b.toString(), null);
         } catch (Exception ex) { showNotice("ساخت CSV ممکن نشد: " + shortError(ex), false); }
     }
 
@@ -4439,7 +4460,9 @@ public class MainActivity extends Activity {
     private String sqlNetworkHint() {
         if (!lastSqlVpnDetected) return "";
         if (lastSqlVpnBypassed) return "\nVPN فعال بود و برنامه تلاش کرد اتصال مرکزی را از شبکه مستقیم دستگاه عبور دهد.";
-        return "\nVPN فعال تشخیص داده شد؛ اگر اتصال برقرار نشد، در تنظیمات VPN اجازه عبور پخش درخشان یا Split tunneling را فعال کنید.";
+        return MANAGEMENT_EDITION
+                ? "\nVPN فعال تشخیص داده شد؛ اگر اتصال برقرار نشد، در تنظیمات VPN اجازه عبور مدیریت آتیران یا Split tunneling را فعال کنید."
+                : "\nVPN فعال تشخیص داده شد؛ اگر اتصال برقرار نشد، در تنظیمات VPN اجازه عبور پخش درخشان یا Split tunneling را فعال کنید.";
     }
 
     private UserSession authenticate(String meelanoUser, String meelanoPassword) throws Exception {
@@ -4451,9 +4474,9 @@ public class MainActivity extends Activity {
             if (visitor != null) { checkStoreLogin(user, visitor); checkStaffLogin(c, user, visitor); return visitor; }
             UserSession sys = authenticateSysUserFlexible(c, user, pass, foundUser);
             if (sys != null) { checkStoreLogin(user, sys); checkStaffLogin(c, user, sys); return sys; }
-            if (foundUser[0]) throw new DbException("رمز عبور پخش درخشان برای این کاربر تطبیق پیدا نکرد.");
+            if (foundUser[0]) throw new DbException(MANAGEMENT_EDITION ? "رمز عبور مدیریت آتیران برای این کاربر تطبیق پیدا نکرد." : "رمز عبور پخش درخشان برای این کاربر تطبیق پیدا نکرد.");
         }
-        throw new DbException("نام کاربری یا رمز عبور پخش درخشان معتبر نیست.");
+        throw new DbException(MANAGEMENT_EDITION ? "نام کاربری یا رمز عبور مدیریت آتیران معتبر نیست." : "نام کاربری یا رمز عبور پخش درخشان معتبر نیست.");
     }
 
     private UserSession authenticateVisitorFlexible(Connection c, String user, String pass, boolean[] foundUser) throws Exception {
@@ -5214,7 +5237,7 @@ public class MainActivity extends Activity {
             String summary = buildWidgetSummary(today);
             if (prefs != null) prefs.edit().putString(KEY_WIDGET_SUMMARY, summary).apply();
             RemoteViews views = new RemoteViews(getPackageName(), ir.meelano.android.R.layout.widget_meelano);
-            views.setTextViewText(ir.meelano.android.R.id.widget_title, "پخش درخشان امروز");
+            views.setTextViewText(ir.meelano.android.R.id.widget_title, MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان امروز");
             views.setTextViewText(ir.meelano.android.R.id.widget_summary, summary);
             Intent intent = new Intent(this, MainActivity.class);
             PendingIntent pi = PendingIntent.getActivity(this, 1818, intent, Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
@@ -5235,7 +5258,7 @@ public class MainActivity extends Activity {
         long day = System.currentTimeMillis() / 86400000L;
         if (prefs.getLong(KEY_LAST_ALERT_DAY, -1) == day) return;
         JSONObject first = alerts.optJSONObject(0);
-        showLocalNotification("هشدار پخش درخشان", first == null ? "چند هشدار مدیریتی نیازمند بررسی است." : first.optString("title", "هشدار") + ": " + first.optString("body", ""), false);
+        showLocalNotification(MANAGEMENT_EDITION ? "هشدار مدیریت آتیران" : "هشدار پخش درخشان", first == null ? "چند هشدار مدیریتی نیازمند بررسی است." : first.optString("title", "هشدار") + ": " + first.optString("body", ""), false);
         prefs.edit().putLong(KEY_LAST_ALERT_DAY, day).apply();
     }
 
@@ -5902,7 +5925,10 @@ public class MainActivity extends Activity {
         String where = "WHERE x.[" + dateCol + "]<=?" + activeAnd(cols, "x");
         String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) where += " AND " + soft;
         List<Object> params = new ArrayList<>(); params.add(date);
-        if (sales && session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where += " AND TRY_CONVERT(int,x.[vis_rdf])=?"; params.add(session.visitorId); }
+        if (sales) {
+            String visitorScope = reportVisitorScopeCondition(cols, "x", params);
+            if (!visitorScope.isEmpty()) where += " AND " + visitorScope;
+        }
         String source = dedupeFactorSource(table, cols, numberCol, "h", where);
         String sql = "SELECT TOP (7) h.[" + dateCol + "], ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY h.[" + dateCol + "] ORDER BY h.[" + dateCol + "] DESC";
         return reverse(readPoints(c, sql, params));
@@ -5922,6 +5948,10 @@ public class MainActivity extends Activity {
         List<Object> params = new ArrayList<>(); params.add(date); params.add(date);
         String innerWhere = "WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" + activeAnd(h, "x");
         String soft = softDeleteCondition(h, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        if (sales && MANAGEMENT_EDITION) {
+            String visitorScope = reportVisitorScopeCondition(h, "x", params);
+            if (!visitorScope.isEmpty()) innerWhere += " AND " + visitorScope;
+        }
         String source = dedupeFactorSource(table, h, numberCol, "h", innerWhere);
         String sql = "SELECT TOP (150) TRY_CONVERT(nvarchar(80),h.[" + numberCol + "]), " + partyExpr + ", " + sqlNumberExpr("h", amountCol, "decimal(19,2)") + ", TRY_CONVERT(nvarchar(500)," + (hasCol(h, "description") ? "h.description" : (hasCol(h, "Explain") ? "h.[Explain]" : "NULL")) + ") FROM " + source + " " + (canJoinCustomer ? "LEFT JOIN dbo.CUSTOMERS c ON TRY_CONVERT(nvarchar(100),c.SHMO)=TRY_CONVERT(nvarchar(100),h.shmo) " : "") + " WHERE ISNULL(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + ",0)>0 ORDER BY h.[" + numberCol + "]";
         JSONArray arr = new JSONArray();
@@ -6000,6 +6030,10 @@ public class MainActivity extends Activity {
                 if ("__blank__".equals(statusValue.trim())) where = " WHERE (" + raw + " IN (N'4',N'سفید',N'blank',N'unused')" + (hasCol(typeCols, "Desciption") ? " OR TRY_CONVERT(nvarchar(120),t.Desciption) LIKE N'%سفید%' OR TRY_CONVERT(nvarchar(120),t.Desciption) LIKE N'%استفاده%'" : "") + ")";
                 else { where = " WHERE " + raw + "=?"; params.add(statusValue.trim()); }
             }
+            if (MANAGEMENT_EDITION) {
+                String visitorScope = reportVisitorScopeCondition(cols, "x", params);
+                if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
+            }
             String sql = "SELECT TOP (200) " + (date == null ? "CAST(NULL AS nvarchar(30))" : "TRY_CONVERT(nvarchar(30),x.[" + date + "])") + ", " + (number == null ? "CAST(NULL AS nvarchar(80))" : "TRY_CONVERT(nvarchar(80),x.[" + number + "])") + ", TRY_CONVERT(decimal(19,2),x.[" + amount + "]), " + raw + ", " + statusExpr + ", " + bankExpr + ", " + partyExpr + ", " + (desc == null ? "CAST(NULL AS nvarchar(500))" : "TRY_CONVERT(nvarchar(500),x.[" + desc + "])") + " FROM dbo.[" + table + "] x" + join + where + " ORDER BY 1 DESC";
             try (PreparedStatement ps = c.prepareStatement(sql)) { setParams(ps, params); try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("date", stringOr(r.getString(1), "—")); o.put("number", stringOr(r.getString(2), "—")); o.put("amount", r.getDouble(3)); o.put("status", stringOr(r.getString(4), "")); o.put("statusLabel", friendlyCheckStatus(incoming, r.getString(4), r.getString(5))); o.put("bank", stringOr(r.getString(6), "—")); o.put("party", stringOr(r.getString(7), "—")); o.put("description", stringOr(r.getString(8), "")); arr.put(o); } } }
         }
@@ -6077,6 +6111,10 @@ public class MainActivity extends Activity {
             List<Object> params = new ArrayList<>(); params.add(date); params.add(date);
             String innerWhere = "WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" + activeAnd(cols, "x");
             String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+            if (sales && MANAGEMENT_EDITION) {
+                String visitorScope = reportVisitorScopeCondition(cols, "x", params);
+                if (!visitorScope.isEmpty()) innerWhere += " AND " + visitorScope;
+            }
             String source = dedupeFactorSource(table, cols, numberCol, "h", innerWhere);
             String sql = "SELECT ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1), " +
                     (partyCol == null ? "CAST(0 AS bigint)" : "COUNT(DISTINCT h.[" + partyCol + "])") + ", " +
@@ -6090,9 +6128,14 @@ public class MainActivity extends Activity {
                 }
             }
             String trendInner = activeWhere(cols, "x"); String softTrend = softDeleteCondition(cols, "x"); if (!softTrend.isEmpty()) trendInner = appendWhere(trendInner, softTrend);
+            List<Object> trendParams = new ArrayList<>();
+            if (sales && MANAGEMENT_EDITION) {
+                String visitorScope = reportVisitorScopeCondition(cols, "x", trendParams);
+                if (!visitorScope.isEmpty()) trendInner = appendWhere(trendInner, visitorScope);
+            }
             String trendSource = dedupeFactorSource(table, cols, numberCol, "h", trendInner);
             String trendSql = "SELECT TOP (7) h.[" + dateCol + "], ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + trendSource + " GROUP BY h.[" + dateCol + "] ORDER BY h.[" + dateCol + "] DESC";
-            chart = reverse(readPoints(c, trendSql, new ArrayList<>()));
+            chart = reverse(readPoints(c, trendSql, trendParams));
         }
         addMetric(metrics, sales ? "جمع فروش" : "جمع خرید", money(total));
         addMetric(metrics, "تعداد اسناد", formatNumber(docs));
@@ -6116,9 +6159,17 @@ public class MainActivity extends Activity {
         boolean hasCheckDate = dateCol != null && date != null && !date.isEmpty();
         String where = hasCheckDate ? " WHERE (TRY_CONVERT(nvarchar(30),[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),[" + dateCol + "]),10)=LEFT(?,10))" : "";
         String whereX = hasCheckDate ? " WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" : "";
+        List<Object> totalParams = new ArrayList<>(), breakdownParams = new ArrayList<>();
+        if (hasCheckDate) { totalParams.add(date); totalParams.add(date); breakdownParams.add(date); breakdownParams.add(date); }
+        if (MANAGEMENT_EDITION) {
+            String totalScope = reportVisitorScopeCondition(cols, "", totalParams);
+            if (!totalScope.isEmpty()) where = appendWhere(where, totalScope);
+            String breakdownScope = reportVisitorScopeCondition(cols, "x", breakdownParams);
+            if (!breakdownScope.isEmpty()) whereX = appendWhere(whereX, breakdownScope);
+        }
         if (amount != null) {
             try (PreparedStatement ps = c.prepareStatement("SELECT COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[" + amount + "])),0) FROM dbo.[" + table + "]" + where)) {
-                if (hasCheckDate) { ps.setString(1, date); ps.setString(2, date); }
+                setParams(ps, totalParams);
                 try (ResultSet r = ps.executeQuery()) { if (r.next()) { count = r.getLong(1); total = r.getDouble(2); } }
             }
         }
@@ -6130,7 +6181,7 @@ public class MainActivity extends Activity {
                 String join = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? " LEFT JOIN dbo.CheckTypes t ON TRY_CONVERT(nvarchar(50),t.ID)=" + raw : "";
                 String sql = "SELECT TOP (8) " + raw + ", " + label + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),x.[" + amount + "])),0) FROM dbo.[" + table + "] x" + join + whereX + " GROUP BY " + raw + ", " + label + " ORDER BY 4 DESC";
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
-                    if (hasCheckDate) { ps.setString(1, date); ps.setString(2, date); }
+                    setParams(ps, breakdownParams);
                     try (ResultSet r = ps.executeQuery()) {
                     while (r.next()) {
                         String status = stringOr(r.getString(1), "");
@@ -6334,10 +6385,17 @@ public class MainActivity extends Activity {
         if (canJoinHeader) {
             String innerWhere = "WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" + activeAnd(h, "x");
             String soft = softDeleteCondition(h, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+            if (sales && MANAGEMENT_EDITION) {
+                String visitorScope = reportVisitorScopeCondition(h, "x", params);
+                if (!visitorScope.isEmpty()) innerWhere += " AND " + visitorScope;
+            }
             String source = dedupeFactorSource(header, h, numberCol, "h", innerWhere);
             from += " JOIN " + source + " ON TRY_CONVERT(nvarchar(100),h.[" + numberCol + "])=TRY_CONVERT(nvarchar(100),dd.[" + detailNumber + "])";
             where = " WHERE 1=1";
         } else if (detailDate != null) {
+            // Detail rows without a joinable invoice header cannot be safely assigned to a
+            // restricted management visitor. Prefer no rows over an unscoped sales leak.
+            if (sales && MANAGEMENT_EDITION && restrictCustomerData()) return arr;
             String dateExpr = "dd.[" + detailDate + "]";
             where = " WHERE (TRY_CONVERT(nvarchar(30)," + dateExpr + ")=? OR LEFT(TRY_CONVERT(nvarchar(30)," + dateExpr + "),10)=LEFT(?,10))";
         } else return arr;
@@ -6408,7 +6466,7 @@ public class MainActivity extends Activity {
         if (kpis == null || kpis.length() == 0) return;
         LinearLayout c = card();
         c.setBackground(gradient(new int[]{alpha(GOLD, 34), SURFACE}, GradientDrawable.Orientation.RIGHT_LEFT, 24));
-        c.addView(text("آمار کلیدی پخش درخشان", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text(MANAGEMENT_EDITION ? "آمار کلیدی مدیریت آتیران" : "آمار کلیدی پخش درخشان", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         c.addView(text("مشتریان، کالاها، فاکتورها و چک‌ها در یک جدول فشرده", 10.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         LinearLayout row = null;
         for (int i = 0; i < kpis.length(); i++) {
@@ -6990,6 +7048,17 @@ public class MainActivity extends Activity {
         params.add(String.valueOf(vid));
         String p = alias == null || alias.trim().isEmpty() ? "" : alias.trim() + ".";
         return "TRY_CONVERT(nvarchar(100)," + p + "[" + vis + "])=?";
+    }
+
+    /** Keep legacy edition scoping unchanged; management uses the central role-aware scope. */
+    private String reportVisitorScopeCondition(Set<String> cols, String alias, List<Object> params) {
+        if (MANAGEMENT_EDITION) return salesScopeCondition(cols, alias, params);
+        Integer visitorId = session == null ? null : session.visitorId;
+        String visitorColumn = resolveFlexible(cols, "vis_rdf", "VisitorID", "visid", "visitor", "shvis");
+        if (visitorId == null || visitorColumn == null) return "";
+        String prefix = alias == null || alias.trim().isEmpty() ? "" : alias.trim() + ".";
+        params.add(visitorId);
+        return "TRY_CONVERT(int," + prefix + "[" + visitorColumn + "])=?";
     }
 
     private boolean canOpenPage(String page) {
@@ -15008,6 +15077,7 @@ public class MainActivity extends Activity {
     // "New version available" check. CI writes apk/latest.json next to each APK.
     // ---------------------------------------------------------------------------------------------
     private static final String UPDATE_MANIFEST_URL = "https://github.com/Companymeelano/Newhamrah/raw/arena/01a0e474-newhamrah/apk/latest.json";
+    private static final String MANAGEMENT_UPDATE_MANIFEST_URL = "https://github.com/Companymeelano/modiriat/raw/main/apk/latest-management.json";
     private static final String KEY_UPDATE_CHECKED_AT = "update_checked_at";
     private static final String KEY_UPDATE_LATEST = "update_latest_json";
     private static final long UPDATE_CHECK_INTERVAL_MS = 12L * 60 * 60 * 1000;
@@ -15039,7 +15109,8 @@ public class MainActivity extends Activity {
             String body = null;
             java.net.HttpURLConnection conn = null;
             try {
-                conn = (java.net.HttpURLConnection) new java.net.URL(STAFF_EDITION ? STAFF_UPDATE_MANIFEST_URL : STORE_EDITION ? STORE_UPDATE_MANIFEST_URL : UPDATE_MANIFEST_URL).openConnection();
+                String updateManifest = MANAGEMENT_EDITION ? MANAGEMENT_UPDATE_MANIFEST_URL : STAFF_EDITION ? STAFF_UPDATE_MANIFEST_URL : STORE_EDITION ? STORE_UPDATE_MANIFEST_URL : UPDATE_MANIFEST_URL;
+                conn = (java.net.HttpURLConnection) new java.net.URL(updateManifest).openConnection();
                 conn.setConnectTimeout(8000); conn.setReadTimeout(8000); conn.setInstanceFollowRedirects(true);
                 if (conn.getResponseCode() == 200) {
                     try (java.io.InputStream in = conn.getInputStream()) {
@@ -18218,8 +18289,10 @@ public class MainActivity extends Activity {
         addHero("گزارشات کاربردی مدیریت", "گزارش‌ها تا زمان بروزرسانی دستی ثابت می‌مانند.");
         addManualRefreshPanel("reports", "بروزرسانی دستی گزارشات", "برای دریافت داده جدید این دکمه را بزنید", () -> loadReports(true));
         addLoading(content, "در حال آماده‌سازی گزارشات مدیریتی…");
-        runDb(this::queryAnalytics, new DbCallback() {
+        final String requestedVisitorPeriod = normalizeVisitorReportPeriod(reportVisitorPeriod);
+        runDb(() -> queryAnalytics(requestedVisitorPeriod), new DbCallback() {
             @Override public void ok(String body) {
+                if (MANAGEMENT_EDITION && !requestedVisitorPeriod.equals(reportVisitorPeriod)) return;
                 try {
                     reportsCacheJson = body;
                     markRefresh("reports");
@@ -18228,6 +18301,7 @@ public class MainActivity extends Activity {
                 } catch (Exception e) { showPageError("گزارش‌ها", e, () -> loadReports(true)); }
             }
             @Override public void fail(Exception e) {
+                if (MANAGEMENT_EDITION && !requestedVisitorPeriod.equals(reportVisitorPeriod)) return;
                 if (!renderCachedReports(e)) showPageError("گزارش‌ها", e, () -> loadReports(true));
             }
         });
@@ -18236,6 +18310,7 @@ public class MainActivity extends Activity {
     private void renderAnalytics(JSONObject a) {
         content.removeAllViews();
         if (a == null) a = new JSONObject();
+        if (MANAGEMENT_EDITION) reportVisitorPeriod = normalizeVisitorReportPeriod(a.optString("visitorSalesPeriod", reportVisitorPeriod));
         lastReportJson = a.toString();
         lastReportSummary = buildExecutiveReportSummary(a);
         addHero("اتاق فرمان زنده گزارشات", "گزارشات کامل‌تر، دسته‌بندی‌شده با نمودارهای سبک؛ مخصوص تصمیم مدیریت");
@@ -18250,6 +18325,7 @@ public class MainActivity extends Activity {
 
         addReportCategory("۱) درآمد، فروش و جریان سفارش", "اول بفهمیم فروش کجا رشد کرده، کجا افت کرده و خرید چقدر با فروش هم‌خوان است", "↗", GOLD);
         addReportRowsSection("فروش هفتگی", "ردیابی بازه‌های قوی/ضعیف فروش برای واکنش سریع", "weeklySales", a.optJSONArray("weeklySales"), GOLD, 6, 0);
+        if (MANAGEMENT_EDITION) addReportVisitorSalesSection(a);
         addDualReportRowsSection("تعادل خرید و فروش", "اگر خرید از فروش جلو بزند، موجودی و نقدینگی زودتر باید کنترل شود", a.optJSONArray("monthlyPurchaseSales"));
         addReportRowsSection("مشتریان درآمدساز", "۵ مشتری که بیشترین اثر را روی فروش دارند", "topCustomers", a.optJSONArray("topCustomers"), SUCCESS, 5, 0);
 
@@ -18279,7 +18355,7 @@ public class MainActivity extends Activity {
         int accent = navAccent("reports");
         c.setBackground(gradient(new int[]{alpha(accent, isLightTheme() ? 24 : 42), alpha(GOLD_2, isLightTheme() ? 18 : 24), alpha(SURFACE, 248)}, GradientDrawable.Orientation.RIGHT_LEFT, 26));
         c.addView(text("نمودار سبک تصمیم سریع", 15.2f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        c.addView(text("برای خوانایی موبایل، نمودارهای ریز فقط روند و اندازه نسبی شاخص‌های کلیدی را نشان می‌دهند و PDF همچنان خلاصه متنی تمیز می‌سازد.", 10.0f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text("نمودارهای تعاملی در ابعاد مناسب موبایل نمایش داده می‌شوند؛ برای مقدار دقیق، نقطه نمودار را لمس کنید. خلاصه متنی هم برای اشتراک و PDF آماده است.", 10.0f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         JSONObject debt = strongestPoint(a.optJSONArray("debtAging"));
         addMiniInsightBars(c, "رادار مالی", new String[]{"فروش", "سود", "مطالبات", "مشتری"}, new double[]{Math.max(0, latestNumeric(a.optJSONArray("weeklySales"))), Math.max(0, latestNumeric(a.optJSONArray("monthlyProfit"))), Math.max(0, valueOf(debt)), Math.max(0, latestNumeric(a.optJSONArray("customerGrowth")))}, new int[]{GOLD, SUCCESS, DANGER, INFO});
         LinearLayout chips = new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL);
@@ -18344,8 +18420,8 @@ public class MainActivity extends Activity {
         Button whatsapp = secondaryButton("خلاصه واتساپی");
         Button pdf = primaryButton("ساخت PDF");
         share.setTextSize(fs(10.3f)); whatsapp.setTextSize(fs(10.3f)); pdf.setTextSize(fs(10.3f));
-        share.setOnClickListener(v -> sharePlainText("خلاصه مدیریتی پخش درخشان", lastReportSummary, null));
-        whatsapp.setOnClickListener(v -> sharePlainText("خلاصه مدیریتی پخش درخشان", whatsappSummary(lastReportSummary), "com.whatsapp"));
+        share.setOnClickListener(v -> sharePlainText(MANAGEMENT_EDITION ? "خلاصه مدیریتی آتیران" : "خلاصه مدیریتی پخش درخشان", lastReportSummary, null));
+        whatsapp.setOnClickListener(v -> sharePlainText(MANAGEMENT_EDITION ? "خلاصه مدیریتی آتیران" : "خلاصه مدیریتی پخش درخشان", whatsappSummary(lastReportSummary), "com.whatsapp"));
         pdf.setOnClickListener(v -> generateReportPdf(lastReportSummary));
         buttons.addView(share, weightedButtonLp());
         buttons.addView(whatsapp, weightedButtonLp());
@@ -18387,10 +18463,14 @@ public class MainActivity extends Activity {
     private String buildExecutiveReportSummary(JSONObject a) {
         if (a == null) a = new JSONObject();
         StringBuilder b = new StringBuilder();
-        b.append("خلاصه مدیریتی پخش درخشان\n");
+        b.append(MANAGEMENT_EDITION ? "خلاصه مدیریتی آتیران\n" : "خلاصه مدیریتی پخش درخشان\n");
         b.append("امتیاز سلامت: ").append(businessHealthScore(a)).append(" از ۱۰۰ - ").append(healthScoreTitle(businessHealthScore(a))).append("\n");
         b.append("وضعیت: ").append(executiveStatus(a)).append("\n");
         b.append("فروش اخیر: ").append(trendSummary(a.optJSONArray("weeklySales"), false)).append("\n");
+        if (MANAGEMENT_EDITION) {
+            JSONObject visitorTop = strongestPoint(a.optJSONArray("visitorSales"));
+            b.append("ویزیتور پرفروش بازه: ").append(labelOf(visitorTop, "label", "بدون داده")).append(" • ").append(moneyValue(visitorTop, "sales")).append("\n");
+        }
         b.append("سود/حاشیه: ").append(trendSummary(a.optJSONArray("monthlyProfit"), false)).append(" / ").append(latestValueText(a.optJSONArray("netMargin"), true)).append("\n");
         b.append("ریسک مطالبات: ").append(labelOf(strongestPoint(a.optJSONArray("debtAging")), "label", "بدون داده")).append(" - ").append(moneyValue(strongestPoint(a.optJSONArray("debtAging")), "value")).append("\n");
         b.append("مشتری کلیدی: ").append(labelOf(strongestPoint(a.optJSONArray("topCustomers")), "label", "نامشخص")).append("\n");
@@ -18720,6 +18800,138 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
     }
 
+    private void addReportVisitorSalesSection(JSONObject analytics) {
+        JSONArray rows = analytics == null ? null : analytics.optJSONArray("visitorSales");
+        String period = normalizeVisitorReportPeriod(analytics == null ? reportVisitorPeriod : analytics.optString("visitorSalesPeriod", reportVisitorPeriod));
+        String from = MeelanoCharts.fa(analytics == null ? "" : analytics.optString("visitorSalesFrom", ""));
+        String to = MeelanoCharts.fa(analytics == null ? "" : analytics.optString("visitorSalesTo", ""));
+        LinearLayout c = card();
+        c.setBackground(gradient(new int[]{alpha(SUCCESS, 28), alpha(INFO, 14), alpha(SURFACE, 248)}, GradientDrawable.Orientation.RIGHT_LEFT, 24));
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.addView(report3dIcon("♙", SUCCESS), new LinearLayout.LayoutParams(dp(46), dp(46)));
+        LinearLayout heading = new LinearLayout(this);
+        heading.setOrientation(LinearLayout.VERTICAL);
+        heading.setPadding(dp(10), 0, dp(8), 0);
+        heading.addView(text("فروش به تفکیک ویزیتور", 15.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        TextView sourceNote = text("فروش از sailfact.vis_rdf • وصول از dar.rdf_vis", 9.8f, MUTED, Typeface.NORMAL);
+        sourceNote.setLineSpacing(dp(2), 1.0f);
+        heading.addView(sourceNote, new LinearLayout.LayoutParams(-1, -2));
+        header.addView(heading, new LinearLayout.LayoutParams(0, -2, 1f));
+        c.addView(header, new LinearLayout.LayoutParams(-1, -2));
+
+        String[][] periodOptions = {{"۷ روز", "7days"}, {"۳۰ روز", "30days"}, {"ماه جاری", "month"}, {"ماه قبل", "lastmonth"}};
+        for (int i = 0; i < periodOptions.length; i += 2) {
+            LinearLayout periodRow = new LinearLayout(this);
+            periodRow.setOrientation(LinearLayout.HORIZONTAL);
+            periodRow.setGravity(Gravity.CENTER_VERTICAL);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) periodRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            for (int j = i; j < Math.min(i + 2, periodOptions.length); j++) {
+                final String key = periodOptions[j][1];
+                boolean selected = key.equals(period);
+                TextView chip = pill(periodOptions[j][0], selected ? SUCCESS : INFO, selected);
+                chip.setTextSize(fs(10.2f));
+                chip.setPadding(dp(10), dp(5), dp(10), dp(5));
+                chip.setMinHeight(dp(42));
+                chip.setFocusable(true);
+                chip.setClickable(true);
+                chip.setContentDescription("بازه گزارش فروش ویزیتورها: " + periodOptions[j][0] + (selected ? "، انتخاب‌شده" : ""));
+                applyTouchFeedback(chip);
+                chip.setOnClickListener(v -> {
+                    if (key.equals(reportVisitorPeriod)) return;
+                    reportVisitorPeriod = key;
+                    loadReports(true);
+                });
+                LinearLayout.LayoutParams chipLp = new LinearLayout.LayoutParams(0, dp(42), 1f);
+                chipLp.setMargins(dp(3), dp(9), dp(3), 0);
+                periodRow.addView(chip, chipLp);
+            }
+            LinearLayout.LayoutParams periodRowLp = new LinearLayout.LayoutParams(-1, -2);
+            c.addView(periodRow, periodRowLp);
+        }
+        if (!from.isEmpty() || !to.isEmpty()) {
+            TextView range = text("بازه شمسی: " + (from.isEmpty() ? "—" : from) + " تا " + (to.isEmpty() ? "—" : to), 9.8f, MUTED, Typeface.BOLD);
+            range.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams rangeLp = new LinearLayout.LayoutParams(-1, -2);
+            rangeLp.setMargins(0, dp(8), 0, 0);
+            c.addView(range, rangeLp);
+        }
+
+        double salesTotal = 0, receiptTotal = 0;
+        long invoiceTotal = 0, activeVisitors = 0;
+        for (int i = 0; rows != null && i < rows.length(); i++) {
+            JSONObject row = rows.optJSONObject(i);
+            if (row == null) continue;
+            salesTotal += row.optDouble("sales", 0);
+            receiptTotal += row.optDouble("receipts", 0);
+            invoiceTotal += row.optLong("invoices", 0);
+            if (row.optLong("invoices", 0) > 0) activeVisitors++;
+        }
+        LinearLayout metrics = new LinearLayout(this);
+        metrics.setOrientation(LinearLayout.HORIZONTAL);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) metrics.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        LinearLayout.LayoutParams metricRowLp = new LinearLayout.LayoutParams(-1, -2);
+        metricRowLp.setMargins(0, dp(10), 0, 0);
+        c.addView(metrics, metricRowLp);
+        String[][] metricValues = {
+                {"فروش بازه", money(salesTotal)},
+                {"فاکتور فروش", formatNumber(invoiceTotal)},
+                {"وصول ثبت‌شده", money(receiptTotal)}
+        };
+        for (String[] item : metricValues) {
+            LinearLayout tile = metric(item[0], item[1]);
+            LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(0, -2, 1f);
+            tileLp.setMargins(dp(3), 0, dp(3), 0);
+            metrics.addView(tile, tileLp);
+        }
+        TextView countNote = text(formatNumber(activeVisitors) + " ویزیتور فروشنده در این بازه • بر اساس اسناد فعال", 10.2f, tc(SUCCESS), Typeface.BOLD);
+        countNote.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams countLp = new LinearLayout.LayoutParams(-1, -2);
+        countLp.setMargins(0, dp(8), 0, 0);
+        c.addView(countNote, countLp);
+
+        List<MeelanoCharts.Point> bars = new ArrayList<>();
+        int[] palette = new int[]{tc(SUCCESS), tc(INFO), tc(GOLD), tc(WARNING), tc(DANGER), tc(GOLD_2), tc(mix(INFO, SUCCESS, 0.5f)), tc(mix(GOLD, DANGER, 0.35f))};
+        for (int i = 0; rows != null && i < Math.min(8, rows.length()); i++) {
+            JSONObject row = rows.optJSONObject(i);
+            if (row == null || row.optDouble("sales", 0) <= 0) continue;
+            bars.add(new MeelanoCharts.Point(row.optString("label", "بدون ویزیتور"), row.optDouble("sales", 0), palette[i % palette.length]));
+        }
+        if (!bars.isEmpty()) {
+            TextView chartTitle = text("مقایسه فروش • ویزیتورهای برتر", 11.2f, TEXT, Typeface.BOLD);
+            LinearLayout.LayoutParams chartTitleLp = new LinearLayout.LayoutParams(-1, -2);
+            chartTitleLp.setMargins(0, dp(12), 0, 0);
+            c.addView(chartTitle, chartTitleLp);
+            MeelanoCharts.Bars chart = new MeelanoCharts.Bars(this, tc(SUCCESS), TEXT, MUTED, MEELANO_BOLD);
+            chart.setPoints(bars, MeelanoCharts.RIAL);
+            chart.setContentDescription("نمودار فروش به تفکیک ویزیتور؛ مقدارها به ریال");
+            LinearLayout.LayoutParams chartLp = new LinearLayout.LayoutParams(-1, MeelanoCharts.Bars.heightFor(bars.size(), getResources().getDisplayMetrics().density));
+            chartLp.setMargins(0, dp(4), 0, 0);
+            c.addView(chart, chartLp);
+        }
+        if (rows == null || rows.length() == 0) {
+            TextView empty = text("برای این بازه فروش یا وصول فعالی ثبت نشده است.", 11.2f, MUTED, Typeface.NORMAL);
+            empty.setGravity(Gravity.CENTER);
+            c.addView(empty, new LinearLayout.LayoutParams(-1, dp(58)));
+        } else {
+            TextView listTitle = text("رتبه‌بندی و جزئیات", 11.2f, TEXT, Typeface.BOLD);
+            LinearLayout.LayoutParams listTitleLp = new LinearLayout.LayoutParams(-1, -2);
+            listTitleLp.setMargins(0, dp(8), 0, 0);
+            c.addView(listTitle, listTitleLp);
+            for (int i = 0; i < Math.min(6, rows.length()); i++) addReportDataRow(c, rows.optJSONObject(i), i + 1, SUCCESS, 0, "visitorSales");
+        }
+        TextView attribution = text("توجه: فروش بر اساس ویزیتور ثبت‌شده روی فاکتور و وصول بر اساس ثبت‌کننده وجه در آتیران است؛ این دو شاخص انتساب متفاوت دارند.", 9.5f, MUTED, Typeface.NORMAL);
+        attribution.setLineSpacing(dp(2), 1.05f);
+        LinearLayout.LayoutParams attributionLp = new LinearLayout.LayoutParams(-1, -2);
+        attributionLp.setMargins(0, dp(10), 0, 0);
+        c.addView(attribution, attributionLp);
+
+        LinearLayout.LayoutParams cardLp = new LinearLayout.LayoutParams(-1, -2);
+        cardLp.setMargins(0, 0, 0, dp(12));
+        content.addView(c, cardLp);
+    }
+
     private void addReportDataRow(LinearLayout parent, JSONObject row, int index, int accent, int valueMode, String key) {
         if (row == null) return;
         LinearLayout item = new LinearLayout(this);
@@ -18760,6 +18972,7 @@ public class MainActivity extends Activity {
         String k = key == null ? "" : key;
         JSONObject top = strongestPoint(rows);
         if ("weeklySales".equals(k)) return "اگر آخرین بازه افت دارد، فروشنده/کانال همان بازه را بررسی کن و یک پیشنهاد کوتاه فعال کن.";
+        if ("visitorSales".equals(k)) return "فروش و وصول ویزیتور برتر را جدا از هم بررسی کن؛ ثبت‌کننده وصول لزوماً فروشنده فاکتور نیست.";
         if ("monthlyProfit".equals(k)) return "ماه کم‌سود را با تخفیف‌ها و بهای تمام‌شده تطبیق بده؛ سود را فدای فروش ظاهری نکن.";
         if ("netMargin".equals(k)) return "حاشیه زیر انتظار یعنی قیمت‌گذاری یا تخفیف نیاز به اصلاح فوری دارد.";
         if ("checkStatuses".equals(k)) return "دسته‌های پرمبلغ را امروز با تاریخ سررسید و بانک مرتبط تطبیق بده.";
@@ -18787,6 +19000,7 @@ public class MainActivity extends Activity {
         if (hint != null && !hint.trim().isEmpty()) return hint;
         String k = key == null ? "" : key;
         if ("weeklySales".equals(k)) return "فروش ثبت‌شده این بازه";
+        if ("visitorSales".equals(k)) return "مبنای فروش: فاکتور • مبنای وصول: ثبت‌کننده وجه";
         if ("monthlyPurchaseSales".equals(k)) return "مقایسه جریان خرید و فروش";
         if ("monthlyProfit".equals(k)) return "سود تخمینی بر اساس بهای ثبت‌شده";
         if ("netMargin".equals(k)) return "درصد سود به فروش";
@@ -18811,18 +19025,62 @@ public class MainActivity extends Activity {
             empty.setGravity(Gravity.CENTER);
             c.addView(empty, new LinearLayout.LayoutParams(-1, dp(58)));
         } else {
-            for (int i = 0; i < Math.min(5, rows.length()); i++) {
+            List<MeelanoCharts.Point> salesPoints = new ArrayList<>();
+            List<MeelanoCharts.Point> purchasePoints = new ArrayList<>();
+            for (int i = 0; i < rows.length(); i++) {
                 JSONObject row = rows.optJSONObject(i);
+                if (row == null) continue;
+                String label = reportMonthShortLabel(row.optString("label", ""));
+                salesPoints.add(new MeelanoCharts.Point(label, row.optDouble("value", 0)));
+                purchasePoints.add(new MeelanoCharts.Point(label, row.optDouble("secondaryValue", 0)));
+            }
+            if (!salesPoints.isEmpty()) addReportAreaChart(c, "فروش ماهانه (ریال)", salesPoints, SUCCESS);
+            if (!purchasePoints.isEmpty()) addReportAreaChart(c, "خرید ماهانه (ریال)", purchasePoints, GOLD_2);
+            TextView latestTitle = text("آخرین ماه‌ها • فروش در برابر خرید", 11.2f, TEXT, Typeface.BOLD);
+            LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(-1, -2);
+            titleLp.setMargins(0, dp(8), 0, 0);
+            c.addView(latestTitle, titleLp);
+            for (int i = Math.max(0, rows.length() - 4); i < rows.length(); i++) {
+                JSONObject row = rows.optJSONObject(i);
+                if (row == null) continue;
                 LinearLayout item = new LinearLayout(this);
                 item.setOrientation(LinearLayout.VERTICAL);
                 item.setPadding(dp(10), dp(9), dp(10), dp(9));
                 item.setBackground(roundedStroke(alpha(INFO, 14), 15, alpha(INFO, 50)));
-                item.addView(text(labelOf(row, "label", "—"), 11.7f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-                item.addView(text("فروش: " + compactMoney(row == null ? null : row.opt("value")) + "  •  خرید: " + compactMoney(row == null ? null : row.opt("secondaryValue")), 10.3f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+                item.addView(text(reportMonthLongLabel(row.optString("label", "—")), 11.7f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+                item.addView(text("فروش: " + compactMoney(row.opt("value")) + "  •  خرید: " + compactMoney(row.opt("secondaryValue")), 10.3f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
                 LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(-1, -2); ip.setMargins(0, dp(8), 0, 0); c.addView(item, ip);
             }
         }
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
+    }
+
+    private String reportMonthShortLabel(String month) {
+        if (month != null && month.matches("^\\d{4}/\\d{2}$")) return MeelanoCharts.fa(month.substring(5, 7) + "/" + month.substring(2, 4));
+        return MeelanoCharts.fa(month == null ? "" : month);
+    }
+
+    private String reportMonthLongLabel(String month) {
+        if (month != null && month.matches("^\\d{4}/\\d{2}$")) {
+            String name = MeelanoJalali.monthName(month + "/01");
+            return (name.isEmpty() ? month.substring(5, 7) : name) + " " + MeelanoCharts.fa(month.substring(0, 4));
+        }
+        return MeelanoCharts.fa(month == null ? "—" : month);
+    }
+
+    private void addReportAreaChart(LinearLayout parent, String title, List<MeelanoCharts.Point> points, int accent) {
+        TextView label = text(title, 10.8f, tc(accent), Typeface.BOLD);
+        LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(-1, -2);
+        labelLp.setMargins(0, dp(10), 0, 0);
+        parent.addView(label, labelLp);
+        MeelanoCharts.Area chart = new MeelanoCharts.Area(this, tc(accent), TEXT, MUTED, MEELANO_BOLD);
+        chart.setPoints(points, MeelanoCharts.RIAL);
+        chart.setContentDescription(title + "؛ نمودار تعاملی، مقدارها به ریال");
+        int width = getResources().getConfiguration().screenWidthDp;
+        int height = width >= 600 ? 202 : width < 340 ? 158 : 176;
+        LinearLayout.LayoutParams chartLp = new LinearLayout.LayoutParams(-1, dp(height));
+        chartLp.setMargins(0, dp(2), 0, 0);
+        parent.addView(chart, chartLp);
     }
 
     private void addBankNamesOnlySection(JSONArray banks) {
@@ -18895,6 +19153,23 @@ public class MainActivity extends Activity {
         addReportInsight(row2, "ریسک مطالبات", labelOf(debt, "label", "بدون هشدار"), moneyValue(debt, "value"), "!", WARNING);
         addReportInsight(row2, "گروه پرفروش", labelOf(cat, "label", "نامشخص"), moneyValue(cat, "value"), "◼", INFO);
         LinearLayout.LayoutParams r2p = new LinearLayout.LayoutParams(-1, -2); r2p.setMargins(0, dp(8), 0, 0); panel.addView(row2, r2p);
+        if (MANAGEMENT_EDITION) {
+            JSONArray visitorRows = a.optJSONArray("visitorSales");
+            JSONObject visitorTop = strongestPoint(visitorRows);
+            long activeVisitors = 0;
+            long visitorInvoices = 0;
+            for (int i = 0; visitorRows != null && i < visitorRows.length(); i++) {
+                JSONObject visitor = visitorRows.optJSONObject(i);
+                if (visitor != null) {
+                    visitorInvoices += visitor.optLong("invoices", 0);
+                    if (visitor.optLong("invoices", 0) > 0) activeVisitors++;
+                }
+            }
+            LinearLayout row3 = new LinearLayout(this); row3.setOrientation(LinearLayout.HORIZONTAL);
+            addReportInsight(row3, "ویزیتور برتر", labelOf(visitorTop, "label", "نامشخص"), moneyValue(visitorTop, "sales"), "♙", SUCCESS);
+            addReportInsight(row3, "عملکرد بازه", formatNumber(activeVisitors) + " ویزیتور", formatNumber(visitorInvoices) + " فاکتور", "◉", INFO);
+            LinearLayout.LayoutParams r3p = new LinearLayout.LayoutParams(-1, -2); r3p.setMargins(0, dp(8), 0, 0); panel.addView(row3, r3p);
+        }
 
         TextView advice = text("پیشنهاد: فروش، سود و وصول را همزمان ببینید؛ عددهای قشنگ بدون نقدینگی کافی نیستند.", 10.8f, alpha(TEXT, 210), Typeface.BOLD);
         advice.setGravity(Gravity.CENTER);
@@ -19061,6 +19336,11 @@ public class MainActivity extends Activity {
     }
 
     private String queryAnalytics() throws Exception {
+        return queryAnalytics(reportVisitorPeriod);
+    }
+
+    private String queryAnalytics(String requestedVisitorPeriod) throws Exception {
+        final String visitorPeriod = normalizeVisitorReportPeriod(requestedVisitorPeriod);
         try (Connection c = openConnection()) {
             JSONObject a = new JSONObject();
             JSONObject errors = new JSONObject();
@@ -19079,11 +19359,132 @@ public class MainActivity extends Activity {
             a.put("topDebtors", safeAnalyticsArray(errors, "topDebtors", () -> queryTopDebtors(c)));
             a.put("overdueInvoices", safeAnalyticsArray(errors, "overdueInvoices", () -> queryOverdueInvoices(c)));
             a.put("inactiveCustomers", safeAnalyticsArray(errors, "inactiveCustomers", () -> queryInactiveCustomers(c)));
+            if (MANAGEMENT_EDITION) {
+                String[] visitorRange = visitorReportDateRange(visitorPeriod, atiranPersianToday(c));
+                final String visitorFrom = visitorRange[0];
+                final String visitorTo = visitorRange[1];
+                a.put("visitorSales", safeAnalyticsArray(errors, "visitorSales", () -> loadVisitorSales(c, visitorFrom, visitorTo)));
+                a.put("visitorSalesPeriod", visitorPeriod);
+                a.put("visitorSalesFrom", visitorFrom);
+                a.put("visitorSalesTo", visitorTo);
+            }
             try { a.put("latestSalesDate", latestDate(c, "sailfact", "date")); } catch (Exception ex) { a.put("latestSalesDate", ""); }
             try { a.put("latestPurchaseDate", latestDate(c, "buyfact", "DATE")); } catch (Exception ex) { a.put("latestPurchaseDate", ""); }
             if (errors.length() > 0) a.put("reportErrors", errors);
             return a.toString();
         }
+    }
+
+    private String normalizeVisitorReportPeriod(String period) {
+        if ("today".equals(period) || "7days".equals(period) || "30days".equals(period) || "lastmonth".equals(period)) return period;
+        return "month";
+    }
+
+    private String[] visitorReportDateRange(String period, String today) {
+        String end = today == null || today.trim().isEmpty() ? jalaliTodayText() : today.trim();
+        String start;
+        switch (normalizeVisitorReportPeriod(period)) {
+            case "today":
+                start = end;
+                break;
+            case "7days":
+                start = MeelanoJalali.addDays(end, -6);
+                break;
+            case "30days":
+                start = MeelanoJalali.addDays(end, -29);
+                break;
+            case "lastmonth": {
+                String previousMonthEnd = MeelanoJalali.addDays(MeelanoJalali.monthStart(end), -1);
+                start = MeelanoJalali.monthStart(previousMonthEnd);
+                end = previousMonthEnd;
+                break;
+            }
+            default:
+                start = MeelanoJalali.monthStart(end);
+                break;
+        }
+        return new String[]{start, end};
+    }
+
+    private JSONArray loadVisitorSales(Connection c, String from, String to) throws Exception {
+        JSONArray out = new JSONArray();
+        Set<String> sales = columns(c, "sailfact");
+        String saleDate = resolveFlexible(sales, "date", "DATE", "tarikh", "Date");
+        String saleAmount = resolveFlexible(sales, "all");
+        String saleVisitor = resolveFlexible(sales, "vis_rdf", "VisitorID", "visid", "visitor", "shvis");
+        if (saleDate == null || saleAmount == null || saleVisitor == null) return out;
+        String saleInvoice = resolveFlexible(sales, "shfacfo", "shfac", "factor_no", "invoice_no", "number", "serial");
+        String saleCustomer = resolveFlexible(sales, "shmo", "SHMO", "customer_id");
+        String saleKey = "COALESCE(NULLIF(TRY_CONVERT(nvarchar(100),s.[" + saleVisitor + "]),N''),N'0')";
+        String invoiceCount = saleInvoice == null ? "COUNT_BIG(1)" : "COUNT(DISTINCT TRY_CONVERT(nvarchar(100),s.[" + saleInvoice + "]))";
+        String customerCount = saleCustomer == null ? "CAST(0 AS bigint)" : "COUNT(DISTINCT TRY_CONVERT(nvarchar(100),s.[" + saleCustomer + "]))";
+        String salesWhere = "WHERE LEFT(TRY_CONVERT(nvarchar(30),s.[" + saleDate + "]),10)>=? AND LEFT(TRY_CONVERT(nvarchar(30),s.[" + saleDate + "]),10)<=?" + activeAnd(sales, "s");
+        String saleSoft = softDeleteCondition(sales, "s");
+        if (!saleSoft.isEmpty()) salesWhere += " AND " + saleSoft;
+        List<Object> params = new ArrayList<>();
+        params.add(from); params.add(to);
+        String visitorScope = reportVisitorScopeCondition(sales, "s", params);
+        if (!visitorScope.isEmpty()) salesWhere += " AND " + visitorScope;
+        String salesCte = "s AS (SELECT " + saleKey + " AS visitor_id, " + invoiceCount + " AS invoices, "
+                + "ISNULL(SUM(TRY_CONVERT(decimal(19,2),s.[" + saleAmount + "])),0) AS sales, " + customerCount + " AS customers, "
+                + "MAX(TRY_CONVERT(nvarchar(30),s.[" + saleDate + "])) AS last_sale FROM dbo.sailfact s " + salesWhere + " GROUP BY " + saleKey + ")";
+
+        String receiptCte = "r AS (SELECT CAST(NULL AS nvarchar(100)) AS visitor_id, CAST(0 AS bigint) AS receipt_count, "
+                + "CAST(0 AS decimal(19,2)) AS receipts WHERE 1=0)";
+        Set<String> receipts = new HashSet<>();
+        try { receipts = columns(c, "dar"); } catch (Exception ignored) { }
+        String receiptDate = resolveFlexible(receipts, "date", "DATE", "tarikh");
+        String receiptAmount = resolveFlexible(receipts, "mab", "amount");
+        String receiptVisitor = resolveFlexible(receipts, "rdf_vis", "vis_rdf", "VisitorID", "visid");
+        String receiptType = resolveFlexible(receipts, "p", "type");
+        if (receiptDate != null && receiptAmount != null && receiptVisitor != null && receiptType != null) {
+            String receiptKey = "COALESCE(NULLIF(TRY_CONVERT(nvarchar(100),d.[" + receiptVisitor + "]),N''),N'0')";
+            String receiptWhere = "WHERE LEFT(TRY_CONVERT(nvarchar(30),d.[" + receiptDate + "]),10)>=? AND LEFT(TRY_CONVERT(nvarchar(30),d.[" + receiptDate + "]),10)<=?"
+                    + " AND TRY_CONVERT(int,d.[" + receiptType + "])=0" + activeAnd(receipts, "d");
+            String receiptSoft = softDeleteCondition(receipts, "d");
+            if (!receiptSoft.isEmpty()) receiptWhere += " AND " + receiptSoft;
+            receiptCte = "r AS (SELECT " + receiptKey + " AS visitor_id, COUNT_BIG(1) AS receipt_count, "
+                    + "ISNULL(SUM(TRY_CONVERT(decimal(19,2),d.[" + receiptAmount + "])),0) AS receipts FROM dbo.dar d " + receiptWhere + " GROUP BY " + receiptKey + ")";
+            params.add(from); params.add(to);
+        }
+
+        Set<String> visitorColumns = new HashSet<>();
+        try { visitorColumns = columns(c, "visitors"); } catch (Exception ignored) { }
+        String visitorId = resolveFlexible(visitorColumns, "vis_rdf", "ID", "id", "rdf", "visitor_id");
+        String visitorName = resolveFlexible(visitorColumns, "vis_name", "name", "Name", "visitor_name", "display_name");
+        String joinedVisitorId = "COALESCE(s.visitor_id,r.visitor_id,N'0')";
+        String visitorJoin = visitorId == null || visitorName == null ? "" : " LEFT JOIN dbo.visitors v ON TRY_CONVERT(nvarchar(100),v.[" + visitorId + "])=" + joinedVisitorId;
+        String visitorLabel = visitorId == null || visitorName == null
+                ? "CASE WHEN " + joinedVisitorId + "=N'0' THEN N'بدون ویزیتور' ELSE N'ویزیتور ' + " + joinedVisitorId + " END"
+                : "CASE WHEN " + joinedVisitorId + "=N'0' THEN N'بدون ویزیتور' ELSE COALESCE(NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(250),v.[" + visitorName + "]))),N''),N'ویزیتور ' + " + joinedVisitorId + ") END";
+        String sql = "WITH " + salesCte + ", " + receiptCte + " SELECT " + joinedVisitorId + " AS visitor_id, " + visitorLabel + " AS label, "
+                + "ISNULL(s.invoices,0) AS invoices, ISNULL(s.sales,0) AS sales, ISNULL(s.customers,0) AS customers, "
+                + "ISNULL(r.receipt_count,0) AS receipt_count, ISNULL(r.receipts,0) AS receipts, s.last_sale "
+                + "FROM s FULL OUTER JOIN r ON s.visitor_id=r.visitor_id" + visitorJoin
+                + " ORDER BY ISNULL(s.sales,0) DESC, ISNULL(r.receipts,0) DESC";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            setParams(ps, params);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    JSONObject row = new JSONObject();
+                    row.put("visitorId", rs.getString("visitor_id"));
+                    row.put("label", stringOr(rs.getString("label"), "بدون ویزیتور"));
+                    row.put("invoices", rs.getLong("invoices"));
+                    row.put("sales", rs.getDouble("sales"));
+                    row.put("customers", rs.getLong("customers"));
+                    row.put("receiptCount", rs.getLong("receipt_count"));
+                    row.put("receipts", rs.getDouble("receipts"));
+                    row.put("lastSale", stringOr(rs.getString("last_sale"), ""));
+                    row.put("value", rs.getDouble("sales"));
+                    row.put("count", rs.getLong("invoices"));
+                    row.put("amount", rs.getDouble("sales"));
+                    row.put("hint", formatNumber(rs.getLong("invoices")) + " فاکتور • "
+                            + formatNumber(rs.getLong("customers")) + " مشتری • وصول " + money(rs.getDouble("receipts")));
+                    out.put(row);
+                }
+            }
+        }
+        return out;
     }
 
     private JSONArray safeAnalyticsArray(JSONObject errors, String key, JsonArrayJob job) {
@@ -19099,7 +19500,8 @@ public class MainActivity extends Activity {
         if (!hasCol(cols, "date") || !hasCol(cols, "all")) return new JSONArray();
         String where = activeWhere(cols, "s");
         List<Object> params = new ArrayList<>();
-        if (session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int,s.[vis_rdf])=?"); params.add(session.visitorId); }
+        String visitorScope = reportVisitorScopeCondition(cols, "s", params);
+        if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
         if (hasFunction(c, "dif_date_alan")) {
             String sql = "WITH x AS (SELECT TRY_CONVERT(int,-dbo.dif_date_alan(s.[date])) age_days, TRY_CONVERT(decimal(19,2),s.[all]) amount FROM dbo.sailfact s " + where + "), " +
                     "b AS (SELECT (age_days/7) week_index, SUM(amount) total FROM x WHERE age_days BETWEEN 0 AND 55 GROUP BY (age_days/7)) " +
@@ -19131,7 +19533,10 @@ public class MainActivity extends Activity {
         String alias = "x";
         String where = activeWhere(cols, alias);
         List<Object> params = new ArrayList<>();
-        if (visitorAware && session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int," + alias + ".[vis_rdf])=?"); params.add(session.visitorId); }
+        if (visitorAware) {
+            String visitorScope = reportVisitorScopeCondition(cols, alias, params);
+            if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
+        }
         String sql = "SELECT TOP (12) LEFT(" + alias + ".[" + d + "],7), ISNULL(SUM(TRY_CONVERT(decimal(19,2)," + alias + ".[" + amount + "])),0) FROM dbo.[" + table + "] " + alias + " " + where + " GROUP BY LEFT(" + alias + ".[" + d + "],7) ORDER BY LEFT(" + alias + ".[" + d + "],7) DESC";
         return reverse(readPoints(c, sql, params));
     }
@@ -19145,15 +19550,21 @@ public class MainActivity extends Activity {
             String typeJoin = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? " LEFT JOIN dbo.CheckTypes t ON t.ID=g.chk_satus " : "";
             String label = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? "N'دریافتی • ' + COALESCE(TRY_CONVERT(nvarchar(100),t.Desciption),N'دسته '+CONVERT(nvarchar(20),g.chk_satus))" : "N'دریافتی • دسته ' + CONVERT(nvarchar(20),g.chk_satus)";
             String where = ""; List<Object> params = new ArrayList<>();
-            if (session != null && session.visitorId != null && hasCol(getCols, "vis_rdf")) { where = " WHERE TRY_CONVERT(int,g.vis_rdf)=?"; params.add(session.visitorId); }
+            String visitorScope = reportVisitorScopeCondition(getCols, "g", params);
+            if (!visitorScope.isEmpty()) where = " WHERE " + visitorScope;
             String sql = "SELECT " + label + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),g.[getchkmab])),0) FROM dbo.getchk g " + typeJoin + where + " GROUP BY " + label;
             appendCheckPoints(out, c, sql, params);
         }
         if (hasCol(putCols, "putchk_status") && hasCol(putCols, "putchkmab")) {
             String typeJoin = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? " LEFT JOIN dbo.CheckTypes t ON t.ID=p.putchk_status " : "";
             String label = hasCol(typeCols, "ID") && hasCol(typeCols, "Desciption") ? "N'پرداختی • ' + COALESCE(TRY_CONVERT(nvarchar(100),t.Desciption),N'دسته '+CONVERT(nvarchar(20),p.putchk_status))" : "N'پرداختی • دسته ' + CONVERT(nvarchar(20),p.putchk_status)";
-            String sql = "SELECT " + label + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),p.[putchkmab])),0) FROM dbo.putchk p " + typeJoin + " GROUP BY " + label;
-            appendCheckPoints(out, c, sql, new ArrayList<>());
+            String where = ""; List<Object> params = new ArrayList<>();
+            if (MANAGEMENT_EDITION) {
+                String visitorScope = reportVisitorScopeCondition(putCols, "p", params);
+                if (!visitorScope.isEmpty()) where = " WHERE " + visitorScope;
+            }
+            String sql = "SELECT " + label + ", COUNT_BIG(1), ISNULL(SUM(TRY_CONVERT(decimal(19,2),p.[putchkmab])),0) FROM dbo.putchk p " + typeJoin + where + " GROUP BY " + label;
+            appendCheckPoints(out, c, sql, params);
         }
         return out;
     }
@@ -19165,7 +19576,8 @@ public class MainActivity extends Activity {
         String nameExpr = hasCol(cust, "MONAME") ? "TRY_CONVERT(nvarchar(250),c.MONAME)" : "TRY_CONVERT(nvarchar(100),c.SHMO)";
         String where = activeWhere(sail, "s");
         List<Object> params = new ArrayList<>();
-        if (session != null && session.visitorId != null && hasCol(sail, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int,s.vis_rdf)=?"); params.add(session.visitorId); }
+        String visitorScope = reportVisitorScopeCondition(sail, "s", params);
+        if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
         String sql = "SELECT TOP (10) " + nameExpr + " AS label, ISNULL(SUM(TRY_CONVERT(decimal(19,2),s.[all])),0) AS value FROM dbo.CUSTOMERS c JOIN dbo.sailfact s ON s.shmo=c.SHMO " + where + " GROUP BY c.SHMO," + nameExpr + " ORDER BY value DESC";
         return readPoints(c, sql, params);
     }
@@ -19180,7 +19592,8 @@ public class MainActivity extends Activity {
         String where = "WHERE [tasvieh]='f' AND NULLIF([t_date],'') IS NOT NULL";
         where += activeAnd(cols, "");
         List<Object> params = new ArrayList<>();
-        if (session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where += " AND TRY_CONVERT(int,[vis_rdf])=?"; params.add(session.visitorId); }
+        String visitorScope = reportVisitorScopeCondition(cols, "", params);
+        if (!visitorScope.isEmpty()) where += " AND " + visitorScope;
         String bucket = "CASE WHEN dbo.dif_date_alan([t_date]) >= 0 THEN N'۰ / جاری' WHEN -dbo.dif_date_alan([t_date]) <= 30 THEN N'۱ تا ۳۰ روز' WHEN -dbo.dif_date_alan([t_date]) <= 60 THEN N'۳۱ تا ۶۰ روز' WHEN -dbo.dif_date_alan([t_date]) <= 90 THEN N'۶۱ تا ۹۰ روز' WHEN -dbo.dif_date_alan([t_date]) <= 180 THEN N'۹۱ تا ۱۸۰ روز' ELSE N'۱۸۰+ روز' END";
         String sql = "WITH x AS (SELECT " + bucket + " bucket, (" + remain + ") amount FROM dbo.sailfact " + where + ") SELECT bucket, SUM(CASE WHEN amount>0 THEN amount ELSE 0 END) FROM x GROUP BY bucket";
         return readPoints(c, sql, params);
@@ -19199,7 +19612,8 @@ public class MainActivity extends Activity {
         String where = activeWhere(sail, "s");
         if (!activeCondition(detail, "d").isEmpty()) where = appendWhere(where, activeCondition(detail, "d"));
         List<Object> params = new ArrayList<>();
-        if (session != null && session.visitorId != null && hasCol(sail, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int,s.vis_rdf)=?"); params.add(session.visitorId); }
+        String visitorScope = reportVisitorScopeCondition(sail, "s", params);
+        if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
         String sql = "SELECT TOP (12) LEFT(s.[date],7), ISNULL(SUM(TRY_CONVERT(decimal(19,2),d.[LINESUM]) - (" + qty + " * ISNULL(TRY_CONVERT(decimal(19,2),i.[" + cost + "]),0))),0) FROM dbo.sailfact s JOIN dbo.subsailfact d ON d.shfacfo=s.shfacfo JOIN dbo.inventory i ON i.shka=d.SHKA " + where + " GROUP BY LEFT(s.[date],7) ORDER BY LEFT(s.[date],7) DESC";
         return reverse(readPoints(c, sql, params));
     }
@@ -19234,7 +19648,8 @@ public class MainActivity extends Activity {
             String where = activeWhere(sail, "s");
             if (!activeCondition(detail, "d").isEmpty()) where = appendWhere(where, activeCondition(detail, "d"));
             List<Object> params = new ArrayList<>();
-            if (session != null && session.visitorId != null && hasCol(sail, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int,s.vis_rdf)=?"); params.add(session.visitorId); }
+            String visitorScope = reportVisitorScopeCondition(sail, "s", params);
+            if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
             String sql = "SELECT TOP (8) COALESCE(TRY_CONVERT(nvarchar(250),g.[" + groupName + "]),N'بدون گروه'), ISNULL(SUM(TRY_CONVERT(decimal(19,2),d.LINESUM)),0) FROM dbo.sailfact s JOIN dbo.subsailfact d ON d.shfacfo=s.shfacfo JOIN dbo.inventory i ON i.shka=d.SHKA LEFT JOIN dbo.kagroup g ON TRY_CONVERT(nvarchar(100),g.[" + groupKey + "])=TRY_CONVERT(nvarchar(100),i.[" + invGroup + "]) " + where + " GROUP BY g.[" + groupName + "] ORDER BY 2 DESC";
             return readPoints(c, sql, params);
         }
@@ -19245,7 +19660,8 @@ public class MainActivity extends Activity {
         Set<String> cols = columns(c, "sailfact");
         if (!hasCol(cols, "date") || !hasCol(cols, "shmo")) return new JSONArray();
         String where = activeWhere(cols, "s"); List<Object> params = new ArrayList<>();
-        if (session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int,s.vis_rdf)=?"); params.add(session.visitorId); }
+        String visitorScope = reportVisitorScopeCondition(cols, "s", params);
+        if (!visitorScope.isEmpty()) where = appendWhere(where, visitorScope);
         String sql = "SELECT TOP (12) LEFT(s.[date],7), COUNT(DISTINCT s.[shmo]) FROM dbo.sailfact s " + where + " GROUP BY LEFT(s.[date],7) ORDER BY LEFT(s.[date],7) DESC";
         return reverse(readPoints(c, sql, params));
     }
@@ -19282,7 +19698,10 @@ public class MainActivity extends Activity {
                 List<Object> params = new ArrayList<>(); params.add(actualDate); params.add(actualDate);
                 String innerWhere = "WHERE (TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=? OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(?,10))" + activeAnd(h, "x");
                 String soft = softDeleteCondition(h, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
-                if (sales && session != null && session.visitorId != null && hasCol(h, "vis_rdf")) { innerWhere += " AND TRY_CONVERT(int,x.vis_rdf)=?"; params.add(session.visitorId); }
+                if (sales) {
+                    String visitorScope = reportVisitorScopeCondition(h, "x", params);
+                    if (!visitorScope.isEmpty()) innerWhere += " AND " + visitorScope;
+                }
                 String source = dedupeFactorSource(header, h, numberCol, "h", innerWhere);
                 String sql = "SELECT TOP (150) TRY_CONVERT(bigint,h.[" + numberCol + "]), " + partyExpr + ", " + sqlNumberExpr("h", amountCol, "decimal(19,2)") + ", " + itemCountExpr + ", " + descExpr + " FROM " + source + " " + (canJoinCustomer ? "LEFT JOIN dbo.CUSTOMERS c ON TRY_CONVERT(nvarchar(100),c.SHMO)=TRY_CONVERT(nvarchar(100),h.shmo) " : "") + itemApply + " ORDER BY h.[" + numberCol + "]";
                 try (PreparedStatement ps = c.prepareStatement(sql)) { setParams(ps, params); try (ResultSet r = ps.executeQuery()) { Set<String> parties = new HashSet<>(); while (r.next()) { JSONObject o = new JSONObject(); o.put("number", r.getLong(1)); String party = stringOr(r.getString(2), "بدون نام"); o.put("party", party); o.put("amount", r.getDouble(3)); o.put("items", r.getLong(4)); o.put("description", stringOr(r.getString(5), "")); docs.put(o); total += r.getDouble(3); docCount++; parties.add(party); itemCount += r.getLong(4); } partyCount = parties.size(); } }
@@ -19374,7 +19793,10 @@ public class MainActivity extends Activity {
         where += activeAnd(cols, "x");
         String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) where += " AND " + soft;
         List<Object> params = new ArrayList<>(); params.add(date); params.add(date);
-        if (sales && session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where += " AND TRY_CONVERT(int,x.[vis_rdf])=?"; params.add(session.visitorId); }
+        if (sales) {
+            String visitorScope = reportVisitorScopeCondition(cols, "x", params);
+            if (!visitorScope.isEmpty()) where += " AND " + visitorScope;
+        }
         String source = dedupeFactorSource(table, cols, number, "h", where);
         try (PreparedStatement ps = c.prepareStatement("SELECT " + sd + "," + st + "," + sp + " FROM " + source)) {
             setParams(ps, params);
@@ -23000,7 +23422,7 @@ public class MainActivity extends Activity {
     private static final int STORE_DEFAULT_RADIUS_M = 120;
     private static final String STORE_UPDATE_MANIFEST_URL = "https://github.com/Companymeelano/Newhamrah/raw/arena/01a0e474-newhamrah/apk/latest-store.json";
 
-    private String editionTitle() { return STAFF_EDITION ? "پخش درخشان پرسنل" : STORE_EDITION ? "پخش درخشان فروشگاه" : "پخش درخشان ویزیتور"; }
+    private String editionTitle() { return MANAGEMENT_EDITION ? "مدیریت آتیران" : STAFF_EDITION ? "پخش درخشان پرسنل" : STORE_EDITION ? "پخش درخشان فروشگاه" : "پخش درخشان ویزیتور"; }
 
     /** In the store app every order is a final invoice, so «پیش‌فاکتور» wording becomes «فاکتور». */
     private String storeWording(String s) {

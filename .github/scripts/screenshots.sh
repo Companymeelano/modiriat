@@ -129,4 +129,15 @@ if [ -f app-staff-debug.apk ]; then
   shot 78-staff-tablet-home staff_home amethyst_pearl
   adb shell wm size reset; adb shell wm density reset
 fi
+# ---- Atiran management edition: brand and login responsiveness without mock report values ----
+if [ -f app-management-debug.apk ]; then
+  adb install -r -g app-management-debug.apk
+  PKG=ir.meelano.atiran.management.debug
+  shot 90-management-login login azure_diamond
+  adb shell wm size 720x1520; adb shell wm density 320
+  shot 91-management-login-phone login azure_diamond
+  adb shell wm size 1600x2560; adb shell wm density 320
+  shot 92-management-login-tablet login azure_diamond
+  adb shell wm size reset; adb shell wm density reset
+fi
 adb logcat -d -t 400 | grep -E "AndroidRuntime|FATAL|MainActivity" | tail -40 > "$OUT/logcat.txt" || true

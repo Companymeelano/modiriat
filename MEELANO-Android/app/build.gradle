@@ -18,6 +18,7 @@ android {
     //  staff   → «پخش درخشان پرسنل» for ordinary personnel (attendance, payroll, leave, advance, own account, deliveries)
     //  tax     → «پخش درخشان مودیان»: sends Atiran's invoices to the Moadian tax system (MeelanoTaxActivity only)
     //  finance → «آتیران مالی»: financial operations / treasury / receivables / reconciliation (AtiranFinanceActivity only)
+    //  management → «مدیریت آتیران»: company-wide reporting and management tools (MainActivity)
     flavorDimensions 'edition'
     productFlavors {
         visitor {
@@ -39,6 +40,12 @@ android {
         finance {
             dimension 'edition'
             applicationId 'ir.meelano.atiran.finance'
+            versionCode 1
+            versionName '1.0.0'
+        }
+        management {
+            dimension 'edition'
+            applicationId 'ir.meelano.atiran.management'
             versionCode 1
             versionName '1.0.0'
         }

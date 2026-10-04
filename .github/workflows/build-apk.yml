@@ -75,7 +75,7 @@ jobs:
 
       - name: Build debug APK
         working-directory: MEELANO-Android
-        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testStoreDebugUnitTest testTaxDebugUnitTest assembleDebug 2>&1 | tee "$RUNNER_TEMP/gradle-debug.log"; exit ${PIPESTATUS[0]}
+        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testStoreDebugUnitTest testTaxDebugUnitTest testManagementDebugUnitTest assembleDebug 2>&1 | tee "$RUNNER_TEMP/gradle-debug.log"; exit ${PIPESTATUS[0]}
 
       - name: Report compile errors
         if: failure()
@@ -148,10 +148,15 @@ jobs:
           cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk "out/MEELANO-Staff-v$APP_VERSION-debug.apk"
           cp MEELANO-Android/app/build/outputs/apk/tax/release/*.apk "out/MEELANO-Tax-v$APP_VERSION-release.apk"
           cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk "out/MEELANO-Tax-v$APP_VERSION-debug.apk"
+          MGMT_BLOCK=$(sed -n '/^[[:space:]]*management[[:space:]]*{/,/^[[:space:]]*}/p' MEELANO-Android/app/build.gradle)
+          MGMT_VERSION=$(printf '%s\n' "$MGMT_BLOCK" | grep -oP "versionName\s+'\K[^']+" | head -1)
+          cp MEELANO-Android/app/build/outputs/apk/management/release/*.apk "out/AtiranManagement-v$MGMT_VERSION-release.apk"
+          cp MEELANO-Android/app/build/outputs/apk/management/debug/*.apk "out/AtiranManagement-v$MGMT_VERSION-debug.apk"
           cp MEELANO-Android/app/build/outputs/apk/visitor/debug/*.apk app-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/store/debug/*.apk app-store-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk app-staff-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk app-tax-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/management/debug/*.apk app-management-debug.apk
           for f in out/*.apk; do
             R=$("$APKSIGNER" verify --verbose --print-certs "$f" | grep -E "Verified using v[23] |certificate SHA-256" | tr '\n' ';')
             echo "::notice title=apksigner $(basename "$f")::$R"
@@ -172,6 +177,7 @@ jobs:
             app-store-debug.apk
             app-staff-debug.apk
             app-tax-debug.apk
+            app-management-debug.apk
           retention-days: 3
 
       - name: Commit APK to branch
@@ -189,10 +195,15 @@ jobs:
             "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-staff.json
           printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/MEELANO-Tax-v%s-release.apk"}\n' \
             "$CODE" "$APP_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$APP_VERSION" > apk/latest-tax.json
-          cat apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json
+          MGMT_BLOCK=$(sed -n '/^[[:space:]]*management[[:space:]]*{/,/^[[:space:]]*}/p' MEELANO-Android/app/build.gradle)
+          MGMT_CODE=$(printf '%s\n' "$MGMT_BLOCK" | grep -oP "versionCode\s+\K[0-9]+" | head -1)
+          MGMT_VERSION=$(printf '%s\n' "$MGMT_BLOCK" | grep -oP "versionName\s+'\K[^']+" | head -1)
+          printf '{"versionCode": %s, "versionName": "%s", "url": "https://github.com/%s/raw/%s/apk/AtiranManagement-v%s-release.apk"}\n' \
+            "$MGMT_CODE" "$MGMT_VERSION" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$MGMT_VERSION" > apk/latest-management.json
+          cat apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-management.json
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
-          git add apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json
+          git add apk/*.apk apk/latest.json apk/latest-store.json apk/latest-staff.json apk/latest-tax.json apk/latest-management.json
           git commit -m "Build APK v$APP_VERSION [skip ci]" || echo "No changes"
           for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin HEAD:${GITHUB_REF_NAME} && break; sleep 5; done
 

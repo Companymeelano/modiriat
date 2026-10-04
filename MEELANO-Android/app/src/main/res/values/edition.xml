@@ -6,4 +6,6 @@
     <bool name="meelano_staff_edition">false</bool>
     <!-- true only in the «tax» flavour (src/tax/res/values/edition.xml). -->
     <bool name="meelano_tax_edition">false</bool>
+    <!-- true only in the «management» flavour (src/management/res/values/edition.xml). -->
+    <bool name="meelano_management_edition">false</bool>
 </resources>
