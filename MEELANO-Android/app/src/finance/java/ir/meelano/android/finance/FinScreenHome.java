@@ -117,7 +117,7 @@ public class FinScreenHome extends FinScreen {
             FinCrash.log(host, "home-section", label + ": " + t.getClass().getName() + ": " + t.getMessage());
             LinearLayout card = ui.cardTone(FinUi.DANGER);
             card.addView(ui.text("⚠  نمایش «" + label + "» ممکن نشد", 12.5f, ui.textColor, true), ui.lp(-1, -2));
-            card.addView(ui.text(FinDiag.shortError(t), 11f, ui.textDim, false), ui.lp(-1, -2));
+            card.addView(ui.text(FinHealth.shortError(t), 11f, ui.textDim, false), ui.lp(-1, -2));
             card.addView(ui.text("کد رویداد: " + FinCrash.eventCode(t), 11f, FinUi.DANGER, true), ui.lp(-1, -2));
             addCard(card, 12);
         }

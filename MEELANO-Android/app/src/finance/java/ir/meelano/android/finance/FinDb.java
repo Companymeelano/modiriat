@@ -174,7 +174,7 @@ public final class FinDb {
     }
 
     /** SQL errors must never reach the user interface; only a short, safe message is produced. */
-    public static String safeMessage(Exception e) {
+    public static String safeMessage(Throwable e) {
         if (e == null) return "";
         String m = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
         m = m.replace('\n', ' ').trim();
