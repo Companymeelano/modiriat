@@ -51,6 +51,7 @@ final class FinSplash {
     private final Button enter, retry, plain, doctor;
 
     private final List<FinHealth.Check> checks = FinHealth.checklist();
+    private LinearLayout crashCard;
     private final LinearLayout[] rows = new LinearLayout[checks.size()];
     private final TextView[] glyphs = new TextView[checks.size()];
     private final TextView[] titles = new TextView[checks.size()];
@@ -96,6 +97,13 @@ final class FinSplash {
         cp.topMargin = ui.dp(12);
         column.addView(card, cp);
         card.addView(ui.sectionTitle("بررسی گام‌به‌گام", "هر خط، یک بررسی واقعی روی گوشی و سرور", "⚕"), ui.lp(-1, -2));
+
+        crashCard = previousCrashCard();
+        if (crashCard != null) {
+            LinearLayout.LayoutParams crp = ui.lp(-1, -2);
+            crp.topMargin = ui.dp(12);
+            column.addView(crashCard, crp);
+        }
 
         rowsBox = ui.column();
         card.addView(rowsBox, ui.lp(-1, -2));
@@ -206,6 +214,37 @@ final class FinSplash {
             if (c.state == FinHealth.FAIL) return c.title + " — " + c.detail;
         }
         return "موردی ناموفق بود.";
+    }
+
+    /**
+     * When the previous run ended with an uncaught exception, its reason is the first thing shown —
+     * a phone in the field cannot be attached to a debugger, and "the app just closes" is not a
+     * diagnosis. The card carries the exception text, the event code and a copy action.
+     */
+    private LinearLayout previousCrashCard() {
+        String crash = FinCrash.lastCrash(a);
+        if (crash == null || crash.trim().isEmpty()) return null;
+        String[] lines = crash.trim().split("\n");
+        StringBuilder reason = new StringBuilder();
+        for (int i = 0; i < lines.length && i < 3; i++) {
+            if (i > 0) reason.append('\n');
+            reason.append(lines[i]);
+        }
+        LinearLayout card = ui.cardTone(FinUi.DANGER);
+        card.addView(ui.text("⚠  اجرای قبلی برنامه با خطا بسته شد", 13f, ui.textColor, true), ui.lp(-1, -2));
+        TextView body = ui.text(reason.toString(), 11f, ui.textDim, false);
+        body.setMaxLines(4);
+        card.addView(body, ui.lp(-1, -2));
+        LinearLayout row = ui.row();
+        row.addView(ui.ghostButton("کپی گزارش کامل", FinUi.DANGER, v -> {
+            if (listener != null) listener.splashDiagnostics();
+        }), ui.lp(0, -2, 1f));
+        LinearLayout.LayoutParams rp = ui.lp(-1, -2);
+        rp.topMargin = ui.dp(8);
+        card.addView(row, rp);
+        card.addView(ui.text("همین متن را برای پشتیبانی بفرستید؛ با آن دقیقاً می‌دانیم کدام مرحله خطا داده است.",
+                10.5f, ui.textFaint, false), ui.lp(-1, -2));
+        return card;
     }
 
     // ------------------------------------------------------------------ rows

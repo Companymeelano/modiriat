@@ -96,7 +96,7 @@ final class FinHealth {
                 final int index = i;
                 c.state = RUNNING;
                 c.detail = "";
-                main.post(() -> listener.onCheckStart(index, c));
+                post(main, () -> listener.onCheckStart(index, c));
                 long started = System.currentTimeMillis();
                 try {
                     String detail;
@@ -121,23 +121,38 @@ final class FinHealth {
                 c.ms = System.currentTimeMillis() - started;
                 if (i == 0) c.ms = 0;
                 doneIndex = i;
-                main.post(() -> listener.onCheckDone(index, c));
+                post(main, () -> listener.onCheckDone(index, c));
                 if (c.state == FAIL) {
                     // A closed port or a refused login makes the following checks meaningless.
                     if (conn != null) { try { conn.close(); } catch (Throwable ignored) { } }
                     final int last = i;
-                    main.post(() -> listener.onChecksFinished(false, last));
+                    post(main, () -> listener.onChecksFinished(false, last));
                     return;
                 }
             }
             if (conn != null) { try { conn.close(); } catch (Throwable ignored) { } }
             final boolean ok = allOk;
             final int last = doneIndex;
-            main.post(() -> listener.onChecksFinished(ok, last));
+            post(main, () -> listener.onChecksFinished(ok, last));
         }, "fin-health");
         worker.setDaemon(true);
         worker.start();
         return worker;
+    }
+
+    /** Every callback is wrapped: a painting error must never take the application down. */
+    private static void post(Handler main, Runnable work) {
+        main.post(() -> {
+            try {
+                work.run();
+            } catch (Throwable t) {
+                try { FinCrash.log(FinApp.context(), "health-ui", t.getClass().getName()); } catch (Throwable ignored) { }
+                FinDb.UiError reporter = FinDb.reporter();
+                if (reporter != null) {
+                    try { reporter.onUiError(t); } catch (Throwable ignored) { }
+                }
+            }
+        });
     }
 
     // ------------------------------------------------------------------ individual checks

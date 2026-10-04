@@ -46,6 +46,22 @@ import java.util.zip.GZIPOutputStream;
 public final class FinDb {
     /** Callback for background work, always delivered on the UI thread. */
     public interface Cb<T> { void ok(T value); default void fail(Exception e) { } }
+
+    /** Receiver of an exception that happened while the UI was painting a result. */
+    public interface UiError { void onUiError(Throwable t); }
+
+    private static volatile UiError uiErrorReporter;
+
+    /**
+     * The activity registers itself here so a screen that throws while drawing its data can be
+     * replaced by a readable error card. Without this, such an exception would reach the main thread
+     * uncaught and the whole application would disappear without a word — which is exactly the
+     * failure mode this class must never allow again.
+     */
+    public static void setUiErrorReporter(UiError reporter) { uiErrorReporter = reporter; }
+
+    /** The registered reporter (used by the health walk and other UI drivers). */
+    public static UiError reporter() { return uiErrorReporter; }
     public interface Op { JSONObject run(Connection c, JSONObject args) throws Exception; }
 
     private static final String PREFS = "atiran_finance_cache";
@@ -297,7 +313,24 @@ public final class FinDb {
     }
 
     private static <T> void deliver(Cb<T> cb, T value) {
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> cb.ok(value));
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                cb.ok(value);
+            } catch (Throwable t) {
+                // A failure while painting a screen must never kill the process: it is logged and
+                // handed to the activity, which shows its error card with a retry.
+                try { FinCrash.log(ctxOf(), "ui-render", t.getClass().getName() + ": " + t.getMessage()); } catch (Throwable ignored) { }
+                UiError reporter = uiErrorReporter;
+                if (reporter != null) {
+                    try { reporter.onUiError(t); } catch (Throwable ignored) { }
+                }
+            }
+        });
+    }
+
+    /** Best-effort context for logging; the application context is enough for the files directory. */
+    private static Context ctxOf() {
+        try { return FinApp.context(); } catch (Throwable t) { return null; }
     }
 
     // ------------------------------------------------------------------ cache on disk (offline)

@@ -39,10 +39,11 @@ android {
         finance {
             dimension 'edition'
             applicationId 'ir.meelano.atiran.finance'
-            // Charts, themed buttons and the reworked data paths of the financial cockpit,
-            // the self-diagnosing startup (1.1.1) and the health/loading screen of 1.2.0.
-            versionCode 4
-            versionName '1.2.0'
+            // Charts, themed buttons and the reworked data paths of the financial cockpit, the
+            // self-diagnosing startup (1.1.1), the health/loading screen (1.2.0) and the crash-proof
+            // interface of 1.2.1 (no screen painting error can close the app any more).
+            versionCode 5
+            versionName '1.2.1'
         }
     }
 

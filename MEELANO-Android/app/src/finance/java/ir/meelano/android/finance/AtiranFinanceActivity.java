@@ -112,6 +112,10 @@ public class AtiranFinanceActivity extends Activity {
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         FinCrash.install(this);
+        // Any screen that throws while painting is reported here instead of killing the process.
+        FinDb.setUiErrorReporter(new FinDb.UiError() {
+            @Override public void onUiError(final Throwable t) { reportUiError(t); }
+        });
         boot = new FinBoot(this, new BootListener());
         bootView = boot.view();
         setContentView(bootView);
@@ -464,16 +468,27 @@ public class AtiranFinanceActivity extends Activity {
             }
             final FinAuth.Result r = result;
             main.post(() -> {
-                if (!finished.compareAndSet(false, true)) return;
-                sink.busy(false);
-                sink.elapsed(0);
-                if (r.ok && r.session != null) {
-                    try { r.session.remember(AtiranFinanceActivity.this); } catch (Throwable ignored) { }
-                    sink.message("خوش آمدید " + FinSession.displayOrUser(), false);
-                    sink.success();
-                } else {
-                    String message = r.message == null || r.message.isEmpty() ? "ورود ناموفق بود." : r.message;
-                    sink.message(message + "\nاگر تکرار شد، «بررسی اتصال به سرور» را بزنید.", true);
+                try {
+                    if (!finished.compareAndSet(false, true)) return;
+                    sink.busy(false);
+                    sink.elapsed(0);
+                    if (r.ok && r.session != null) {
+                        try { r.session.remember(AtiranFinanceActivity.this); } catch (Throwable ignored) { }
+                        sink.message("خوش آمدید " + FinSession.displayOrUser(), false);
+                        sink.success();
+                    } else {
+                        String message = r.message == null || r.message.isEmpty() ? "ورود ناموفق بود." : r.message;
+                        sink.message(message + "\nاگر تکرار شد، «بررسی اتصال به سرور» را بزنید.", true);
+                    }
+                } catch (Throwable t) {
+                    // Even the hand-off to the desk is wrapped: the operator never loses the screen.
+                    FinCrash.log(AtiranFinanceActivity.this, "login-ui", t.getClass().getName() + ": " + t.getMessage());
+                    try {
+                        sink.busy(false);
+                        sink.elapsed(0);
+                        sink.message("ورود انجام شد ولی نمایش میزکار با خطا متوقف شد · کد رویداد "
+                                + FinCrash.eventCode(t) + "\n" + t.getClass().getSimpleName() + ": " + t.getMessage(), true);
+                    } catch (Throwable ignored) { }
                 }
             });
         }, "fin-login");
@@ -906,23 +921,33 @@ public class AtiranFinanceActivity extends Activity {
     }
 
     public void showTab(String target, boolean resetStack) {
-        tab = target;
-        if (resetStack) stack.clear();
-        renderNav();
-        switch (target) {
-            case TAB_MONEY: stack.push(new FinScreenSales(this)); break;
-            case TAB_CHECKS: stack.push(new FinScreenCheques(this)); break;
-            case TAB_RECEIVABLES: stack.push(new FinScreenReceivables(this)); break;
-            case TAB_MORE: stack.push(new FinScreenMore(this)); break;
-            default: stack.push(new FinScreenHome(this)); break;
+        try {
+            tab = target;
+            if (resetStack) stack.clear();
+            renderNav();
+            switch (target) {
+                case TAB_MONEY: stack.push(new FinScreenSales(this)); break;
+                case TAB_CHECKS: stack.push(new FinScreenCheques(this)); break;
+                case TAB_RECEIVABLES: stack.push(new FinScreenReceivables(this)); break;
+                case TAB_MORE: stack.push(new FinScreenMore(this)); break;
+                default: stack.push(new FinScreenHome(this)); break;
+            }
+            renderTop(false);
+        } catch (Throwable t) {
+            FinCrash.log(this, "open-tab", target + ": " + t.getClass().getName());
+            showScreenError(stack.peek(), t);
         }
-        renderTop(false);
     }
 
     /** Drill-down: KPI → list → detail → source record. */
     public void open(FinScreen screen) {
-        stack.push(screen);
-        renderTop(true);
+        try {
+            stack.push(screen);
+            renderTop(true);
+        } catch (Throwable t) {
+            FinCrash.log(this, "open-screen", t.getClass().getName());
+            showScreenError(screen, t);
+        }
     }
 
     /**
@@ -939,25 +964,30 @@ public class AtiranFinanceActivity extends Activity {
         final int token = ++renderToken;
         showLoading(top.title());
         contentHost.postDelayed(() -> {
-            if (token != renderToken) return;
-            View v;
             try {
-                v = top.build();
+                if (token != renderToken) return;
+                View v;
+                try {
+                    v = top.build();
+                } catch (Throwable t) {
+                    FinCrash.log(AtiranFinanceActivity.this, "screen-failed", top.getClass().getSimpleName()
+                            + ": " + t.getClass().getName());
+                    showScreenError(top, t);
+                    return;
+                }
+                contentHost.removeAllViews();
+                contentHost.addView(v, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                if (animate) {
+                    v.setAlpha(0f);
+                    v.setTranslationX(ui.dp(16));
+                    v.animate().alpha(1f).translationX(0f).setDuration(180).start();
+                }
+                renderDone = true;
+                try { top.load(false); } catch (Throwable t) { FinCrash.log(AtiranFinanceActivity.this, "screen-load", t.getClass().getName()); }
             } catch (Throwable t) {
-                FinCrash.log(AtiranFinanceActivity.this, "screen-failed", top.getClass().getSimpleName()
-                        + ": " + t.getClass().getName());
-                showScreenError(top, t);
-                return;
+                FinCrash.log(AtiranFinanceActivity.this, "screen-render", t.getClass().getName());
+                try { showScreenError(top, t); } catch (Throwable ignored) { }
             }
-            contentHost.removeAllViews();
-            contentHost.addView(v, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            if (animate) {
-                v.setAlpha(0f);
-                v.setTranslationX(ui.dp(16));
-                v.animate().alpha(1f).translationX(0f).setDuration(180).start();
-            }
-            renderDone = true;
-            try { top.load(false); } catch (Throwable t) { FinCrash.log(AtiranFinanceActivity.this, "screen-load", t.getClass().getName()); }
         }, 24L);
     }
 
@@ -1082,9 +1112,29 @@ public class AtiranFinanceActivity extends Activity {
         db.pool().execute(() -> {
             JSONObject health = db.health();
             main.post(() -> {
-                hasCache = health.optBoolean("ok", false);
-                renderHeader(hasCache ? ("متصل · " + FinFmt.faNumber(health.optInt("ms", 0)) + "ms") : "آفلاین — آخرین نسخه", false);
+                try {
+                    hasCache = health.optBoolean("ok", false);
+                    renderHeader(hasCache ? ("متصل · " + FinFmt.faNumber(health.optInt("ms", 0)) + "ms") : "آفلاین — آخرین نسخه", false);
+                } catch (Throwable t) {
+                    FinCrash.log(AtiranFinanceActivity.this, "probe-ui", t.getClass().getName());
+                    reportUiError(t);
+                }
             });
+        });
+    }
+
+    /**
+     * Central sink for an exception that happened while the interface was painting. It logs, shows the
+     * error card for the current screen and never rethrows — the operator always keeps a usable app.
+     */
+    public void reportUiError(final Throwable t) {
+        if (t == null) return;
+        FinCrash.log(this, "ui-error", t.getClass().getName() + ": " + t.getMessage());
+        main.post(() -> {
+            try {
+                if (current != null && contentHost != null) showScreenError(current, t);
+                else toast("خطای نمایش · کد رویداد " + FinCrash.eventCode(t));
+            } catch (Throwable ignored) { }
         });
     }
 

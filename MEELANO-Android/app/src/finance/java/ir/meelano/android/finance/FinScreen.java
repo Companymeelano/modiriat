@@ -54,10 +54,15 @@ public abstract class FinScreen {
 
     /** Rebuilds the whole screen (structure + data) in place — used by the retry action. */
     public final void rerun() {
-        box.removeAllViews();
-        ui.pad(box);
-        populate();
-        fetch();
+        try {
+            box.removeAllViews();
+            ui.pad(box);
+            populate();
+            fetch();
+        } catch (Throwable t) {
+            // A retry that fails again reports itself; it never closes the application.
+            host.reportUiError(t);
+        }
     }
 
     public final void load(boolean force) {

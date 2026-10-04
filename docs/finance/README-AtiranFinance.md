@@ -7,7 +7,7 @@
 | بسته (applicationId) | `ir.meelano.atiran.finance` |
 | flavor | `finance` (نسخه‌های visitor/store/staff/tax دست‌نخورده) |
 | Activity | `ir.meelano.android.finance.AtiranFinanceActivity` (تنها Launcher) |
-| نسخه | `versionCode 4`, `versionName 1.2.0` (صفحهٔ بررسی سلامت و بارگذاری + شروع خودتشخیص) |
+| نسخه | `versionCode 5`, `versionName 1.2.1` (صفحهٔ بررسی سلامت + رابط بدون بسته‌شدن ناگهانی) |
 | دیتابیس | همان SQL Server آتیران (jtds، بدون هیچ رمزی در سورس/APK/لاگ) |
 | نوشتن | فقط `dbo.meelano_fin_*` — جدول‌های اصلی فقط خوانده می‌شوند |
 
