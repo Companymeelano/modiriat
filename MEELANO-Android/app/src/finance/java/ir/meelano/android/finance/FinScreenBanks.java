@@ -6,6 +6,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «بانک‌ها» — every real bank account with its balance, movement totals, POS volume and cheque counts.
  *
@@ -33,11 +35,11 @@ public class FinScreenBanks extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 300_000L, c -> payload(c), this::render);
+        db.read(key(cacheKey()), 300_000L, c -> queryPayload(c), this::render);
     }
 
     /** Every account, its movement and its POS share — all from the database. The post-login preload calls this same method. */
-    public static JSONArray payload(Connection c) throws Exception {
+    public static JSONArray queryPayload(Connection c) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.home(c, today);
         payload.put("today", today);

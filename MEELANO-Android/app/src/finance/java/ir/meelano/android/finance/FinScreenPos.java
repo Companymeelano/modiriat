@@ -5,6 +5,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «مرکز POS» — card-reader transactions, their settlement per bank and per operator, and the
  * transactions that have no receipt behind them.
@@ -37,11 +39,11 @@ public class FinScreenPos extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 90_000L, c -> payload(c, host.periodFrom(), host.periodTo()), this::render);
+        db.read(key(cacheKey()), 90_000L, c -> queryPayload(c, host.periodFrom(), host.periodTo()), this::render);
     }
 
     /** POS transactions of the period, read from the database. The post-login preload calls this same method. */
-    public static JSONArray payload(Connection c, String from, String to) throws Exception {
+    public static JSONArray queryPayload(Connection c, String from, String to) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.posSummary(c, from, to);
         payload.put("today", today);

@@ -9,6 +9,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «بیشتر» — the module directory, the theme switcher, the activity log and the about box.
  *
@@ -36,11 +38,11 @@ public class FinScreenMore extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 120_000L, c -> payload(c), this::render);
+        db.read(key(cacheKey()), 120_000L, c -> queryPayload(c), this::render);
     }
 
     /** The audit trail of what this app wrote, read from the database. The post-login preload calls this same method. */
-    public static JSONArray payload(Connection c) throws Exception {
+    public static JSONArray queryPayload(Connection c) throws Exception {
         JSONObject payload = new JSONObject();
         payload.put("today", FinQueries.serverToday(c));
         payload.put("activity", FinQueries.activity(c, 30));

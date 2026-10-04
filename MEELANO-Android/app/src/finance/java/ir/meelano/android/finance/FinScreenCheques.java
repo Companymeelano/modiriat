@@ -7,6 +7,8 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «مرکز چک» — received and issued cheques with the real Atiran status names.
  *
@@ -81,14 +83,14 @@ public class FinScreenCheques extends FinScreen {
         final String m = mode;
         final boolean issued = issuedView;
         db.read(key(cacheKey() + (issued ? ":out" : ":in")), 120_000L,
-                c -> payload(c, host.periodFrom(), host.periodTo(), m, issued), env -> render(env, issued));
+                c -> queryPayload(c, host.periodFrom(), host.periodTo(), m, issued), env -> render(env, issued));
     }
 
     /**
      * The cheque centre payload (received or issued view), read from the database. The post-login
      * preload calls this same method.
      */
-    public static JSONArray payload(Connection c, String from, String to, String mode, boolean issued) throws Exception {
+    public static JSONArray queryPayload(Connection c, String from, String to, String mode, boolean issued) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = new JSONObject();
         payload.put("today", today);

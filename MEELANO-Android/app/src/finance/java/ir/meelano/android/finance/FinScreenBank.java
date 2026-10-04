@@ -5,6 +5,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «جزئیات حساب بانکی» — movements of one account with the real ban_act kinds, plus the movement
  * outside the app that a reconciliation case can be opened for.
@@ -39,11 +41,11 @@ public class FinScreenBank extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 120_000L, c -> payload(c, bankRdf, host.periodFrom(), host.periodTo()), this::render);
+        db.read(key(cacheKey()), 120_000L, c -> queryPayload(c, bankRdf, host.periodFrom(), host.periodTo()), this::render);
     }
 
     /** One account: its movement, unlinked rows and open cases — read from the database. */
-    public static JSONArray payload(Connection c, int bankRdf, String from, String to) throws Exception {
+    public static JSONArray queryPayload(Connection c, int bankRdf, String from, String to) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = new JSONObject();
         payload.put("today", today);

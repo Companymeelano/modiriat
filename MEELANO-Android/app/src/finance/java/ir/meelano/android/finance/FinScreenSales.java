@@ -8,6 +8,8 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,11 +54,11 @@ public class FinScreenSales extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 90_000L, c -> payload(c, host.periodFrom(), host.periodTo()), this::render);
+        db.read(key(cacheKey()), 90_000L, c -> queryPayload(c, host.periodFrom(), host.periodTo()), this::render);
     }
 
     /** Sales versus collection for the period, read from the database. The post-login preload calls this same method. */
-    public static JSONArray payload(Connection c, String from, String to) throws Exception {
+    public static JSONArray queryPayload(Connection c, String from, String to) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.salesVsCollection(c, from, to);
         payload.put("today", today);

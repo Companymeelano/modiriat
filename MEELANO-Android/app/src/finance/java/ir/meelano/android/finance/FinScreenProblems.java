@@ -5,6 +5,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «مرکز کارهای باز» — the three real sources of open work, each with its own query:
  * receipts whose components do not add up, POS transactions without a receipt, and bank movements
@@ -29,11 +31,11 @@ public class FinScreenProblems extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 60_000L, c -> payload(c, host.periodFrom(), host.periodTo()), this::render);
+        db.read(key(cacheKey()), 60_000L, c -> queryPayload(c, host.periodFrom(), host.periodTo()), this::render);
     }
 
     /** Open reconciliation work of the period, read from the database. The post-login preload calls this same method. */
-    public static JSONArray payload(Connection c, String from, String to) throws Exception {
+    public static JSONArray queryPayload(Connection c, String from, String to) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = new JSONObject();
         payload.put("today", today);

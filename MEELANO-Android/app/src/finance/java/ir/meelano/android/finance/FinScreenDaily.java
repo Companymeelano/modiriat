@@ -7,6 +7,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 import java.sql.PreparedStatement;
 
 /**
@@ -36,11 +38,11 @@ public class FinScreenDaily extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 60_000L, c -> payload(c), this::render);
+        db.read(key(cacheKey()), 60_000L, c -> queryPayload(c), this::render);
     }
 
     /** The day report with its close history, read from the database. The post-login preload calls this same method. */
-    public static JSONArray payload(Connection c) throws Exception {
+    public static JSONArray queryPayload(Connection c) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.dailyReport(c, today);
         payload.put("today", today);

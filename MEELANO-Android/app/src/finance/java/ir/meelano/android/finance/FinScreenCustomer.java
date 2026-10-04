@@ -5,6 +5,8 @@ import android.widget.LinearLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 /**
  * «پرونده مشتری» — account file with balance, statement, open invoices, cheques and follow-ups.
  *
@@ -35,11 +37,11 @@ public class FinScreenCustomer extends FinScreen {
     }
 
     @Override protected void fetch() {
-        db.read(key(cacheKey()), 90_000L, c -> payload(c, shmo), this::render);
+        db.read(key(cacheKey()), 90_000L, c -> queryPayload(c, shmo), this::render);
     }
 
     /** One customer file: balance, statement, open invoices and cheques — read from the database. */
-    public static JSONArray payload(Connection c, int shmo) throws Exception {
+    public static JSONArray queryPayload(Connection c, int shmo) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.customerSummary(c, shmo, today);
         payload.put("today", today);

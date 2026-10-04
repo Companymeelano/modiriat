@@ -8,6 +8,8 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.sql.Connection;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,14 +55,14 @@ public class FinScreenHome extends FinScreen {
 
     @Override protected void fetch() {
         final String base = "home:" + host.today();
-        db.read(key(base), 60_000L, c -> payload(c), env -> render(env));
+        db.read(key(base), 60_000L, c -> queryPayload(c), env -> render(env));
     }
 
     /**
      * The complete home payload, read from the database. The post-login preload calls this same
      * method, so a screen can never show something different from what the prefetch read.
      */
-    public static JSONArray payload(Connection c) throws Exception {
+    public static JSONArray queryPayload(Connection c) throws Exception {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.home(c, today);
         payload.put("alerts", FinQueries.alerts(c, today));

@@ -8,7 +8,7 @@ import java.sql.Connection;
  * The post-login preload: right after the sign-in succeeds, every finance screen's data is read
  * <b>from the database</b> in one background pass and kept in the memory cache.
  *
- * <p>Each screen exposes the very same {@code payload(Connection …)} method its own refresh uses, so
+ * <p>Each screen exposes the very same {@code queryPayload(Connection …)} method its own refresh uses, so
  * what the preload stores and what the screen would have read are identical by construction — a
  * screen can never show something that was not fetched from the database. The pass runs one query
  * after another with a short pause, so a low-memory phone never sees the whole load at once, and it
@@ -35,28 +35,28 @@ public final class FinPrefetch {
             // Let the desk and its home screen paint first; if it already read the home payload, the
             // freshness check below simply skips it.
             if (!pause(900L)) return;
-            warm(db, "home:" + today, 55_000L, () -> FinScreenHome.payload(c), step, "خانه");
+            warm(db, "home:" + today, 55_000L, () -> FinScreenHome.queryPayload(c), step, "خانه");
             if (!pause()) return;
-            warm(db, "banks", 290_000L, () -> FinScreenBanks.payload(c), step, "بانک‌ها");
+            warm(db, "banks", 290_000L, () -> FinScreenBanks.queryPayload(c), step, "بانک‌ها");
             if (!pause()) return;
             warm(db, "checks:" + FinQueries.MODE_ALL + ":" + f + ":in", 110_000L,
-                    () -> FinScreenCheques.payload(c, f, t, FinQueries.MODE_ALL, false), step, "چک‌های دریافتی");
+                    () -> FinScreenCheques.queryPayload(c, f, t, FinQueries.MODE_ALL, false), step, "چک‌های دریافتی");
             if (!pause()) return;
-            warm(db, "recv:" + today, 110_000L, () -> FinScreenReceivables.payload(c), step, "مطالبات");
+            warm(db, "recv:" + today, 110_000L, () -> FinScreenReceivables.queryPayload(c), step, "مطالبات");
             if (!pause()) return;
-            warm(db, "problems:" + f + ":" + t, 55_000L, () -> FinScreenProblems.payload(c, f, t), step, "کارهای باز");
+            warm(db, "problems:" + f + ":" + t, 55_000L, () -> FinScreenProblems.queryPayload(c, f, t), step, "کارهای باز");
             if (!pause()) return;
-            warm(db, "cash:" + f + ":" + t, 85_000L, () -> FinScreenCash.payload(c, f, t), step, "صندوق");
+            warm(db, "cash:" + f + ":" + t, 85_000L, () -> FinScreenCash.queryPayload(c, f, t), step, "صندوق");
             if (!pause()) return;
-            warm(db, "pos:" + f + ":" + t, 85_000L, () -> FinScreenPos.payload(c, f, t), step, "POS");
+            warm(db, "pos:" + f + ":" + t, 85_000L, () -> FinScreenPos.queryPayload(c, f, t), step, "POS");
             if (!pause()) return;
-            warm(db, "sales:" + f + ":" + t, 85_000L, () -> FinScreenSales.payload(c, f, t), step, "فروش و وصول");
+            warm(db, "sales:" + f + ":" + t, 85_000L, () -> FinScreenSales.queryPayload(c, f, t), step, "فروش و وصول");
             if (!pause()) return;
-            warm(db, "daily:" + today, 55_000L, () -> FinScreenDaily.payload(c), step, "گزارش روز");
+            warm(db, "daily:" + today, 55_000L, () -> FinScreenDaily.queryPayload(c), step, "گزارش روز");
             if (!pause()) return;
-            warm(db, "recon:" + f + ":" + t, 55_000L, () -> FinScreenRecon.payload(c, f, t), step, "مغایرت بانکی");
+            warm(db, "recon:" + f + ":" + t, 55_000L, () -> FinScreenRecon.queryPayload(c, f, t), step, "مغایرت بانکی");
             if (!pause()) return;
-            warm(db, "more:" + today, 110_000L, () -> FinScreenMore.payload(c), step, "بیشتر و رخدادها");
+            warm(db, "more:" + today, 110_000L, () -> FinScreenMore.queryPayload(c), step, "بیشتر و رخدادها");
         } catch (Throwable e) {
             // The preload is an optimisation: if the connection itself fails, the screens still read
             // on their own and show their own error card.
