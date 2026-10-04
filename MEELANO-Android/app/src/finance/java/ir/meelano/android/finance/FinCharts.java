@@ -89,6 +89,78 @@ public final class FinCharts {
             this.regular = font != null ? Typeface.create(font, Typeface.NORMAL) : Typeface.DEFAULT;
             text.setTypeface(regular);
             paint.setStrokeCap(Paint.Cap.ROUND);
+            if (softwareRendering(c)) setLayerType(LAYER_TYPE_SOFTWARE, null);
+        }
+
+        private boolean failureReported = false;
+        static final String PREF_SOFTWARE = "fin_chart_software";
+        static final int WARN_COLOR = 0xFFE08A1E;
+
+        /**
+         * Charts are drawn through this single entry point, so a drawing error can never reach the
+         * framework: an exception inside onDraw would otherwise travel up the main thread and close
+         * the application with no message at all — the one failure this screen set must never have
+         * again. A chart that cannot be painted reports itself and stays a quiet notice instead.
+         */
+        @Override protected final void onDraw(Canvas canvas) {
+            try {
+                paint(canvas);
+            } catch (Throwable t) {
+                drawFailure(canvas, t);
+            }
+        }
+
+        /** The real drawing routine of a chart. */
+        protected abstract void paint(Canvas canvas);
+
+        private void drawFailure(Canvas canvas, Throwable t) {
+            try {
+                if (!failureReported) {
+                    failureReported = true;
+                    noteFailure(getContext(), t);
+                }
+                float w = getWidth(), h = getHeight();
+                if (w <= 0 || h <= 0) return;
+                text.setTypeface(regular);
+                text.setTextSize(dp(10.5f));
+                text.setTextAlign(Paint.Align.CENTER);
+                text.setColor(WARN_COLOR);
+                canvas.drawText("نمایش این نمودار ممکن نشد · کد رویداد " + FinCrash.eventCode(t), w / 2f, h / 2f, text);
+            } catch (Throwable ignored) {
+                // A chart must never throw while reporting that it could not draw.
+            }
+        }
+
+        /** Report + remember: the first drawing failure switches the whole app to software rendering. */
+        static void noteFailure(Context c, Throwable t) {
+            try {
+                if (c == null) return;
+                Context app = c.getApplicationContext();
+                if (app == null) return;
+                FinCrash.log(app, "chart-draw-failed", t.getClass().getName() + ": " + t.getMessage());
+                app.getSharedPreferences("atiran_finance", Context.MODE_PRIVATE).edit()
+                        .putBoolean(PREF_SOFTWARE, true).apply();
+            } catch (Throwable ignored) { }
+        }
+
+        /** Compatibility mode, switched on automatically by the first drawing failure. */
+        static boolean softwareRendering(Context c) {
+            try {
+                return c != null && c.getSharedPreferences("atiran_finance", Context.MODE_PRIVATE)
+                        .getBoolean(PREF_SOFTWARE, false);
+            } catch (Throwable t) {
+                return false;
+            }
+        }
+
+        /** True when at least one chart could not be painted in this installation. */
+        public static boolean anyFailure(Context c) {
+            try {
+                String log = FinCrash.bootLog(c);
+                return log != null && log.contains("chart-draw-failed");
+            } catch (Throwable t) {
+                return false;
+            }
         }
 
         Base formatter(Formatter f) { if (f != null) formatter = f; return this; }
@@ -171,6 +243,7 @@ public final class FinCharts {
 
         public Logo(Context c, int gold, int silver, int surface, int deep) {
             super(c);
+            if (Base.softwareRendering(c)) setLayerType(LAYER_TYPE_SOFTWARE, null);
             this.gold = gold;
             this.silver = silver;
             this.surface = surface;
@@ -195,6 +268,24 @@ public final class FinCharts {
         }
 
         @Override protected void onDraw(Canvas canvas) {
+            try {
+                paint(canvas);
+            } catch (Throwable error) {
+                Base.noteFailure(getContext(), error);
+                try {
+                    float w = getWidth(), h = getHeight();
+                    if (w > 0 && h > 0) {
+                        float s = Math.min(w, h);
+                        p.setShader(null);
+                        p.setStyle(Paint.Style.FILL);
+                        p.setColor(alpha(gold, 40));
+                        canvas.drawRoundRect(new RectF(0, 0, w, h), s * 0.28f, s * 0.28f, p);
+                    }
+                } catch (Throwable ignored) { }
+            }
+        }
+
+        private void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0) return;
             float t = anim == null ? 1f : (float) anim.getAnimatedValue();
@@ -267,7 +358,7 @@ public final class FinCharts {
             this.selected = -1;
             StringBuilder cd = new StringBuilder();
             for (int i = 0; i < this.labels.length; i++) {
-                cd.append(this.labels[i]);
+                cd.append(this.labels[i] == null ? "" : this.labels[i]);
                 for (int sIdx = 0; sIdx < this.series.length; sIdx++) {
                     double[] row = this.series[sIdx];
                     if (row != null && i < row.length) cd.append(' ').append(formatter.format(row[i]));
@@ -292,7 +383,7 @@ public final class FinCharts {
             return super.onTouchEvent(e);
         }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override protected void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0) return;
             int n = labels.length;
@@ -392,11 +483,11 @@ public final class FinCharts {
             text.setTextAlign(Paint.Align.CENTER);
             text.setTypeface(regular);
             float lw = 0;
-            for (String label : labels) lw = Math.max(lw, text.measureText(label));
+            for (String label : labels) lw = Math.max(lw, text.measureText(label == null ? "" : label));
             int fit = Math.max(2, (int) ((right - left) / (lw + dp(12))) + 1);
             int every = Math.max(1, (int) Math.ceil((n - 1) / (double) Math.max(1, fit - 1)));
             for (int i = 0; i < n; i += every) {
-                String label = labels[i];
+                String label = labels[i] == null ? "" : labels[i];
                 float half = text.measureText(label) / 2f;
                 float x = Math.max(half + dp(2), Math.min(w - half - dp(2), n > 1 ? right - step * i : (left + right) / 2f));
                 canvas.drawText(label, x, h - dp(4), text);
@@ -419,7 +510,7 @@ public final class FinCharts {
                 canvas.drawCircle(sx, y, dp(1.5f) * sc, paint);
             }
 
-            StringBuilder tip = new StringBuilder(labels[sel]);
+            StringBuilder tip = new StringBuilder(labels[sel] == null ? "" : labels[sel]);
             for (int sIdx = 0; sIdx < series.length; sIdx++) {
                 double[] row = series[sIdx];
                 if (row == null || sel >= row.length) continue;
@@ -467,7 +558,7 @@ public final class FinCharts {
             this.selected = -1;
             StringBuilder cd = new StringBuilder();
             for (int i = 0; i < this.labels.length; i++) {
-                cd.append(this.labels[i]);
+                cd.append(this.labels[i] == null ? "" : this.labels[i]);
                 for (double[] row : this.series) if (row != null && i < row.length) cd.append(' ').append(formatter.format(row[i]));
                 cd.append("، ");
             }
@@ -489,7 +580,7 @@ public final class FinCharts {
             return super.onTouchEvent(e);
         }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override protected void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0) return;
             int n = labels.length;
@@ -567,16 +658,16 @@ public final class FinCharts {
             text.setColor(muted);
             text.setTextAlign(Paint.Align.CENTER);
             float lw = 0;
-            for (String label : labels) lw = Math.max(lw, text.measureText(label));
+            for (String label : labels) lw = Math.max(lw, text.measureText(label == null ? "" : label));
             int fit = Math.max(2, (int) ((right - left) / (lw + dp(10))) + 1);
             int every = Math.max(1, (int) Math.ceil((n - 1) / (double) Math.max(1, fit - 1)));
             for (int i = 0; i < n; i += every) {
                 float centre = right - slot * (i + 0.5f);
-                canvas.drawText(labels[i], centre, h - dp(3), text);
+                canvas.drawText(labels[i] == null ? "" : labels[i], centre, h - dp(3), text);
             }
 
             int sel = selected >= 0 ? selected : indexOfMax(series[0]);
-            StringBuilder tip = new StringBuilder(labels[sel]);
+            StringBuilder tip = new StringBuilder(labels[sel] == null ? "" : labels[sel]);
             for (int sIdx = 0; sIdx < series.length; sIdx++) {
                 double[] row = series[sIdx];
                 if (row == null || sel >= row.length) continue;
@@ -621,7 +712,8 @@ public final class FinCharts {
             this.notes = notes == null ? new String[0] : notes;
             StringBuilder cd = new StringBuilder();
             for (int i = 0; i < this.labels.length; i++) {
-                cd.append(this.labels[i]).append(' ').append(formatter.format(i < this.values.length ? this.values[i] : 0)).append("، ");
+                cd.append(this.labels[i] == null ? "" : this.labels[i]).append(' ')
+                        .append(formatter.format(i < this.values.length ? this.values[i] : 0)).append("، ");
             }
             announce(cd.toString());
             animateIn();
@@ -631,7 +723,7 @@ public final class FinCharts {
         /** Height that fits {@code rows} rows at the standard row height. */
         public static int heightFor(int rows, float density) { return (int) ((Math.max(1, rows) * 40 + 8) * density); }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override protected void paint(Canvas canvas) {
             float w = getWidth();
             if (w <= 0) return;
             if (labels.length == 0) { drawEmpty(canvas); return; }
@@ -656,7 +748,7 @@ public final class FinCharts {
                 text.setTextSize(dp(11f) * sc);
                 text.setColor(textColor);
                 text.setTextAlign(Paint.Align.RIGHT);
-                canvas.drawText(fit(labels[i], w - dp(6)), w - dp(2), y + rowH * 0.42f, text);
+                canvas.drawText(fit(labels[i] == null ? "—" : labels[i], w - dp(6)), w - dp(2), y + rowH * 0.42f, text);
 
                 text.setTextSize(dp(9.5f) * sc);
                 text.setTypeface(regular);
@@ -706,7 +798,8 @@ public final class FinCharts {
             this.centerTitle = centerTitle == null ? "" : centerTitle;
             StringBuilder cd = new StringBuilder(this.centerTitle).append(": ");
             for (int i = 0; i < this.labels.length; i++) {
-                cd.append(this.labels[i]).append(' ').append(centerFormatter.format(i < this.values.length ? this.values[i] : 0)).append("، ");
+                cd.append(this.labels[i] == null ? "" : this.labels[i]).append(' ')
+                        .append(centerFormatter.format(i < this.values.length ? this.values[i] : 0)).append("، ");
             }
             announce(cd.toString());
             animateIn();
@@ -715,7 +808,7 @@ public final class FinCharts {
 
         public Donut centerFormatter(Formatter f) { if (f != null) centerFormatter = f; return this; }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override protected void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0) return;
             if (labels.length == 0 || values.length == 0) { drawEmpty(canvas); return; }
@@ -785,7 +878,7 @@ public final class FinCharts {
 
         public Ring note(String n) { this.note = n == null ? "" : n; return this; }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override protected void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0) return;
             float size = Math.min(w, h);
@@ -846,7 +939,7 @@ public final class FinCharts {
             return this;
         }
 
-        @Override protected void onDraw(Canvas canvas) {
+        @Override protected void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0 || values.length < 2) return;
             double max = 0, min = Double.MAX_VALUE;
@@ -928,6 +1021,23 @@ public final class FinCharts {
         public float value() { return value; }
 
         @Override protected void onDraw(Canvas canvas) {
+            try {
+                paint(canvas);
+            } catch (Throwable t) {
+                Base.noteFailure(getContext(), t);
+                try {
+                    float w = getWidth(), h = getHeight();
+                    if (w > 0 && h > 0) {
+                        p.setShader(null);
+                        p.setStyle(Paint.Style.FILL);
+                        p.setColor(track);
+                        canvas.drawRoundRect(new RectF(0, 0, w, h), h / 2f, h / 2f, p);
+                    }
+                } catch (Throwable ignored) { }
+            }
+        }
+
+        private void paint(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             if (w <= 0 || h <= 0) return;
             float r = h / 2f;

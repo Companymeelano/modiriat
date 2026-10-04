@@ -100,6 +100,8 @@ public class AtiranFinanceActivity extends Activity {
     private boolean watchdogOn = true;
     private int renderToken;
     private boolean renderDone;
+    /** True once the operator desk has been displayed and painted in this run. */
+    private boolean deskShown;
 
     // ---- the rich sign-in screen (kept as fields so the shared login flow can drive it)
     private TextView loginState;
@@ -121,6 +123,7 @@ public class AtiranFinanceActivity extends Activity {
         setContentView(bootView);
         String crash = FinCrash.lastCrash(this);
         if (crash != null && !crash.trim().isEmpty()) boot.showCrash(crash);
+        FinCrash.step(this, "session-start " + safeVersion());
         boot.note("نسخهٔ برنامه " + safeVersion() + " · " + FinSession.deviceLabel());
         main.postDelayed(this::watchStartup, 2_000L);
         main.postDelayed(this::runStep1, 40L);
@@ -226,6 +229,7 @@ public class AtiranFinanceActivity extends Activity {
         }
         endStep("ساخت میزکار", null);
         watchdogOn = false;
+        deskShown = true;
         if (bootView != null) bootView.postDelayed(() -> { if (boot != null) boot.ok("آماده است"); }, 600L);
     }
 
@@ -1194,6 +1198,16 @@ public class AtiranFinanceActivity extends Activity {
 
     private String key(String base) {
         return base + ":" + (periodFrom == null ? "" : periodFrom);
+    }
+
+    @Override protected void onDestroy() {
+        try {
+            // A report of an older crash is only cleared once the desk has really been shown and the
+            // application is closing normally: until then it stays available for support.
+            if (deskShown) FinCrash.clearCrash(this);
+        } catch (Throwable ignored) { }
+        FinCrash.step(this, "session-end");
+        super.onDestroy();
     }
 
     @Override protected void onResume() {

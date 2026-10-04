@@ -158,6 +158,26 @@ public class FinScreenMore extends FinScreen {
         card.addView(entry("▤", "گزارش راه‌اندازی و خطاها",
                 "مرحله‌های شروع برنامه و آخرین خطای ثبت‌شده", "",
                 v -> host.showSupportLog()), ui.lp(-1, -2));
+
+        final boolean software = FinCharts.Base.softwareRendering(host);
+        card.addView(entry("◫", software ? "نمودارها: حالت سازگاری فعال" : "نمودارها: شتاب سخت‌افزاری",
+                software ? "برای این گوشی نمودارها نرم‌افزاری رسم می‌شوند (پایدارتر)" : "برای مشکل‌های نمایشی، حالت سازگاری را روشن کنید",
+                "", v -> {
+                    try {
+                        // getSharedPreferences lives on Context; the activity is one, so call it as such.
+                        android.content.Context ctx = host;
+                        ctx.getSharedPreferences("atiran_finance", android.content.Context.MODE_PRIVATE)
+                                .edit().putBoolean(FinCharts.Base.PREF_SOFTWARE, !software).apply();
+                        host.toast(software ? "حالت سازگاری خاموش شد." : "حالت سازگاری نمودارها روشن شد.");
+                        host.reload();
+                    } catch (Throwable t) {
+                        host.toast("تغییر حالت ممکن نشد · کد رویداد " + FinCrash.eventCode(t));
+                    }
+                }), ui.lp(-1, -2));
+        if (FinCharts.Base.anyFailure(host)) {
+            card.addView(ui.text("⚠  در این نصب حداقل یک نمودار رسم نشده است؛ گزارش «راه‌اندازی و خطاها» جزئیات را دارد.",
+                    11f, FinUi.WARNING, false), ui.lp(-1, -2));
+        }
         body.addView(card, top(12));
     }
 

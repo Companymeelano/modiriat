@@ -190,9 +190,10 @@ public class FinScreenSales extends FinScreen {
         int[] colors = new int[n];
         for (int x = 0; x < n; x++) {
             String[] r = active.get(x);
-            labels[x] = r[0];
-            values[x] = Double.parseDouble(r[2]);
-            notes[x] = r[1] + " فاکتور · وصول " + FinFmt.compact(Double.parseDouble(r[3])) + " ریال";
+            labels[x] = r[0] == null ? "—" : r[0];
+            values[x] = FinFmt.parseNumber(r.length > 2 ? r[2] : null);
+            notes[x] = (r.length > 1 && r[1] != null ? r[1] : "—") + " فاکتور · وصول "
+                    + FinFmt.compact(FinFmt.parseNumber(r.length > 3 ? r[3] : null)) + " ریال";
             colors[x] = palette[x % palette.length];
         }
         FinCharts.Bars bars = ui.barsChart(FinUi.FormatterKind.MONEY);
@@ -202,8 +203,8 @@ public class FinScreenSales extends FinScreen {
         card5.addView(ui.tableHeader(new String[]{"اپراتور", "فاکتور", "فروش", "وصول"}), top(10));
         for (int x = 0; x < active.size() && x < 12; x++) {
             String[] r = active.get(x);
-            double sales = Double.parseDouble(r[2]);
-            double receipts = Double.parseDouble(r[3]);
+            double sales = FinFmt.parseNumber(r.length > 2 ? r[2] : null);
+            double receipts = FinFmt.parseNumber(r.length > 3 ? r[3] : null);
             // The row is tinted by how much of that operator's sale has actually been collected.
             int accent = sales <= 0 ? ui.textDim : (receipts >= sales ? FinUi.SUCCESS : FinUi.WARNING);
             card5.addView(ui.tableRow(new String[]{r[0], r[1], compact(sales), compact(receipts), FinFmt.percent(receipts, sales)},

@@ -712,7 +712,7 @@ public final class FinQueries {
         params.add(to);
         if (bank) {
             sql.append("AND pd.PosBankRdf=? ");
-            params.add(Integer.parseInt(bankFilter));
+            params.add((int) Math.round(FinFmt.parseNumber(bankFilter)));
         }
         if (searching) {
             sql.append("AND (pd.ShPeigiri LIKE ? OR v.vis_name LIKE ? OR ISNULL(pd.PosDesc,'') LIKE ? OR ISNULL(b.BANKNAME,'') LIKE ?) ");

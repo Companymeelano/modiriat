@@ -117,6 +117,18 @@ public final class FinCrash {
         } catch (Throwable ignored) { }
     }
 
+    /**
+     * True when the previous run started and never reached its end marker — a crash the Java layer
+     * could not record (a native graphics failure, for instance) or a process killed for memory.
+     */
+    public static boolean lastRunUnclean(Context ctx) {
+        String log = bootLog(ctx);
+        if (log == null || log.trim().isEmpty()) return false;
+        int start = log.lastIndexOf("session-start");
+        if (start < 0) return false;
+        return log.indexOf("session-end", start) < 0;
+    }
+
     public static boolean hasCrash(Context ctx) {
         String s = read(ctx, CRASH_FILE);
         return s != null && !s.trim().isEmpty();

@@ -101,6 +101,50 @@ public final class FinFmt {
         return b.toString();
     }
 
+    /**
+     * Safe number parsing for values that come from the server or from a form: null, empty text,
+     * Persian digits, thousands separators and stray spaces never throw — they return the fallback.
+     * A parsing error used to be able to travel up the main thread while a screen was being built,
+     * which is exactly the kind of failure that closes the application without a message.
+     */
+    public static double parseNumber(Object value, double fallback) {
+        if (value == null) return fallback;
+        if (value instanceof Number) {
+            double d = ((Number) value).doubleValue();
+            return Double.isFinite(d) ? d : fallback;
+        }
+        String text = toLatinDigits(String.valueOf(value).trim());
+        if (text.isEmpty()) return fallback;
+        StringBuilder clean = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch >= '0' && ch <= '9') clean.append(ch);
+            else if (ch == '.' || ch == '-' || ch == '+') clean.append(ch);
+            else if (ch == ',' || ch == ' ' || ch == '\u066c' || ch == '\u060c' || ch == '\u200f' || ch == '\u200e') continue;
+            else return fallback;
+        }
+        try {
+            double d = Double.parseDouble(clean.toString());
+            return Double.isFinite(d) ? d : fallback;
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    public static double parseNumber(Object value) { return parseNumber(value, 0d); }
+
+    /** Latin digits for parsing; Persian/Arabic-Indic digits are converted. */
+    public static String toLatinDigits(String v) {
+        if (v == null) return "";
+        StringBuilder b = new StringBuilder(v.length());
+        for (char ch : v.toCharArray()) {
+            if (ch >= '\u06f0' && ch <= '\u06f9') b.append((char) ('0' + (ch - '\u06f0')));
+            else if (ch >= '\u0660' && ch <= '\u0669') b.append((char) ('0' + (ch - '\u0660')));
+            else b.append(ch);
+        }
+        return b.toString();
+    }
+
     /** Period presets used by every report filter. */
     public static final String[] PERIOD_KEYS = {"today", "yesterday", "7d", "30d", "month", "lastmonth", "custom"};
     public static final String[] PERIOD_LABELS = {"امروز", "دیروز", "۷ روز", "۳۰ روز", "این ماه", "ماه گذشته", "بازه دلخواه"};

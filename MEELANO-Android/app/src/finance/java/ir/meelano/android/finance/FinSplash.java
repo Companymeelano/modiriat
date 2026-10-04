@@ -101,6 +101,8 @@ final class FinSplash {
         card.addView(ui.sectionTitle("بررسی گام‌به‌گام", "هر خط، یک بررسی واقعی روی گوشی و سرور", "⚕"), ui.lp(-1, -2));
 
         crashCard = previousCrashCard();
+        boolean unclean = crashCard == null && FinCrash.lastRunUnclean(a);
+        if (crashCard == null && unclean) crashCard = uncleanCard();
         if (crashCard != null) {
             LinearLayout.LayoutParams crp = ui.lp(-1, -2);
             crp.topMargin = ui.dp(12);
@@ -251,6 +253,19 @@ final class FinSplash {
         card.addView(row, rp);
         card.addView(ui.text("همین متن را برای پشتیبانی بفرستید؛ با آن دقیقاً می‌دانیم کدام مرحله خطا داده است.",
                 10.5f, ui.textFaint, false), ui.lp(-1, -2));
+        return card;
+    }
+
+    /**
+     * The previous run began and never ended: no Java exception was recorded, so the process was most
+     * likely terminated by the system (graphics driver or memory). The card says exactly that, and
+     * since the charts have already been switched to software rendering, it also invites a retry.
+     */
+    private LinearLayout uncleanCard() {
+        LinearLayout card = ui.cardTone(FinUi.WARNING);
+        card.addView(ui.text("⚠  اجرای قبلی بدون خطای ثبت‌شده بسته شد", 13f, ui.textColor, true), ui.lp(-1, -2));
+        card.addView(ui.text("خطای جاوا ثبت نشد؛ یعنی برنامه توسط سیستم بسته شده است (کرش گرافیکی یا فشار حافظه)."
+                + " نمودارها از این پس در «حالت سازگاری» رسم می‌شوند.", 11f, ui.textDim, false), ui.lp(-1, -2));
         return card;
     }
 

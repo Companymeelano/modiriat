@@ -341,6 +341,10 @@ public final class FinDb {
         try {
             SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
             String json = value.toString();
+            // Very large payloads are kept in memory only: writing them would cost tens of megabytes
+            // of heap on a small phone for very little benefit, and heap pressure is what kills an
+            // application without a message.
+            if (json.length() > 1_200_000) return;
             byte[] packed = gzip(json);
             p.edit().putString(key, android.util.Base64.encodeToString(packed, android.util.Base64.NO_WRAP)).apply();
         } catch (Exception ignored) { }

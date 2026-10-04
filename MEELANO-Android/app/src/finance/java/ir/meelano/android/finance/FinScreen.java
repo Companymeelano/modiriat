@@ -288,7 +288,8 @@ public abstract class FinScreen {
 
     protected static String trimTo(String v, int max) {
         if (v == null) return "";
-        return v.length() <= max ? v : v.substring(0, max - 1) + "…";
+        if (max <= 0) return "";
+        return v.length() <= max ? v : v.substring(0, Math.max(0, max - 1)) + "…";
     }
 
     protected static int statusOfName(String status) { return FinUi.statusColor(status); }
