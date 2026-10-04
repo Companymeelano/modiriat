@@ -40,9 +40,10 @@ public class FinChartsTest {
         assertEquals("1.2 میلیارد", FinFmt.compact(1_200_000_000.0));
         // Amounts keep Latin digits on purpose (they are copied into Excel/PDF), counts do not.
         assertEquals("500 هزار", FinFmt.compact(500_000.0));
-        assertEquals("۸۵۰", FinFmt.compact(850.0));
+        assertEquals("850", FinFmt.compact(850.0));
         assertEquals("۱۲۳", FinFmt.faNumber("123"));
-        assertEquals("۱٬۲۴۰", FinCharts.COUNT.format(1240));
+        // Counts use Persian digits; the group separator stays the ASCII comma that faNumber leaves alone.
+        assertEquals("۱,۲۴۰", FinCharts.COUNT.format(1240));
     }
 
     @Test public void periodPresetsAlwaysEndOnServerToday() {

@@ -55,7 +55,9 @@ jobs:
         if: success()
         continue-on-error: true
         working-directory: MEELANO-Android
-        run: gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testFinanceDebugUnitTest 2>&1 | tail -40
+        run: |
+          set -o pipefail
+          gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testFinanceDebugUnitTest 2>&1 | tail -40
 
       - name: Publish build diagnostics to the branch
         if: failure() && github.event_name == 'push'
