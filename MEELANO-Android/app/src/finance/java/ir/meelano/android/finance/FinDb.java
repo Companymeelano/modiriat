@@ -70,20 +70,63 @@ public final class FinDb {
 
     // ------------------------------------------------------------------ connection
 
-    /** Opens a connection with a short login timeout; the caller must close it. */
+    /** Set once a JDBC connection has succeeded in this process, so the probe stays off the hot path. */
+    private static volatile boolean transportSeen = false;
+    /** Maximum wait of the TCP pre-flight; a phone that cannot reach the server must fail fast. */
+    private static final int PROBE_MS = 8_000;
+
+    /**
+     * Fast TCP reachability probe in front of the JDBC driver.
+     *
+     * A mobile network can black-hole packets, and the driver would then sit on its own timeouts for
+     * a long time — which is exactly how a sign-in ends up looking like a frozen screen. Eight seconds
+     * with an explicit socket timeout turns that into a prompt, understandable failure instead.
+     */
+    public static void preflight() throws SQLException {
+        if (transportSeen) return;
+        long started = System.currentTimeMillis();
+        java.net.Socket s = new java.net.Socket();
+        try {
+            s.connect(new java.net.InetSocketAddress(FinEnv.host(), FinEnv.PORT), PROBE_MS);
+        } catch (Exception e) {
+            throw new SQLException("سرور پاسخ نداد (" + (System.currentTimeMillis() - started) + "ms · "
+                    + e.getClass().getSimpleName() + ")", e);
+        } finally {
+            try { s.close(); } catch (Exception ignored) { }
+        }
+    }
+
+    /** Opens a connection with a short login timeout (after the reachability probe). */
     public Connection open() throws SQLException {
+        preflight();
+        return openDirect();
+    }
+
+    /**
+     * The raw JDBC connection, without the probe — used by the diagnostics so the "port is open" and
+     * "SQL Server accepted the application login" steps are measured independently.
+     */
+    public Connection openDirect() throws SQLException {
         try {
             Class.forName("net.sourceforge.jtds.jdbc.Driver");
         } catch (ClassNotFoundException ignored) {
             // jtds is registered by the driver manager on some devices without an explicit load.
         }
+        try { DriverManager.setLoginTimeout(15); } catch (Throwable ignored) { }
         String url = "jdbc:jtds:sqlserver://" + FinEnv.host() + ":" + FinEnv.PORT + "/" + FinEnv.database()
-                + ";loginTimeout=15;socketTimeout=45;appName=AtiranFinance;";
+                + ";loginTimeout=12;socketTimeout=45;appName=AtiranFinance;";
         Properties props = new Properties();
         props.setProperty("user", FinEnv.user());
         props.setProperty("password", FinEnv.password());
         props.setProperty("charset", "UTF-8");
-        return DriverManager.getConnection(url, props);
+        try {
+            Connection c = DriverManager.getConnection(url, props);
+            transportSeen = true;
+            return c;
+        } catch (SQLException e) {
+            transportSeen = false;
+            throw e;
+        }
     }
 
     /** Cheap connectivity probe used by the header status chip and the sync screen. */

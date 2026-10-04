@@ -42,6 +42,7 @@
             android:label="@string/fin_app_name"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
+            android:theme="@style/FinBootTheme"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -53,6 +54,7 @@
         <activity
             android:name=".finance.FinSelfTestActivity"
             android:exported="false"
-            android:label="@string/fin_app_name" />
+            android:label="@string/fin_app_name"
+            android:theme="@style/FinBootTheme" />
     </application>
 </manifest>

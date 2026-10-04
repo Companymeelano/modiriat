@@ -749,7 +749,10 @@ public final class FinCharts {
             text.setTypeface(bold);
             float ts = size * 0.13f;
             text.setTextSize(ts);
-            while (ts > dp(9) && text.measureText(value) > inner) { ts -= dp(0.5f); text.setTextSize(ts); }
+            for (int i = 0; i < 240 && ts > dp(9) && text.measureText(value) > inner; i++) {
+                ts -= dp(0.5f);
+                text.setTextSize(ts);
+            }
             canvas.drawText(value, cx, cy + ts * 0.28f, text);
             text.setTypeface(regular);
             text.setColor(muted);
@@ -807,7 +810,10 @@ public final class FinCharts {
             text.setColor(textColor);
             text.setTypeface(bold);
             float inner = (2 * r - stroke) * 0.86f;
-            while (ts > dp(9) && text.measureText(percent) > inner) { ts -= dp(0.5f); text.setTextSize(ts); }
+            for (int i = 0; i < 240 && ts > dp(9) && text.measureText(percent) > inner; i++) {
+                ts -= dp(0.5f);
+                text.setTextSize(ts);
+            }
             canvas.drawText(percent, cx, cy + ts * 0.3f, text);
             text.setTypeface(regular);
             text.setColor(muted);

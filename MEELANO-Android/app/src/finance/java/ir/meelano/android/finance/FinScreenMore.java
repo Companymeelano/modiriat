@@ -76,6 +76,7 @@ public class FinScreenMore extends FinScreen {
         body.addView(modules, ui.lp(-1, -2));
 
         themes();
+        support();
         activity(p);
         about();
     }
@@ -137,6 +138,26 @@ public class FinScreenMore extends FinScreen {
         card.addView(grid, ui.lp(-1, -2));
         card.addView(ui.text("رنگ‌های معنایی (موفق/هشدار/خطا/مدیریت) در همه پوسته‌ها یکسان می‌مانند؛ فقط سطوح و رنگ تأکیدی تغییر می‌کند.",
                 11f, ui.textFaint, false), ui.lp(-1, -2));
+        body.addView(card, top(12));
+    }
+
+    /**
+     * «تشخیص و پشتیبانی» — the three actions an operator needs when something does not work on the
+     * phone: the connection doctor (network → port → SQL login → server date), the full technical
+     * self test against the real database, and the startup/crash log of this installation.
+     */
+    private void support() {
+        LinearLayout card = section("⚕", "تشخیص و پشتیبانی",
+                "اگر داده‌ای نمی‌آید یا ورود ناموفق است، از این سه ابزار استفاده کنید");
+        card.addView(entry("⇅", "بررسی اتصال به سرور",
+                "اینترنت، نام سرور، پورت، ورود به SQL و تاریخ سرور", "",
+                v -> host.showDiagnostics()), ui.lp(-1, -2));
+        card.addView(entry("⚙", "آزمون فنی کامل",
+                "خواندن واقعی همه جدول‌های مالی روی سرور آتیران", "",
+                v -> host.runSelfTest()), ui.lp(-1, -2));
+        card.addView(entry("▤", "گزارش راه‌اندازی و خطاها",
+                "مرحله‌های شروع برنامه و آخرین خطای ثبت‌شده", "",
+                v -> host.showSupportLog()), ui.lp(-1, -2));
         body.addView(card, top(12));
     }
 

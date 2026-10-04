@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      «آتیران مالی» uses a self-contained dark window theme instead of the shared AppTheme.
+
+      Two reasons: the finance edition must never depend on a shared resource that another edition
+      could change, and the window must be dark from the very first frame — before the activity sets
+      any content view — so a slow start can never show a bright or empty window on a phone that is
+      used in a dim office.
+    -->
+    <style name="FinBootTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/fin_obsidian</item>
+        <item name="android:colorBackground">@color/fin_obsidian</item>
+        <item name="android:statusBarColor">@color/fin_obsidian</item>
+        <item name="android:navigationBarColor">@color/fin_obsidian</item>
+        <item name="android:colorAccent">@color/fin_gold</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+</resources>

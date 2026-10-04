@@ -249,10 +249,20 @@ public final class FinUi {
             try {
                 float size = maxSp;
                 setTextSize(size);
-                if (!isSingleLine()) { while (size > minSp && getLineCount() > 2) { size -= 0.5f; setTextSize(size); } }
-                else {
+                // The shrink loop is bounded: on a device where the measured width never settles (a
+                // pathological font scale, for instance) the text keeps the smallest step instead of
+                // spinning during layout — a spinning layout pass is what makes an app look frozen.
+                if (!isSingleLine()) {
+                    for (int i = 0; i < 160 && size > minSp && getLineCount() > 2; i++) {
+                        size -= 0.5f;
+                        setTextSize(size);
+                    }
+                } else {
                     String value = getText() == null ? "" : getText().toString();
-                    while (size > minSp && getPaint().measureText(value) > width) { size -= 0.5f; setTextSize(size); }
+                    for (int i = 0; i < 160 && size > minSp && getPaint().measureText(value) > width; i++) {
+                        size -= 0.5f;
+                        setTextSize(size);
+                    }
                 }
             } catch (Exception ignored) {
             } finally {
