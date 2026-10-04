@@ -349,8 +349,13 @@ public final class FinAuth {
             p.permissions = FinSession.defaultPermissions(heuristic);
             return p;
         }
-        p.role = "user";
-        p.permissions = FinSession.defaultPermissions("user");
+        // Nothing in the database restricts this account (no access row, no role column, no Atiran
+        // role, no wording that names a role): it has authenticated against Atiran itself, so on the
+        // finance edition it opens with the full finance permission set. A database row, whenever it
+        // exists, always overrides this default.
+        p.role = "finance_operator";
+        p.roleSource = "finance-default";
+        p.permissions = FinSession.defaultPermissions("finance_operator");
         return p;
     }
 
@@ -489,7 +494,7 @@ public final class FinAuth {
         if (n.contains("راننده") || n.contains("driver")) return "driver";
         if (n.contains("کارگر") || n.contains("worker")) return "worker";
         if (n.contains("کارمند") || n.contains("employee")) return "employee";
-        if (visitorId != null && visitorId > 0) return "visitor";
+        if (visitorId != null && visitorId > 0) return "";
         return "";
     }
 

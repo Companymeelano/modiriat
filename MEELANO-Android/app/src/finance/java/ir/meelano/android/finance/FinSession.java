@@ -166,6 +166,7 @@ public final class FinSession {
             case "driver": return "راننده";
             case "worker": return "کارگر";
             case "employee": return "کارمند";
+            case "finance_operator": return "اپراتور مالی";
             default: return "کاربر محدود";
         }
     }
@@ -177,7 +178,12 @@ public final class FinSession {
         boolean manager = "admin".equals(r) || "manager".equals(r);
         boolean accountant = "accountant".equals(r) || "senior_accountant".equals(r);
         boolean collections = "collections".equals(r);
-        if (manager) {
+        boolean operator = "finance_operator".equals(r);
+        if (manager || operator) {
+            // The finance edition is the management tool itself: an account that the database does not
+            // restrict works with every finance module. Anything the database *does* say (a row in
+            // meelano_access_users / a role column / Atiran's role table) still wins, because it is
+            // resolved before this default is used.
             s.addAll(Arrays.asList(FINANCE_PERMISSIONS));
         } else if (accountant) {
             s.addAll(Arrays.asList("finance_dashboard", "finance_sales", "finance_banks", "finance_receivables",

@@ -100,6 +100,10 @@ public class AtiranFinanceActivity extends Activity {
     private boolean watchdogOn = true;
     private int renderToken;
     private boolean renderDone;
+    /** Time of the last Back press, for the "press again to exit" rule. */
+    private long lastBackAt;
+    /** One line per module of the post-login database preload, shown in the «وضعیت داده» dialog. */
+    private final java.util.List<String> preloadReport = java.util.Collections.synchronizedList(new java.util.ArrayList<String>());
     /** True once the operator desk has been displayed and painted in this run. */
     private boolean deskShown;
 
@@ -877,6 +881,73 @@ public class AtiranFinanceActivity extends Activity {
         loadServerDate();
         probeConnection();
         preloadAllData();
+        guardDesk();
+    }
+
+    /**
+     * Last line of defence of the desk: if the content area is still empty after login, the home
+     * screen is opened again; if it is *still* empty, the operator gets the boot report with a copy
+     * button instead of a blank page.
+     */
+    private void guardDesk() {
+        main.postDelayed(() -> {
+            try {
+                if (showingLogin || contentHost == null) return;
+                if (contentHost.getChildCount() == 0) {
+                    FinCrash.step(this, "desk-empty-watchdog");
+                    showTab(TAB_HOME, true);
+                }
+            } catch (Throwable ignored) { }
+        }, 1600L);
+        main.postDelayed(() -> {
+            try {
+                if (showingLogin || contentHost == null) return;
+                if (contentHost.getChildCount() == 0) {
+                    FinCrash.step(this, "desk-empty-report");
+                    showScreenError(current, new IllegalStateException("محتوای میزکار ساخته نشد"));
+                }
+            } catch (Throwable ignored) { }
+        }, 4200L);
+    }
+
+    /** One-line summary of what has been read from the database so far. */
+    private String dataStatusLabel() {
+        int n = preloadReport.size();
+        if (n == 0) return "وضعیت داده: در حال خواندن از دیتابیس…";
+        return "وضعیت داده: " + FinFmt.faNumber(n) + " بخش از دیتابیس خوانده شد · برای جزئیات بزنید";
+    }
+
+    /** Every module of the preload with its row count, duration or error — straight from the run. */
+    public void showDataStatus() {
+        try {
+            StringBuilder b = new StringBuilder();
+            b.append("خواندن داده‌ها از دیتابیس آتیران\n");
+            b.append("هدف: ").append(FinEnv.describe()).append('\n');
+            b.append("تاریخ سرور: ").append(serverToday == null ? "…" : serverToday)
+                    .append(" · بازه: ").append(periodFrom()).append(" تا ").append(periodTo()).append('\n');
+            b.append("\n—— بخش‌ها ——\n");
+            synchronized (preloadReport) {
+                if (preloadReport.isEmpty()) b.append("(هنوز چیزی خوانده نشده)\n");
+                for (String line : preloadReport) b.append("• ").append(line).append('\n');
+            }
+            TextView body = new TextView(this);
+            body.setText(b.toString());
+            body.setTextSize(11.5f);
+            body.setTypeface(Typeface.MONOSPACE);
+            body.setTextColor(ui == null ? 0xFFF2F5FA : ui.textColor);
+            body.setTextDirection(View.TEXT_DIRECTION_RTL);
+            ScrollView sc = new ScrollView(this);
+            sc.addView(body);
+            new AlertDialog.Builder(this)
+                    .setTitle("وضعیت داده‌ها")
+                    .setView(sc)
+                    .setPositiveButton("کپی", (d, w) -> copyText(b.toString(), "وضعیت داده‌ها"))
+                    .setNegativeButton("بستن", null)
+                    .create()
+                    .show();
+        } catch (Throwable t) {
+            toast("گزارش وضعیت باز نشد · کد رویداد " + FinCrash.eventCode(t));
+        }
     }
 
     /** Writes what the database said about the signed-in account into the boot trail (no password). */
@@ -914,8 +985,18 @@ public class AtiranFinanceActivity extends Activity {
         Thread t = new Thread(() -> {
             try {
                 FinPrefetch.warmAll(db, from, to, today, (label, rows, ms, error) -> {
-                    if (error != null) FinCrash.log(AtiranFinanceActivity.this, "prefetch-fail:" + label, error);
-                    else FinCrash.step(AtiranFinanceActivity.this, "prefetch:" + label + ":" + (rows < 0 ? "cached" : rows + ":" + ms + "ms"));
+                    String line;
+                    if (error != null) {
+                        line = label + " — خواندن ناموفق: " + error;
+                        FinCrash.log(AtiranFinanceActivity.this, "prefetch-fail:" + label, error);
+                    } else if (rows < 0) {
+                        line = label + " — از پیش خوانده شده بود";
+                    } else {
+                        line = label + " — " + FinFmt.faNumber(rows) + " ردیف در " + FinFmt.faNumber(ms) + " میلی‌ثانیه";
+                        FinCrash.step(AtiranFinanceActivity.this, "prefetch:" + label + ":" + rows + ":" + ms + "ms");
+                    }
+                    preloadReport.add(line);
+                    main.post(() -> { try { renderHeader(hasCache ? "متصل به سرور" : "بدون اتصال", false); } catch (Throwable ignored) { } });
                 });
                 FinCrash.step(AtiranFinanceActivity.this, "prefetch-done");
             } catch (Throwable e) {
@@ -945,8 +1026,11 @@ public class AtiranFinanceActivity extends Activity {
 
         LinearLayout chips = ui.column();
         chips.setGravity(Gravity.END);
-        if (s != null && !s.roleFromDatabase) {
-            chips.addView(ui.chip("نقش از جدول دسترسی خوانده نشد", FinUi.WARNING), ui.lp(-2, -2));
+        if (s != null) {
+            String access = s.isManager() ? "دسترسی کامل" : ("دسترسی: " + s.roleLabel);
+            String where = s.roleFromDatabase ? " · از دیتابیس" : " · پیش‌فرض نسخهٔ مالی";
+            boolean blocked = !s.isManager() && !s.canWrite();
+            chips.addView(ui.chip(access + where, blocked ? FinUi.WARNING : ui.goldAccent), ui.lp(-2, -2));
         }
         chips.addView(ui.chip(loading ? "… در حال اتصال" : connectionNote, loading ? FinUi.INFO : (hasCache ? FinUi.SUCCESS : FinUi.WARNING)), ui.lp(-2, -2));
         top.addView(chips, ui.lp(-2, -2));
@@ -961,6 +1045,13 @@ public class AtiranFinanceActivity extends Activity {
         meta.addView(filler, ui.lp(0, -2, 1f));
         meta.addView(ui.chip("نسخه " + FinSession.appVersion(), ui.textFaint), ui.lp(-2, -2));
         headerBar.addView(meta, ui.lp(-1, -2));
+
+        LinearLayout dataRow = ui.row();
+        dataRow.setPadding(0, ui.dp(6), 0, 0);
+        TextView dataChip = ui.chip(dataStatusLabel(), ui.textDim);
+        dataChip.setOnClickListener(v -> showDataStatus());
+        dataRow.addView(dataChip, ui.lp(-2, -2));
+        headerBar.addView(dataRow, ui.lp(-1, -2));
 
         View line = new View(this);
         line.setBackgroundColor(FinUi.alpha(ui.goldAccent, 90));
@@ -1019,7 +1110,12 @@ public class AtiranFinanceActivity extends Activity {
         try {
             tab = target;
             if (resetStack) stack.clear();
-            renderNav();
+            // The tab bar is decoration: if drawing it ever fails, the screen itself must still open.
+            try {
+                renderNav();
+            } catch (Throwable t) {
+                FinCrash.log(this, "nav-render", t.getClass().getName() + ": " + t.getMessage());
+            }
             switch (target) {
                 case TAB_MONEY: stack.push(new FinScreenSales(this)); break;
                 case TAB_CHECKS: stack.push(new FinScreenCheques(this)); break;
@@ -1030,7 +1126,12 @@ public class AtiranFinanceActivity extends Activity {
             renderTop(false);
         } catch (Throwable t) {
             FinCrash.log(this, "open-tab", target + ": " + t.getClass().getName());
-            showScreenError(stack.peek(), t);
+            try {
+                if (stack.isEmpty()) stack.push(new FinScreenHome(this));
+                showScreenError(stack.peek(), t);
+            } catch (Throwable second) {
+                FinCrash.log(this, "open-tab-fallback", second.getClass().getName());
+            }
         }
     }
 
@@ -1058,32 +1159,49 @@ public class AtiranFinanceActivity extends Activity {
         if (top == null || contentHost == null) return;
         final int token = ++renderToken;
         showLoading(top.title());
+        contentHost.postDelayed(() -> renderNow(top, token, animate), 24L);
+        // If those 24 ms never arrive (a stalled frame, a busy main thread), the screen is built anyway
+        // instead of leaving the operator in front of an empty page.
         contentHost.postDelayed(() -> {
-            try {
-                if (token != renderToken) return;
-                View v;
-                try {
-                    v = top.build();
-                } catch (Throwable t) {
-                    FinCrash.log(AtiranFinanceActivity.this, "screen-failed", top.getClass().getSimpleName()
-                            + ": " + t.getClass().getName());
-                    showScreenError(top, t);
-                    return;
-                }
-                contentHost.removeAllViews();
-                contentHost.addView(v, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                if (animate) {
-                    v.setAlpha(0f);
-                    v.setTranslationX(ui.dp(16));
-                    v.animate().alpha(1f).translationX(0f).setDuration(180).start();
-                }
-                renderDone = true;
-                try { top.load(false); } catch (Throwable t) { FinCrash.log(AtiranFinanceActivity.this, "screen-load", t.getClass().getName()); }
-            } catch (Throwable t) {
-                FinCrash.log(AtiranFinanceActivity.this, "screen-render", t.getClass().getName());
-                try { showScreenError(top, t); } catch (Throwable ignored) { }
+            if (token == renderToken && !renderDone) {
+                FinCrash.step(this, "screen-watchdog:" + top.getClass().getSimpleName());
+                renderNow(top, token, false);
             }
-        }, 24L);
+        }, 900L);
+    }
+
+    /** Builds the screen of the stack top and hands it to the content host. Never throws. */
+    private void renderNow(final FinScreen top, final int token, final boolean animate) {
+        try {
+            if (token != renderToken || renderDone || contentHost == null) return;
+            View v;
+            try {
+                v = top.build();
+            } catch (Throwable t) {
+                FinCrash.log(this, "screen-failed", top.getClass().getSimpleName() + ": " + t.getClass().getName());
+                showScreenError(top, t);
+                return;
+            }
+            contentHost.removeAllViews();
+            // Every screen lives inside a scroll view: a screen is always taller than the window, and
+            // before this the part below the first screenful was simply unreachable.
+            ScrollView sc = ui.scroll();
+            sc.setFillViewport(false);
+            sc.addView(v, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            contentHost.addView(sc, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if (animate) {
+                sc.setAlpha(0f);
+                sc.setTranslationX(ui.dp(16));
+                sc.animate().alpha(1f).translationX(0f).setDuration(180).start();
+            }
+            renderDone = true;
+            FinCrash.step(this, "screen-shown:" + top.getClass().getSimpleName()
+                    + ":" + (v.getMeasuredHeight() > 0 ? v.getMeasuredHeight() : 0) + "px");
+            try { top.load(false); } catch (Throwable t) { FinCrash.log(this, "screen-load", t.getClass().getName()); }
+        } catch (Throwable t) {
+            FinCrash.log(this, "screen-render", t.getClass().getName() + ": " + t.getMessage());
+            try { showScreenError(top, t); } catch (Throwable ignored) { }
+        }
     }
 
     private void showScreenError(FinScreen screen, Throwable t) {
@@ -1110,43 +1228,58 @@ public class AtiranFinanceActivity extends Activity {
         contentHost.addView(sc, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
+    /**
+     * In-app Back: it never closes the application on the first press. It walks the screen stack, then
+     * returns to the home tab, and only a second press inside two seconds leaves the application —
+     * with a message that says so. The «خروج» button in the header is the explicit way out.
+     */
     public void back() {
+        if (showingLogin) {
+            askToExit();
+            return;
+        }
         if (stack.size() > 1) {
             stack.pop();
             renderTop(false);
-        } else if (!TAB_HOME.equals(tab)) {
-            showTab(TAB_HOME, true);
-        } else {
-            finish();
+            return;
         }
+        if (!TAB_HOME.equals(tab)) {
+            showTab(TAB_HOME, true);
+            return;
+        }
+        askToExit();
+    }
+
+    /** One press explains, the second press inside two seconds leaves. */
+    private void askToExit() {
+        long now = System.currentTimeMillis();
+        if (now - lastBackAt < 2200L) {
+            finish();
+            return;
+        }
+        lastBackAt = now;
+        toast("برای خروج از برنامه، دوباره دکمهٔ بازگشت را بزنید — یا از دکمهٔ «خروج» در بالای صفحه استفاده کنید.");
     }
 
     /**
-     * Android 13+ (and required from targetSdk 36) delivers Back through OnBackInvokedCallback; the
-     * callback is registered only while there is somewhere to go back to, so on the home screen the
-     * system plays its own "back to home" animation. The same pattern is used by MainActivity.
+     * Android 13+ (and required from targetSdk 36) delivers Back through OnBackInvokedCallback. The
+     * callback is registered for as long as the application is in front — including the sign-in screen
+     * — so the system can never close the app by itself; every press is handled in {@link #back()}.
      */
     private void updateBackCallback() {
         if (Build.VERSION.SDK_INT < 33) return;
         try {
-            boolean needed = !showingLogin && (stack.size() > 1 || !TAB_HOME.equals(tab));
+            boolean needed = true;
             android.window.OnBackInvokedDispatcher d = getOnBackInvokedDispatcher();
             if (needed && backCallback == null) {
                 android.window.OnBackInvokedCallback cb = this::back;
                 d.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, cb);
                 backCallback = cb;
-            } else if (!needed && backCallback != null) {
-                d.unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backCallback);
-                backCallback = null;
             }
         } catch (Throwable ignored) { }
     }
 
     @Override public void onBackPressed() {
-        if (showingLogin) {
-            finish();
-            return;
-        }
         back();
     }
 
@@ -1160,6 +1293,7 @@ public class AtiranFinanceActivity extends Activity {
 
     public void showLoading(String what) {
         if (contentHost == null || ui == null) return;
+        FinCrash.step(this, "screen-loading:" + what);
         contentHost.removeAllViews();
         ScrollView sc = ui.scroll();
         LinearLayout col = ui.column();

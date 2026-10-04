@@ -2,6 +2,7 @@ package ir.meelano.android.finance;
 
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -95,7 +96,27 @@ public class FinScreenHome extends FinScreen {
 
         JSONObject p = payload(env);
         if (p.length() == 0) {
-            addCard(problem(env.optString("error", ""), () -> load(true)), 10);
+            String error = env.optString("error", "");
+            if (error.isEmpty()) {
+                // The database answered, there is simply nothing in this range: say so on the screen
+                // instead of leaving the operator with an empty page.
+                LinearLayout card = ui.cardTone(FinUi.WARNING);
+                card.addView(ui.text("دادهٔ این بازه خالی است", 13f, ui.textColor, true), ui.lp(-1, -2));
+                card.addView(ui.text("برای بازهٔ " + host.periodFrom() + " تا " + host.periodTo()
+                        + " هیچ رکورد فروش، وصول، چک یا بانکی خوانده نشد. بازه را از تب «بیشتر» عوض کنید یا"
+                        + " «به‌روزرسانی» را بزنید.", 11.5f, ui.textDim, false), ui.lp(-1, -2));
+                Button again = ui.primaryButton("تلاش دوباره", ui.goldAccent, v -> load(true));
+                LinearLayout.LayoutParams ap = ui.lp(-1, -2);
+                ap.topMargin = ui.dp(10);
+                card.addView(again, ap);
+                Button status = ui.ghostButton("وضعیت خواندن داده‌ها", ui.goldAccent, v -> host.showDataStatus());
+                LinearLayout.LayoutParams sp = ui.lp(-1, -2);
+                sp.topMargin = ui.dp(8);
+                card.addView(status, sp);
+                addCard(card, 10);
+            } else {
+                addCard(problem(error, () -> load(true)), 10);
+            }
             return;
         }
 
