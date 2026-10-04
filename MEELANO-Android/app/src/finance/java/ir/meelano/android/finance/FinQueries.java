@@ -219,8 +219,10 @@ public final class FinQueries {
         if (unlinkedPos > 0) out.put(alert("pos_unlinked", "POS بیدریافت", unlinkedPos + " تراکنش POS به قبض دریافت متصل نیست.", FinUi.WARNING));
         int negative = count(c, "SELECT COUNT(*) AS v FROM dbo.CUSTOMERS WITH (NOLOCK) WHERE ISNULL(man,0)<0");
         if (negative > 0) out.put(alert("negative_balance", "مانده بستانکار مشتری", negative + " مشتری مانده منفی (بستانکار) دارند.", FinUi.INFO));
-        int openRecon = count(c, "SELECT COUNT(*) AS v FROM dbo.meelano_fin_recon WITH (NOLOCK) WHERE status IN (N'open',N'review')");
-        if (openRecon > 0) out.put(alert("recon_open", "مغایرت بانکی باز", openRecon + " پرونده مغایرت در انتظار بررسی است.", FinUi.WARNING));
+        if (FinDb.hasTable(c, "meelano_fin_recon")) {
+            int openRecon = count(c, "SELECT COUNT(*) AS v FROM dbo.meelano_fin_recon WITH (NOLOCK) WHERE status IN (N'open',N'review')");
+            if (openRecon > 0) out.put(alert("recon_open", "مغایرت بانکی باز", openRecon + " پرونده مغایرت در انتظار بررسی است.", FinUi.WARNING));
+        }
         return out;
     }
 
@@ -325,6 +327,7 @@ public final class FinQueries {
 
     /** Reconciliation cases recorded by this app (meelano_fin_recon). */
     public static JSONArray reconCases(Connection c, int limit) throws Exception {
+        if (!FinDb.hasTable(c, "meelano_fin_recon")) return new JSONArray();
         return select(c, "SELECT TOP (" + clamp(limit, 1, 200) + ") id, case_key, kind, bank_rdf, jalali_date, amount, "
                 + "system_ref, bank_ref, reason, status, assigned_to, resolution, approved_by, created_by, "
                 + "CONVERT(nvarchar(19), created_at, 120) AS created_at "
@@ -505,8 +508,11 @@ public final class FinQueries {
         o.put("openCount", count(c, "SELECT COUNT(*) AS v FROM dbo.sailfact WITH (NOLOCK) WHERE active='t' AND ISNULL(bamandeh,0)<>0"));
         o.put("checksSecuring", sum(c, "SELECT ISNULL(SUM(getchkmab),0) AS v FROM dbo.getchk WITH (NOLOCK) WHERE sardate>?", today));
         o.put("checksDueNow", sum(c, "SELECT ISNULL(SUM(getchkmab),0) AS v FROM dbo.getchk WITH (NOLOCK) WHERE sardate<=?", today));
-        o.put("followupsOpen", count(c, "SELECT COUNT(*) AS v FROM dbo.meelano_fin_followup WITH (NOLOCK) WHERE status IN (N'pending',N'promise')"));
-        o.put("promisesDue", count(c, "SELECT COUNT(*) AS v FROM dbo.meelano_fin_followup WITH (NOLOCK) WHERE promise_date IS NOT NULL AND promise_date<=?", today));
+        boolean followups = FinDb.hasTable(c, "meelano_fin_followup");
+        o.put("followupsOpen", followups
+                ? count(c, "SELECT COUNT(*) AS v FROM dbo.meelano_fin_followup WITH (NOLOCK) WHERE status IN (N'pending',N'promise')") : 0);
+        o.put("promisesDue", followups
+                ? count(c, "SELECT COUNT(*) AS v FROM dbo.meelano_fin_followup WITH (NOLOCK) WHERE promise_date IS NOT NULL AND promise_date<=?", today) : 0);
         return o;
     }
 
@@ -658,33 +664,51 @@ public final class FinQueries {
 
     /** Unified calendar of everything with a due date (cheques, invoices, promises, settlements, cases). */
     public static JSONArray calendar(Connection c, String from, String to, String today, int limit) throws Exception {
-        return select(c, "SELECT TOP (" + clamp(limit, 1, 300) + ") kind, jalali_date, ref, amount, detail, status FROM ("
-                + "SELECT N'چک دریافتی' AS kind, g.sardate AS jalali_date, ISNULL(g.shgetchk,N'') AS ref, ISNULL(g.getchkmab,0) AS amount, "
-                + "       ISNULL(c.MONAME, g.VIRTUALNAME) AS detail, "
-                + "       CASE WHEN g.sardate < ? THEN N'سررسید گذشته' ELSE N'در انتظار' END AS status "
-                + "  FROM dbo.getchk g WITH (NOLOCK) LEFT JOIN dbo.CUSTOMERS c WITH (NOLOCK) ON c.SHMO=g.shmo "
-                + " WHERE g.sardate>=? AND g.sardate<=? "
-                + "UNION ALL "
-                + "SELECT N'چک پرداختی', p.sardate, ISNULL(p.shputchk,N''), ISNULL(p.putchkmab,0), ISNULL(p.girande,N''), "
-                + "       CASE WHEN p.sardate < ? AND p.putchk_status IN (1,7) THEN N'سررسید گذشته' ELSE N'ثبتشده' END "
-                + "  FROM dbo.putchk p WITH (NOLOCK) WHERE p.sardate>=? AND p.sardate<=? "
-                + "UNION ALL "
-                + "SELECT N'فاکتور فروش', s.[date], CONVERT(nvarchar(30), s.shfacfo), ISNULL(s.[all],0), ISNULL(c2.MONAME,N''), "
-                + "       CASE WHEN ISNULL(s.bamandeh,0)<>0 THEN N'تسویهنشده' ELSE N'تسویهشده' END "
-                + "  FROM dbo.sailfact s WITH (NOLOCK) LEFT JOIN dbo.CUSTOMERS c2 WITH (NOLOCK) ON c2.SHMO=s.shmo "
-                + " WHERE s.active='t' AND s.[date]>=? AND s.[date]<=? "
-                + "UNION ALL "
-                + "SELECT N'وعده پرداخت', f.promise_date, CONVERT(nvarchar(30), f.shmo), ISNULL(f.promise_amount,0), "
-                + "       ISNULL(f.note,N''), ISNULL(f.status,N'pending') "
-                + "  FROM dbo.meelano_fin_followup f WITH (NOLOCK) WHERE f.promise_date IS NOT NULL AND f.promise_date>=? AND f.promise_date<=? "
-                + "UNION ALL "
-                + "SELECT N'تسویه کاربر', st.jalali_date, ISNULL(st.user_login,N''), ISNULL(st.amount,0), N'تسویه', ISNULL(st.status,N'pending') "
-                + "  FROM dbo.meelano_fin_settlement st WITH (NOLOCK) WHERE st.jalali_date>=? AND st.jalali_date<=? "
-                + "UNION ALL "
-                + "SELECT N'مغایرت', rc.jalali_date, ISNULL(rc.case_key,N''), ISNULL(rc.amount,0), ISNULL(rc.kind,N''), ISNULL(rc.status,N'open') "
-                + "  FROM dbo.meelano_fin_recon rc WITH (NOLOCK) WHERE rc.jalali_date IS NOT NULL AND rc.jalali_date>=? AND rc.jalali_date<=? "
-                + ") t ORDER BY jalali_date DESC",
-                today, from, to, today, from, to, from, to, from, to, from, to, from, to);
+        boolean followups = FinDb.hasTable(c, "meelano_fin_followup");
+        boolean settlements = FinDb.hasTable(c, "meelano_fin_settlement");
+        boolean recon = FinDb.hasTable(c, "meelano_fin_recon");
+        StringBuilder sql = new StringBuilder();
+        List<Object> args = new ArrayList<>();
+        sql.append("SELECT TOP (").append(clamp(limit, 1, 300))
+                .append(") kind, jalali_date, ref, amount, detail, status FROM (")
+                .append("SELECT N'\u0686\u06a9 \u062f\u0631\u06cc\u0627\u0641\u062a\u06cc' AS kind, g.sardate AS jalali_date, ISNULL(g.shgetchk,N'') AS ref, ISNULL(g.getchkmab,0) AS amount, ")
+                .append("       ISNULL(c.MONAME, g.VIRTUALNAME) AS detail, ")
+                .append("       CASE WHEN g.sardate < ? THEN N'\u0633\u0631\u0631\u0633\u06cc\u062f \u06af\u0630\u0634\u062a\u0647' ELSE N'\u062f\u0631 \u0627\u0646\u062a\u0638\u0627\u0631' END AS status ")
+                .append("  FROM dbo.getchk g WITH (NOLOCK) LEFT JOIN dbo.CUSTOMERS c WITH (NOLOCK) ON c.SHMO=g.shmo ")
+                .append(" WHERE g.sardate>=? AND g.sardate<=? ")
+                .append("UNION ALL ")
+                .append("SELECT N'\u0686\u06a9 \u067e\u0631\u062f\u0627\u062e\u062a\u06cc', p.sardate, ISNULL(p.shputchk,N''), ISNULL(p.putchkmab,0), ISNULL(p.girande,N''), ")
+                .append("       CASE WHEN p.sardate < ? AND p.putchk_status IN (1,7) THEN N'\u0633\u0631\u0631\u0633\u06cc\u062f \u06af\u0630\u0634\u062a\u0647' ELSE N'\u062b\u0628\u062a\u200c\u0634\u062f\u0647' END ")
+                .append("  FROM dbo.putchk p WITH (NOLOCK) WHERE p.sardate>=? AND p.sardate<=? ")
+                .append("UNION ALL ")
+                .append("SELECT N'\u0641\u0627\u06a9\u062a\u0648\u0631 \u0641\u0631\u0648\u0634', s.[date], CONVERT(nvarchar(30), s.shfacfo), ISNULL(s.[all],0), ISNULL(c2.MONAME,N''), ")
+                .append("       CASE WHEN ISNULL(s.bamandeh,0)<>0 THEN N'\u062a\u0633\u0648\u06cc\u0647\u200c\u0646\u0634\u062f\u0647' ELSE N'\u062a\u0633\u0648\u06cc\u0647\u200c\u0634\u062f\u0647' END ")
+                .append("  FROM dbo.sailfact s WITH (NOLOCK) LEFT JOIN dbo.CUSTOMERS c2 WITH (NOLOCK) ON c2.SHMO=s.shmo ")
+                .append(" WHERE s.active='t' AND s.[date]>=? AND s.[date]<=?");
+        args.add(today); args.add(from); args.add(to);
+        args.add(today); args.add(from); args.add(to);
+        args.add(from); args.add(to);
+        if (followups) {
+            sql.append(" UNION ALL ")
+                    .append("SELECT N'\u0648\u0639\u062f\u0647 \u067e\u0631\u062f\u0627\u062e\u062a', f.promise_date, CONVERT(nvarchar(30), f.shmo), ISNULL(f.promise_amount,0), ")
+                    .append("       ISNULL(f.note,N''), ISNULL(f.status,N'pending') ")
+                    .append("  FROM dbo.meelano_fin_followup f WITH (NOLOCK) WHERE f.promise_date IS NOT NULL AND f.promise_date>=? AND f.promise_date<=? ");
+            args.add(from); args.add(to);
+        }
+        if (settlements) {
+            sql.append(" UNION ALL ")
+                    .append("SELECT N'\u062a\u0633\u0648\u06cc\u0647 \u06a9\u0627\u0631\u0628\u0631', st.jalali_date, ISNULL(st.user_login,N''), ISNULL(st.amount,0), N'\u062a\u0633\u0648\u06cc\u0647', ISNULL(st.status,N'pending') ")
+                    .append("  FROM dbo.meelano_fin_settlement st WITH (NOLOCK) WHERE st.jalali_date>=? AND st.jalali_date<=? ");
+            args.add(from); args.add(to);
+        }
+        if (recon) {
+            sql.append(" UNION ALL ")
+                    .append("SELECT N'\u0645\u063a\u0627\u06cc\u0631\u062a', rc.jalali_date, ISNULL(rc.case_key,N''), ISNULL(rc.amount,0), ISNULL(rc.kind,N''), ISNULL(rc.status,N'open') ")
+                    .append("  FROM dbo.meelano_fin_recon rc WITH (NOLOCK) WHERE rc.jalali_date IS NOT NULL AND rc.jalali_date>=? AND rc.jalali_date<=? ");
+            args.add(from); args.add(to);
+        }
+        sql.append(") t ORDER BY jalali_date DESC");
+        return select(c, sql.toString(), args.toArray());
     }
 
     // ================================================================ POS
@@ -788,6 +812,7 @@ public final class FinQueries {
     }
 
     public static JSONArray settlements(Connection c, String from, String to, int limit) throws Exception {
+        if (!FinDb.hasTable(c, "meelano_fin_settlement")) return new JSONArray();
         return select(c, "SELECT TOP (" + clamp(limit, 1, 200) + ") id, op_key, user_login, jalali_date, kind, amount, "
                 + "expected, difference, reference, receiver, status, confirmed_by, "
                 + "CONVERT(nvarchar(19), created_at, 120) AS created_at, "
@@ -807,26 +832,36 @@ public final class FinQueries {
      * column stays empty and the screen says so instead of inventing an attribution.
      */
     public static JSONArray userSettlement(Connection c, String from, String to) throws Exception {
-        return select(c, "SELECT v.vis_rdf, v.vis_name, ISNULL(v.Username,'') AS username, v.kind, "
-                + "(SELECT COUNT(*) FROM dbo.sailfact s WITH (NOLOCK) WHERE s.vis_rdf=v.vis_rdf AND s.active='t' AND s.[date]>=? AND s.[date]<=?) AS invoices, "
-                + "(SELECT ISNULL(SUM(s.[all]),0) FROM dbo.sailfact s WITH (NOLOCK) WHERE s.vis_rdf=v.vis_rdf AND s.active='t' AND s.[date]>=? AND s.[date]<=?) AS sales, "
-                + "(SELECT ISNULL(SUM(d.mab),0) FROM dbo.dar d WITH (NOLOCK) WHERE d.rdf_vis=v.vis_rdf AND d.p=0 AND ISNULL(d.Active,1)=1 AND d.[date]>=? AND d.[date]<=?) AS receipts, "
-                + "(SELECT ISNULL(SUM(d.naghd),0) FROM dbo.dar d WITH (NOLOCK) WHERE d.rdf_vis=v.vis_rdf AND d.p=0 AND ISNULL(d.Active,1)=1 AND d.[date]>=? AND d.[date]<=?) AS cash, "
-                + "(SELECT ISNULL(SUM(d.mabcheck),0) FROM dbo.dar d WITH (NOLOCK) WHERE d.rdf_vis=v.vis_rdf AND d.p=0 AND ISNULL(d.Active,1)=1 AND d.[date]>=? AND d.[date]<=?) AS checks, "
-                + "(SELECT ISNULL(SUM(pd.MabPos),0) FROM dbo.PosDetails pd WITH (NOLOCK) "
-                + "   INNER JOIN dbo.dar d2 WITH (NOLOCK) ON d2.ghno=pd.ghno AND d2.p=0 "
-                + "   WHERE pd.UserID=v.vis_rdf AND d2.[date]>=? AND d2.[date]<=?) AS pos, "
-                + "(SELECT ISNULL(SUM(st.amount),0) FROM dbo.meelano_fin_settlement st WITH (NOLOCK) "
-                + "   WHERE st.user_login=ISNULL(v.Username,'') AND st.jalali_date>=? AND st.jalali_date<=? AND st.status<>N'rejected') AS delivered, "
-                + "(SELECT COUNT(*) FROM dbo.meelano_fin_settlement st WITH (NOLOCK) "
-                + "   WHERE st.user_login=ISNULL(v.Username,'') AND st.jalali_date>=? AND st.jalali_date<=? AND st.status<>N'rejected') AS deliveries "
-                + "FROM dbo.visitors v WITH (NOLOCK) WHERE v.Username IS NOT NULL AND LTRIM(RTRIM(v.Username))<>'' ORDER BY v.vis_rdf",
-                from, to, from, to, from, to, from, to, from, to, from, to, from, to, from, to);
+        boolean delivered = FinDb.hasTable(c, "meelano_fin_settlement");
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT v.vis_rdf, v.vis_name, ISNULL(v.Username,'') AS username, v.kind, ")
+                .append("(SELECT COUNT(*) FROM dbo.sailfact s WITH (NOLOCK) WHERE s.vis_rdf=v.vis_rdf AND s.active='t' AND s.[date]>=? AND s.[date]<=?) AS invoices, ")
+                .append("(SELECT ISNULL(SUM(s.[all]),0) FROM dbo.sailfact s WITH (NOLOCK) WHERE s.vis_rdf=v.vis_rdf AND s.active='t' AND s.[date]>=? AND s.[date]<=?) AS sales, ")
+                .append("(SELECT ISNULL(SUM(d.mab),0) FROM dbo.dar d WITH (NOLOCK) WHERE d.rdf_vis=v.vis_rdf AND d.p=0 AND ISNULL(d.Active,1)=1 AND d.[date]>=? AND d.[date]<=?) AS receipts, ")
+                .append("(SELECT ISNULL(SUM(d.naghd),0) FROM dbo.dar d WITH (NOLOCK) WHERE d.rdf_vis=v.vis_rdf AND d.p=0 AND ISNULL(d.Active,1)=1 AND d.[date]>=? AND d.[date]<=?) AS cash, ")
+                .append("(SELECT ISNULL(SUM(d.mabcheck),0) FROM dbo.dar d WITH (NOLOCK) WHERE d.rdf_vis=v.vis_rdf AND d.p=0 AND ISNULL(d.Active,1)=1 AND d.[date]>=? AND d.[date]<=?) AS checks, ")
+                .append("(SELECT ISNULL(SUM(pd.MabPos),0) FROM dbo.PosDetails pd WITH (NOLOCK) ")
+                .append("   INNER JOIN dbo.dar d2 WITH (NOLOCK) ON d2.ghno=pd.ghno AND d2.p=0 ")
+                .append("   WHERE pd.UserID=v.vis_rdf AND d2.[date]>=? AND d2.[date]<=?) AS pos, ");
+        if (delivered) {
+            sql.append("(SELECT ISNULL(SUM(st.amount),0) FROM dbo.meelano_fin_settlement st WITH (NOLOCK) ")
+                    .append("   WHERE st.user_login=ISNULL(v.Username,'') AND st.jalali_date>=? AND st.jalali_date<=? AND st.status<>N'rejected') AS delivered, ")
+                    .append("(SELECT COUNT(*) FROM dbo.meelano_fin_settlement st WITH (NOLOCK) ")
+                    .append("   WHERE st.user_login=ISNULL(v.Username,'') AND st.jalali_date>=? AND st.jalali_date<=? AND st.status<>N'rejected') AS deliveries ");
+        } else {
+            sql.append("CAST(0 AS money) AS delivered, CAST(0 AS int) AS deliveries ");
+        }
+        sql.append("FROM dbo.visitors v WITH (NOLOCK) WHERE v.Username IS NOT NULL AND LTRIM(RTRIM(v.Username))<>'' ORDER BY v.vis_rdf");
+        Object[] args = delivered
+                ? new Object[]{from, to, from, to, from, to, from, to, from, to, from, to, from, to, from, to}
+                : new Object[]{from, to, from, to, from, to, from, to, from, to, from, to};
+        return select(c, sql.toString(), args);
     }
 
     // ================================================================ follow-up / activity
 
     public static JSONArray followUps(Connection c, int shmo, int limit) throws Exception {
+        if (!FinDb.hasTable(c, "meelano_fin_followup")) return new JSONArray();
         if (shmo > 0) {
             return select(c, "SELECT TOP (" + clamp(limit, 1, 200) + ") id, shmo, action, note, promise_amount, promise_date, "
                     + "status, next_action, next_date, assigned_to, created_by, "
@@ -842,9 +877,9 @@ public final class FinQueries {
 
     /** Activity feed: the finance audit trail, or real Atiran receipts before anything was recorded. */
     public static JSONArray activity(Connection c, int limit) throws Exception {
-        JSONArray rows = select(c, "SELECT TOP (" + clamp(limit, 1, 200) + ") id, username, role_key, module, action, reference, "
+        JSONArray rows = FinDb.hasTable(c, "meelano_fin_audit") ? select(c, "SELECT TOP (" + clamp(limit, 1, 200) + ") id, username, role_key, module, action, reference, "
                 + "amount, device, app_version, CONVERT(nvarchar(19), created_at, 120) AS at "
-                + "FROM dbo.meelano_fin_audit WITH (NOLOCK) ORDER BY id DESC");
+                + "FROM dbo.meelano_fin_audit WITH (NOLOCK) ORDER BY id DESC") : new JSONArray();
         if (rows.length() > 0) return rows;
         return select(c, "SELECT TOP (" + clamp(limit, 1, 200) + ") ghno AS id, N'Atiran' AS username, N'operator' AS role_key, "
                 + "N'قبض دریافت' AS module, N'ثبت' AS action, CONVERT(nvarchar(30), ghno) AS reference, ISNULL(mab,0) AS amount, "

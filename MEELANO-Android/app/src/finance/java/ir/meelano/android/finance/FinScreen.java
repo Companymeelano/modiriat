@@ -53,6 +53,11 @@ public abstract class FinScreen {
 
     protected abstract void populate();
 
+    /** How many blocks the current screen has drawn — used by the host's empty-screen check. */
+    public int contentChildCount() {
+        return box.getChildCount();
+    }
+
     /** Rebuilds the whole screen (structure + data) in place — used by the retry action. */
     public final void rerun() {
         try {

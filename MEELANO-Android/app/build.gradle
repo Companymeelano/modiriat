@@ -45,7 +45,8 @@ android {
             // health/loading screen (1.2.0); crash-proof interface (1.2.1); guarded custom drawing
             // with software fallback (1.2.3); direct sign-in on the same path as the other Meelano
             // applications and a full database preload after login (1.2.4); in-app Back button, scrollable
-            // screens and full finance access for accounts the database does not restrict (1.2.5).
+            // screens, full finance access for accounts the database does not restrict, and not a single
+            // DDL statement — every module is read from the database's existing tables (1.2.5).
         }
     }
 

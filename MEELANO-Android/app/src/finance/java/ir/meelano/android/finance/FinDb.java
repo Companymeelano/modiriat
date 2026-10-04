@@ -516,52 +516,82 @@ public final class FinDb {
      * finance operators do inside «آتیران مالی» (reconciliation cases, follow-ups, settlements,
      * daily closing and the audit trail). Created once per installation.
      */
+    /**
+     * The application never creates, alters or drops anything in the Atiran database: the instruction
+     * is to work with the tables that already exist there. This method therefore only <b>detects</b>
+     * which of the project's optional tables are present, so every read and write can be routed to the
+     * real tables when they are not.
+     */
     public void ensureSchema(Connection c) throws SQLException {
         if (schemaReady) return;
-        try (java.sql.Statement st = c.createStatement()) {
-            st.execute("IF OBJECT_ID(N'dbo.meelano_fin_recon',N'U') IS NULL CREATE TABLE dbo.meelano_fin_recon ("
-                    + "id bigint IDENTITY(1,1) NOT NULL PRIMARY KEY, case_key nvarchar(120) NOT NULL, kind nvarchar(40) NOT NULL, "
-                    + "bank_rdf int NULL, jalali_date char(10) NULL, amount money NULL, system_ref nvarchar(120) NULL, "
-                    + "bank_ref nvarchar(120) NULL, reason nvarchar(400) NULL, status nvarchar(24) NOT NULL DEFAULT N'open', "
-                    + "assigned_to nvarchar(120) NULL, resolution nvarchar(600) NULL, approved_by nvarchar(120) NULL, "
-                    + "created_at datetime2 NOT NULL DEFAULT SYSDATETIME(), created_by nvarchar(120) NOT NULL, "
-                    + "updated_at datetime2 NOT NULL DEFAULT SYSDATETIME())");
-            st.execute("IF OBJECT_ID(N'dbo.meelano_fin_followup',N'U') IS NULL CREATE TABLE dbo.meelano_fin_followup ("
-                    + "id bigint IDENTITY(1,1) NOT NULL PRIMARY KEY, shmo int NOT NULL, action nvarchar(40) NOT NULL, "
-                    + "note nvarchar(700) NULL, promise_amount money NULL, promise_date char(10) NULL, "
-                    + "status nvarchar(24) NOT NULL DEFAULT N'pending', next_action nvarchar(200) NULL, "
-                    + "next_date char(10) NULL, assigned_to nvarchar(120) NULL, created_at datetime2 NOT NULL DEFAULT SYSDATETIME(), "
-                    + "created_by nvarchar(120) NOT NULL)");
-            st.execute("IF OBJECT_ID(N'dbo.meelano_fin_settlement',N'U') IS NULL CREATE TABLE dbo.meelano_fin_settlement ("
-                    + "id bigint IDENTITY(1,1) NOT NULL PRIMARY KEY, op_key nvarchar(120) NOT NULL, user_login nvarchar(120) NOT NULL, "
-                    + "jalali_date char(10) NOT NULL, kind nvarchar(24) NOT NULL, amount money NOT NULL, "
-                    + "expected money NULL, difference money NULL, reference nvarchar(120) NULL, receiver nvarchar(120) NULL, "
-                    + "signature varbinary(max) NULL, status nvarchar(24) NOT NULL DEFAULT N'pending', "
-                    + "confirmed_by nvarchar(120) NULL, confirmed_at datetime2 NULL, created_at datetime2 NOT NULL DEFAULT SYSDATETIME(), "
-                    + "created_by nvarchar(120) NOT NULL)");
-            st.execute("IF OBJECT_ID(N'dbo.meelano_fin_dayclose',N'U') IS NULL CREATE TABLE dbo.meelano_fin_dayclose ("
-                    + "id bigint IDENTITY(1,1) NOT NULL PRIMARY KEY, jalali_date char(10) NOT NULL, jdate_key char(10) NOT NULL, "
-                    + "checklist nvarchar(max) NULL, open_issues int NOT NULL DEFAULT 0, status nvarchar(24) NOT NULL DEFAULT N'draft', "
-                    + "note nvarchar(600) NULL, closed_by nvarchar(120) NULL, closed_at datetime2 NULL, "
-                    + "created_at datetime2 NOT NULL DEFAULT SYSDATETIME(), created_by nvarchar(120) NOT NULL)");
-            st.execute("IF OBJECT_ID(N'dbo.meelano_fin_audit',N'U') IS NULL CREATE TABLE dbo.meelano_fin_audit ("
-                    + "id bigint IDENTITY(1,1) NOT NULL PRIMARY KEY, op_key nvarchar(120) NOT NULL, username nvarchar(120) NOT NULL, "
-                    + "role_key nvarchar(60) NULL, module nvarchar(40) NOT NULL, action nvarchar(40) NOT NULL, "
-                    + "reference nvarchar(160) NULL, amount money NULL, before_json nvarchar(max) NULL, after_json nvarchar(max) NULL, "
-                    + "device nvarchar(160) NULL, app_version nvarchar(40) NULL, created_at datetime2 NOT NULL DEFAULT SYSDATETIME())");
-            st.execute("IF OBJECT_ID(N'dbo.meelano_fin_ops',N'U') IS NULL CREATE TABLE dbo.meelano_fin_ops ("
-                    + "op_key nvarchar(120) NOT NULL PRIMARY KEY, module nvarchar(40) NOT NULL, username nvarchar(120) NOT NULL, "
-                    + "result_json nvarchar(max) NULL, created_at datetime2 NOT NULL DEFAULT SYSDATETIME())");
-            st.execute("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_fin_audit_time') "
-                    + "CREATE INDEX IX_fin_audit_time ON dbo.meelano_fin_audit (created_at DESC)");
-            st.execute("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_fin_recon_key') "
-                    + "CREATE UNIQUE INDEX IX_fin_recon_key ON dbo.meelano_fin_recon (case_key)");
-            st.execute("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_fin_settle_op') "
-                    + "CREATE UNIQUE INDEX IX_fin_settle_op ON dbo.meelano_fin_settlement (op_key)");
-            st.execute("IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_fin_follow_shmo') "
-                    + "CREATE INDEX IX_fin_follow_shmo ON dbo.meelano_fin_followup (shmo, created_at DESC)");
-        }
+        probeTables(c);
         schemaReady = true;
+    }
+
+    /** The optional tables of this app. Nothing here is created by the application. */
+    public static final String[] OPTIONAL_TABLES = {
+            "meelano_fin_recon", "meelano_fin_followup", "meelano_fin_settlement",
+            "meelano_fin_dayclose", "meelano_fin_audit", "meelano_fin_ops"
+    };
+
+    private static final Map<String, Boolean> TABLE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Checks every optional table once per run (sys.tables only — no DDL is ever executed). */
+    public static void probeTables(Connection c) {
+        for (String t : OPTIONAL_TABLES) hasTable(c, t);
+    }
+
+    /**
+     * True when the table really exists in the connected database. The answer is cached for the run,
+     * because it cannot change while the operator is signed in — the app never creates anything.
+     */
+    public static boolean hasTable(Connection c, String table) {
+        Boolean cached = TABLE_CACHE.get(table);
+        if (cached != null) return cached;
+        boolean exists = tableExists(c, table);
+        TABLE_CACHE.put(table, exists);
+        return exists;
+    }
+
+    /** Used by support tools to re-check the schema after an administrator adds a table. */
+    public static void forgetTables() {
+        TABLE_CACHE.clear();
+    }
+
+    /**
+     * Connection-free answer from the probe that already ran on the first read. The interface uses it
+     * before offering an action that would write to an optional table, so a database without those
+     * tables simply reports “only reading the real Atiran tables is supported here”.
+     *
+     * <p>Before the first probe finishes the answer is unknown, and an unknown table is treated as
+     * available: the action proceeds and, in the unlikely case the table is really absent, the write
+     * helper reports it in Persian. A missing probe must never block an operator with a wrong claim.
+     */
+    public static boolean tableAvailable(String table) {
+        Boolean v = TABLE_CACHE.get(table);
+        return v == null || v;
+    }
+
+    /** True once the optional tables have been probed at least once in this run. */
+    public static boolean tablesProbed() {
+        for (String t : OPTIONAL_TABLES) if (TABLE_CACHE.containsKey(t)) return true;
+        return false;
+    }
+
+    /** True when the project's optional tables are available (an administrator created them). */
+    public static boolean optionalTablesAvailable(Connection c) {
+        return hasTable(c, "meelano_fin_audit") || hasTable(c, "meelano_fin_ops")
+                || hasTable(c, "meelano_fin_followup") || hasTable(c, "meelano_fin_settlement")
+                || hasTable(c, "meelano_fin_recon") || hasTable(c, "meelano_fin_dayclose");
+    }
+
+    /** Same answer, straight from the probe that already ran — safe for the interface thread. */
+    public static boolean optionalTablesAvailable() {
+        for (String t : OPTIONAL_TABLES) {
+            Boolean v = TABLE_CACHE.get(t);
+            if (v != null && v) return true;
+        }
+        return false;
     }
 
     /**
@@ -573,13 +603,17 @@ public final class FinDb {
             JSONObject result = new JSONObject();
             try (Connection c = open()) {
                 ensureSchema(c);
+                final boolean opsTable = hasTable(c, "meelano_fin_ops");
+                final boolean auditTable = hasTable(c, "meelano_fin_audit");
                 c.setAutoCommit(false);
                 try {
                     String existing = null;
-                    try (PreparedStatement ps = c.prepareStatement(
-                            "SELECT result_json FROM dbo.meelano_fin_ops WHERE op_key = ?")) {
-                        bind(ps, new Object[]{opKey});
-                        try (ResultSet r = ps.executeQuery()) { if (r.next()) existing = r.getString(1); }
+                    if (opsTable) {
+                        try (PreparedStatement ps = c.prepareStatement(
+                                "SELECT result_json FROM dbo.meelano_fin_ops WHERE op_key = ?")) {
+                            bind(ps, new Object[]{opKey});
+                            try (ResultSet r = ps.executeQuery()) { if (r.next()) existing = r.getString(1); }
+                        }
                     }
                     if (existing != null) {
                         result = new JSONObject(existing);
@@ -589,12 +623,15 @@ public final class FinDb {
                         JSONObject produced = op.run(c, args == null ? new JSONObject() : args);
                         if (produced == null) produced = new JSONObject();
                         produced.put("ok", true);
-                        try (PreparedStatement ps = c.prepareStatement(
-                                "INSERT INTO dbo.meelano_fin_ops(op_key, module, username, result_json) VALUES(?,?,?,?)")) {
-                            bind(ps, new Object[]{opKey, module, FinSession.username(), produced.toString()});
-                            ps.executeUpdate();
+                        if (opsTable) {
+                            try (PreparedStatement ps = c.prepareStatement(
+                                    "INSERT INTO dbo.meelano_fin_ops(op_key, module, username, result_json) VALUES(?,?,?,?)")) {
+                                bind(ps, new Object[]{opKey, module, FinSession.username(), produced.toString()});
+                                ps.executeUpdate();
+                            }
                         }
-                        audit(c, opKey, module, action, args, produced);
+                        if (auditTable) audit(c, opKey, module, action, args, produced);
+                        produced.put("auditWritten", auditTable);
                         c.commit();
                         result = produced;
                     }
@@ -618,6 +655,7 @@ public final class FinDb {
     /** Writes the audit row (who / what / when / where / reference). */
     public void audit(Connection c, String opKey, String module, String action, JSONObject args, JSONObject after)
             throws SQLException {
+        if (!hasTable(c, "meelano_fin_audit")) return;
         try (PreparedStatement ps = c.prepareStatement(
                 "INSERT INTO dbo.meelano_fin_audit(op_key, username, role_key, module, action, reference, amount, "
                         + "before_json, after_json, device, app_version) VALUES(?,?,?,?,?,?,?,?,?,?,?)")) {

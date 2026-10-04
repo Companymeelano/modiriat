@@ -194,6 +194,10 @@ public class FinScreenRecon extends FinScreen {
 
     /** Opens (or re-uses) a reconciliation case: idempotent through the case_key unique index. */
     private void openCase(String kind, String reference, String title, double amount, String reason) {
+        if (!FinDb.tableAvailable("meelano_fin_recon")) {
+            host.toast("این قابلیت به جدول اختصاصی «آتیران مالی» نیاز دارد که در این دیتابیس ساخته نشده است. خواندن همهٔ بخش‌ها از جدول‌های خود آتیران کار می‌کند و برنامه هیچ جدولی نمی‌سازد.");
+            return;
+        }
         if (!host.can("finance_reconcile")) {
             host.toast("برای ثبت پرونده مغایرت مجوز finance_reconcile لازم است.");
             return;

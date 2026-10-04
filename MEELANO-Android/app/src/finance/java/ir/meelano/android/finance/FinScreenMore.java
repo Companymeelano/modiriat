@@ -81,23 +81,24 @@ public class FinScreenMore extends FinScreen {
         body.addView(modules, ui.lp(-1, -2));
 
         account();
+        viewState();
         themes();
         support();
         activity(p);
         about();
     }
 
+    /**
+     * Reading is always allowed for a signed-in operator — the data of every module is real and the
+     * whole point of the app is to show it. What a role controls is <b>writing</b>: the row simply says
+     * so instead of hiding the module.
+     */
     private android.view.View entry(String glyph, String title, String sub, String permission, final android.view.View.OnClickListener tap) {
-        final boolean allowed = host.can(permission);
-        android.view.View.OnClickListener click = new android.view.View.OnClickListener() {
-            @Override public void onClick(android.view.View v) {
-                if (allowed) tap.onClick(v);
-                else host.toast("این بخش برای نقش شما مجاز نیست.");
-            }
-        };
-        return ui.listRow(glyph + "  " + title, allowed ? sub : "بدون دسترسی برای این نقش",
-                allowed ? "" : "محدود", allowed ? "" : "بدون دسترسی",
-                allowed ? ui.goldAccent : FinUi.WARNING, click);
+        boolean write = host.can(permission);
+        return ui.listRow(glyph + "  " + title,
+                sub + (write ? "" : " · این نقش فقط می‌تواند بخواند"),
+                write ? "" : "فقط خواندن", write ? "" : "بدون دسترسی نوشتن",
+                write ? ui.goldAccent : FinUi.INFO, tap);
     }
 
     /**
@@ -127,6 +128,28 @@ public class FinScreenMore extends FinScreen {
         card.addView(row2("زمان ورود", clock(s.loginAt)), ui.lp(-1, -2));
         card.addView(ui.text("پیش‌بارگذاری: پس از ورود، همهٔ بخش‌ها یک‌بار از دیتابیس خوانده و ذخیره می‌شوند "
                 + "تا هر صفحه بلافاصله با داده واقعی باز شود.", 11f, ui.textFaint, false), ui.lp(-1, -2));
+        body.addView(card, ui.lp(-1, -2));
+    }
+
+    /**
+     * Live state of the operator desk: what the host is really showing right now, plus the last steps
+     * of the run. If a screen ever comes up empty, this card is the fastest way to say why.
+     */
+    private void viewState() {
+        LinearLayout card = section("◉", "وضعیت نمایش", "بررسی زندهٔ میزکار و آخرین مرحله‌های اجرا");
+        card.addView(row2("تب فعال", host.hostTab()), ui.lp(-1, -2));
+        card.addView(row2("صفحه‌های باز", FinFmt.faNumber(host.hostStackSize())), ui.lp(-1, -2));
+        card.addView(row2("بلوک‌های صفحه", FinFmt.faNumber(box.getChildCount())), ui.lp(-1, -2));
+        card.addView(row2("فرزندان میزبان", FinFmt.faNumber(host.hostContentChildren())), ui.lp(-1, -2));
+        card.addView(row2("دکمه‌های نوار پایین", FinFmt.faNumber(host.hostNavChildren())), ui.lp(-1, -2));
+        card.addView(row2("جدول‌های اختیاری", !FinDb.tablesProbed()
+                ? "در حال تشخیص…" : (FinDb.optionalTablesAvailable()
+                ? "موجود — ثبت‌های برنامه فعال است" : "ساخته نشده — فقط خواندن از جدول‌های آتیران")), ui.lp(-1, -2));
+        android.widget.TextView trail = ui.text(FinCrash.lastSteps(host, 8), 10f, ui.textFaint, false);
+        trail.setTypeface(android.graphics.Typeface.MONOSPACE);
+        card.addView(trail, ui.lp(-1, -2));
+        card.addView(ui.text("دکمهٔ بازگشت به‌تنهایی برنامه را نمی‌بندد؛ اول به خانه برمی‌گردد و برای خروج باید دو بار پشت سر هم زده شود.",
+                11f, ui.textFaint, false), ui.lp(-1, -2));
         body.addView(card, ui.lp(-1, -2));
     }
 
@@ -261,7 +284,7 @@ public class FinScreenMore extends FinScreen {
         card.addView(kv("اتصال", FinEnv.describe()), ui.lp(-1, -2));
         card.addView(kv("تاریخ سرور", host.clockLabel()), ui.lp(-1, -2));
         card.addView(kv("دستگاه", FinSession.deviceLabel()), ui.lp(-1, -2));
-        card.addView(ui.text("این نسخه فقط می‌خواند و می‌نویسد در جدول‌های اختصاصی خود (meelano_fin_*). هیچ مقدار مالی در جدول‌های اصلی آتیران تغییر نمی‌کند و هیچ سند مالی حذف نمی‌شود.",
+        card.addView(ui.text("این نسخه هیچ جدولی نمی‌سازد و هیچ مقدار مالی در جدول‌های اصلی آتیران را تغییر نمی‌دهد؛ همهٔ اطلاعات هر بخش از همان جدول‌های موجود دیتابیس آتیران خوانده می‌شود. اگر جدول‌های اختیاری «آتیران مالی» از قبل وجود داشته باشند، ثبت‌های خود برنامه (پیگیری، تسویه، بستن روز، مغایرت) در همان‌ها نگه‌داری می‌شود.",
                 11.5f, ui.textDim, false), ui.lp(-1, -2));
 
         LinearLayout tools = ui.row();

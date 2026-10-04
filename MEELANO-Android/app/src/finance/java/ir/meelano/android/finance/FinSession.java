@@ -178,21 +178,30 @@ public final class FinSession {
         boolean manager = "admin".equals(r) || "manager".equals(r);
         boolean accountant = "accountant".equals(r) || "senior_accountant".equals(r);
         boolean collections = "collections".equals(r);
-        boolean operator = "finance_operator".equals(r);
-        if (manager || operator) {
+        boolean financeOperator = "finance_operator".equals(r);
+        boolean operator = "visitor".equals(r) || "distributor".equals(r) || "driver".equals(r)
+                || "worker".equals(r) || "employee".equals(r) || "warehouse".equals(r) || "sales_employee".equals(r);
+        if (manager || financeOperator) {
             // The finance edition is the management tool itself: an account that the database does not
             // restrict works with every finance module. Anything the database *does* say (a row in
             // meelano_access_users / a role column / Atiran's role table) still wins, because it is
             // resolved before this default is used.
             s.addAll(Arrays.asList(FINANCE_PERMISSIONS));
+        } else if (operator) {
+            // Atiran's own operators (the visitors table) work with every finance module as well; the
+            // write actions that touch accounting documents stay with the accounting roles above.
+            s.addAll(Arrays.asList("finance_dashboard", "finance_sales", "finance_banks", "finance_receivables",
+                    "finance_checks", "finance_pos", "finance_cash", "finance_reports", "finance_export",
+                    "finance_print", "finance_create"));
         } else if (accountant) {
             s.addAll(Arrays.asList("finance_dashboard", "finance_sales", "finance_banks", "finance_receivables",
                     "finance_checks", "finance_pos", "finance_cash", "finance_settlement", "finance_reports",
                     "finance_reconcile", "finance_create", "finance_confirm", "finance_export", "finance_print",
                     "finance_daily_close", "finance_audit"));
         } else if (collections) {
-            s.addAll(Arrays.asList("finance_dashboard", "finance_receivables", "finance_checks", "finance_reports",
-                    "finance_create", "finance_export"));
+            s.addAll(Arrays.asList("finance_dashboard", "finance_sales", "finance_banks", "finance_receivables",
+                    "finance_checks", "finance_pos", "finance_cash", "finance_reports",
+                    "finance_create", "finance_export", "finance_print"));
         } else {
             s.addAll(Arrays.asList("finance_dashboard"));
         }

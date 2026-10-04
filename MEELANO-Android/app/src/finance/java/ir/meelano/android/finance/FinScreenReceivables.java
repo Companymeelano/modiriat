@@ -253,6 +253,10 @@ public class FinScreenReceivables extends FinScreen {
 
     /** Guarded write: permission + transaction + audit + duplicate protection. */
     private void newFollowUp() {
+        if (!FinDb.tableAvailable("meelano_fin_followup")) {
+            host.toast("این قابلیت به جدول اختصاصی «آتیران مالی» نیاز دارد که در این دیتابیس ساخته نشده است. خواندن همهٔ بخش‌ها از جدول‌های خود آتیران کار می‌کند و برنامه هیچ جدولی نمی‌سازد.");
+            return;
+        }
         if (!host.can("finance_create")) {
             host.toast("برای ثبت پیگیری مجوز finance_create لازم است.");
             return;

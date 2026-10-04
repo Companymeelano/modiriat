@@ -46,10 +46,12 @@ public class FinScreenDaily extends FinScreen {
         String today = FinQueries.serverToday(c);
         JSONObject payload = FinQueries.dailyReport(c, today);
         payload.put("today", today);
-        payload.put("closes", FinDb.select(c, "SELECT TOP (20) id, jalali_date, jdate_key, open_issues, status, note, "
-                + "closed_by, created_by, CONVERT(nvarchar(19), closed_at, 120) AS closed_at, "
-                + "CONVERT(nvarchar(19), created_at, 120) AS created_at "
-                + "FROM dbo.meelano_fin_dayclose WITH (NOLOCK) ORDER BY id DESC"));
+        payload.put("closes", FinDb.hasTable(c, "meelano_fin_dayclose")
+                ? FinDb.select(c, "SELECT TOP (20) id, jalali_date, jdate_key, open_issues, status, note, "
+                        + "closed_by, created_by, CONVERT(nvarchar(19), closed_at, 120) AS closed_at, "
+                        + "CONVERT(nvarchar(19), created_at, 120) AS created_at "
+                        + "FROM dbo.meelano_fin_dayclose WITH (NOLOCK) ORDER BY id DESC")
+                : new JSONArray());
         payload.put("mismatchCount", FinQueries.mismatchCount(c, today, today));
         JSONArray a = new JSONArray();
         a.put(payload);

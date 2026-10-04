@@ -302,6 +302,15 @@ public class AtiranFinanceActivity extends Activity {
 
     public FinUi ui() { return ui; }
 
+    /** Live view state — shown by the «وضعیت نمایش» card in «بیشتر». */
+    public int hostContentChildren() { return contentHost == null ? -1 : contentHost.getChildCount(); }
+
+    public int hostNavChildren() { return navBar == null ? -1 : navBar.getChildCount(); }
+
+    public int hostStackSize() { return stack.size(); }
+
+    public String hostTab() { return tab; }
+
     public FinDb db() { return db; }
 
     public FinSession session() { return FinSession.get(); }
@@ -869,14 +878,25 @@ public class AtiranFinanceActivity extends Activity {
         navBar = ui.row();
         navBar.setBackground(ui.gradient(ui.surface, FinUi.mix(ui.surface, ui.goldAccent, 0.08f), 0));
         navBar.setPadding(ui.dp(6), ui.dp(6), ui.dp(6), ui.dp(6));
+        navBar.setMinimumHeight(ui.dp(58));      // the tab bar must never collapse to nothing
         root.addView(navBar, ui.lp(-1, -2));
 
         setContentView(root);
         FinCrash.step(this, "desk-built");
         renderHeader("… در حال اتصال", true);
-        renderNav();
-        FinCrash.step(this, "nav-rendered");
-        showTab(TAB_HOME, true);
+        try {
+            renderNav();
+        } catch (Throwable t) {
+            // A broken tab bar must not cost the operator the desk: it is rebuilt on any tab change.
+            FinCrash.log(this, "nav-failed", t.getClass().getName() + ": " + t.getMessage());
+        }
+        FinCrash.step(this, "nav-rendered:" + (navBar == null ? -1 : navBar.getChildCount()));
+        try {
+            showTab(TAB_HOME, true);
+        } catch (Throwable t) {
+            FinCrash.log(this, "tab-failed", t.getClass().getName() + ": " + t.getMessage());
+            showScreenError(current, t);
+        }
         updateBackCallback();
         loadServerDate();
         probeConnection();
