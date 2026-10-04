@@ -163,7 +163,7 @@ public final class FinDb {
             out.put("ok", true);
             out.put("ms", System.currentTimeMillis() - started);
             lastError = "";
-        } catch (Exception e) {
+        } catch (Throwable e) {
             lastError = safeMessage(e);
             try {
                 out.put("ok", false);
@@ -286,7 +286,9 @@ public final class FinDb {
                 cacheTime.put(key, System.currentTimeMillis());
                 saveDisk(key, result);
                 deliver(cb, result);
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                // Throwable, not Exception: an OutOfMemoryError or a driver LinkageError raised on a
+                // worker thread would otherwise terminate the whole process without a message.
                 lastError = safeMessage(e);
                 JSONObject disk = loadDisk(key);
                 if (disk != null) {
@@ -483,12 +485,12 @@ public final class FinDb {
                 } finally {
                     try { c.setAutoCommit(true); } catch (Exception ignored) { }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 lastError = safeMessage(e);
                 try {
                     result.put("ok", false);
                     result.put("error", lastError);
-                } catch (Exception ignored) { }
+                } catch (Throwable ignored) { }
             }
             deliver(cb, result);
         });

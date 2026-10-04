@@ -1,7 +1,11 @@
 package ir.meelano.android.finance;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Process;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,19 +43,66 @@ public final class FinCrash {
 
     private FinCrash() { }
 
-    /** Installs the process-wide handler once; the previous handler still runs, so Android behaves as usual. */
+    /**
+     * Installs the process-wide handler once.
+     *
+     * The handler writes the full report (exception + the last steps the app had reached), then
+     * restarts the activity so the operator sees the reason on the phone itself instead of a closing
+     * window. Restarting is rate-limited, so a reproducible crash can never become a restart loop.
+     */
     public static synchronized void install(final Context ctx) {
         if (installed) return;
         installed = true;
         final Thread.UncaughtExceptionHandler previous = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
+            boolean relaunched = false;
             try {
                 write(ctx, CRASH_FILE, describe(error));
+                relaunched = relaunch(ctx);
             } catch (Throwable ignored) {
                 // A crash handler must never crash.
             }
+            if (relaunched) {
+                // Give the system a moment to hand the restart to the activity manager, then let the
+                // process end normally instead of leaving it in an undefined state.
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    try { Process.killProcess(Process.myPid()); } catch (Throwable ignored) { }
+                }, 900L);
+                return;
+            }
             if (previous != null) previous.uncaughtException(thread, error);
+            else Process.killProcess(Process.myPid());
         });
+    }
+
+    /** Restarts the launcher activity once per crash window; returns false when that is too soon. */
+    private static boolean relaunch(Context ctx) {
+        try {
+            android.content.SharedPreferences p = ctx.getSharedPreferences("atiran_finance", Context.MODE_PRIVATE);
+            long last = p.getLong("fin_last_relaunch", 0L);
+            long now = System.currentTimeMillis();
+            if (now - last < 45_000L) return false;
+            p.edit().putLong("fin_last_relaunch", now).apply();
+            Intent i = new Intent();
+            i.setClassName(ctx.getPackageName(), "ir.meelano.android.finance.AtiranFinanceActivity");
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            i.putExtra("fin.recovered", true);
+            ctx.startActivity(i);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** The last {@code n} steps the application reached — the trail that names the failing stage. */
+    public static String lastSteps(Context ctx, int n) {
+        String boot = bootLog(ctx);
+        if (boot == null || boot.trim().isEmpty()) return "(بدون گزارش مرحله)";
+        String[] lines = boot.trim().split("\n");
+        StringBuilder b = new StringBuilder();
+        int from = Math.max(0, lines.length - Math.max(1, n));
+        for (int i = from; i < lines.length; i++) b.append(lines[i]).append('\n');
+        return b.toString();
     }
 
     /** One startup step; {@code detail} may be a duration or a result, never a credential. */
@@ -74,6 +125,14 @@ public final class FinCrash {
     public static String lastCrash(Context ctx) { return read(ctx, CRASH_FILE); }
 
     public static String bootLog(Context ctx) { return read(ctx, BOOT_FILE); }
+
+    private static Context ctxOf() { try { return FinApp.context(); } catch (Throwable t) { return null; } }
+
+    /** Records a milestone of the running application, in the same trail as the startup log. */
+    public static void step(Context ctx, String step) {
+        if (ctx == null) return;
+        log(ctx, step, null);
+    }
 
     public static void clearCrash(Context ctx) {
         try {
@@ -108,6 +167,13 @@ public final class FinCrash {
                 .append(" · Android ").append(Build.VERSION.RELEASE).append(" (API ").append(Build.VERSION.SDK_INT)
                 .append(") · کد رویداد ").append(eventCode(t)).append('\n');
         b.append(t.getClass().getName()).append(": ").append(String.valueOf(t.getMessage())).append('\n');
+        try {
+            Context c = ctxOf();
+            if (c != null) {
+                b.append("—— آخرین مرحله‌های اجرا ——\n");
+                b.append(lastSteps(c, 14));
+            }
+        } catch (Throwable ignored) { }
         try {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);

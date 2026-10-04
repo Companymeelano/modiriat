@@ -24,10 +24,14 @@
 
     <!-- This edition replaces the shared app icon, its round icon and its label, so the three
          attributes are explicitly replaced instead of merged (the shared manifest declares them). -->
+    <!-- largeHeap: this edition hosts a JDBC driver and draws its own charts, so it legitimately
+         needs more headroom than a list-only app; a bigger heap keeps a low-memory phone from
+         killing the process while the dashboard is being built. -->
     <application
         android:name=".finance.FinApp"
         android:icon="@mipmap/ic_fin_launcher"
         android:label="@string/fin_app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_fin_launcher_round"
         tools:replace="android:icon,android:label,android:roundIcon">
 

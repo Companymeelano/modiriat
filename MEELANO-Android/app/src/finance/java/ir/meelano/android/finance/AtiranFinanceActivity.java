@@ -191,6 +191,21 @@ public class AtiranFinanceActivity extends Activity {
         }
         @Override public void splashPlainLogin() { showPlainPanel(); }
         @Override public void splashDiagnostics() { showDiagnostics(null); }
+        @Override public void splashCopyReport() { copyText(supportBundle(), "گزارش خطای آتیران مالی"); }
+    }
+
+    /** Everything support needs in one text: version, device, last crash and the step trail. */
+    public String supportBundle() {
+        StringBuilder b = new StringBuilder();
+        b.append("گزارش پشتیبانی «آتیران مالی»\n");
+        b.append("نسخه ").append(safeVersion()).append(" · ").append(FinSession.deviceLabel()).append('\n');
+        b.append("هدف: ").append(FinEnv.describe()).append('\n');
+        String crash = FinCrash.lastCrash(this);
+        if (crash != null && !crash.trim().isEmpty()) {
+            b.append("\n—— آخرین خطای کشنده ——\n").append(crash.trim()).append('\n');
+        }
+        b.append("\n—— مرحله‌های اجرا (آخرین ۴۰ خط) ——\n").append(FinCrash.lastSteps(this, 40));
+        return b.toString();
     }
 
     /** Falls back to the plain panel (with its own sign-in form) — always available. */
@@ -409,11 +424,17 @@ public class AtiranFinanceActivity extends Activity {
 
     private final class BootListener implements FinBoot.Listener {
         @Override public void bootLogin(String user, String pass) {
-            attemptLogin(user, pass, bootSink);
+            try {
+                attemptLogin(user, pass, bootSink);
+            } catch (Throwable t) {
+                boot.fail("ورود", t);
+            }
         }
-        @Override public void bootDiagnostics() { showDiagnostics(bootSink); }
+        @Override public void bootDiagnostics() {
+            try { showDiagnostics(bootSink); } catch (Throwable t) { boot.fail("بررسی اتصال", t); }
+        }
         @Override public void bootSelfTest() { runSelfTest(); }
-        @Override public void bootCopy() { copyText(boot.logText(), "گزارش آتیران مالی"); }
+        @Override public void bootCopy() { copyText(supportBundle(), "گزارش آتیران مالی"); }
         @Override public void bootContinue() {
             boot.showLogin();
             if (ui == null) {
@@ -427,6 +448,23 @@ public class AtiranFinanceActivity extends Activity {
     }
 
     private final DesignedLoginSink designedSink = new DesignedLoginSink();
+
+    /**
+     * The sign-in button. A click handler that throws would reach the main thread loop and close the
+     * app with no message, so the attempt is entered through this guard in every case.
+     */
+    private void safeAttempt(EditText user, EditText pass) {
+        try {
+            attemptLogin(user.getText().toString().trim(), pass.getText().toString(), designedSink);
+        } catch (Throwable t) {
+            FinCrash.log(this, "login-click", t.getClass().getName() + ": " + t.getMessage());
+            if (loginState != null) {
+                loginState.setTextColor(FinUi.DANGER);
+                loginState.setText("ورود اجرا نشد · کد رویداد " + FinCrash.eventCode(t) + "\n"
+                        + t.getClass().getSimpleName() + ": " + t.getMessage());
+            }
+        }
+    }
 
     /**
      * One sign-in attempt. Runs on its own daemon thread (never the UI thread and never the query
@@ -474,6 +512,7 @@ public class AtiranFinanceActivity extends Activity {
                     sink.elapsed(0);
                     if (r.ok && r.session != null) {
                         try { r.session.remember(AtiranFinanceActivity.this); } catch (Throwable ignored) { }
+                        FinCrash.step(AtiranFinanceActivity.this, "login-ok:" + FinSession.roleKey());
                         sink.message("خوش آمدید " + FinSession.displayOrUser(), false);
                         sink.success();
                     } else {
@@ -609,12 +648,17 @@ public class AtiranFinanceActivity extends Activity {
         lp3.topMargin = ui.dp(8);
         card.addView(diag, lp3);
 
-        loginButton.setOnClickListener(v -> attemptLogin(
-                user.getText().toString().trim(), pass.getText().toString(), designedSink));
-        diag.setOnClickListener(v -> showDiagnostics(designedSink));
+        loginButton.setOnClickListener(v -> safeAttempt(user, pass));
+        diag.setOnClickListener(v -> {
+            try {
+                showDiagnostics(designedSink);
+            } catch (Throwable t) {
+                toast("گزارش بررسی اجرا نشد · کد رویداد " + FinCrash.eventCode(t));
+            }
+        });
         pass.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                attemptLogin(user.getText().toString().trim(), pass.getText().toString(), designedSink);
+                safeAttempt(user, pass);
                 return true;
             }
             return false;
@@ -827,8 +871,10 @@ public class AtiranFinanceActivity extends Activity {
         root.addView(navBar, ui.lp(-1, -2));
 
         setContentView(root);
+        FinCrash.step(this, "desk-built");
         renderHeader("… در حال اتصال", true);
         renderNav();
+        FinCrash.step(this, "nav-rendered");
         showTab(TAB_HOME, true);
         updateBackCallback();
         loadServerDate();
@@ -908,7 +954,11 @@ public class AtiranFinanceActivity extends Activity {
             cell.addView(g, ui.lp(-1, -2));
             cell.addView(l, ui.lp(-1, -2));
             cell.setOnClickListener(v -> {
-                if (!t[0].equals(tab)) showTab(t[0], true);
+                try {
+                    if (!t[0].equals(tab)) showTab(t[0], true);
+                } catch (Throwable x) {
+                    reportUiError(x);
+                }
             });
             cell.setClickable(true);
             cell.setFocusable(true);

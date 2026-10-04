@@ -35,6 +35,8 @@ final class FinSplash {
         void splashRetry();
         void splashPlainLogin();
         void splashDiagnostics();
+        /** Copies the full support bundle (last crash + the steps that led to it). */
+        void splashCopyReport();
     }
 
     private final Activity a;
@@ -226,18 +228,23 @@ final class FinSplash {
         if (crash == null || crash.trim().isEmpty()) return null;
         String[] lines = crash.trim().split("\n");
         StringBuilder reason = new StringBuilder();
-        for (int i = 0; i < lines.length && i < 3; i++) {
-            if (i > 0) reason.append('\n');
-            reason.append(lines[i]);
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty()) continue;
+            if (line.startsWith("==")) continue;                      // device/event-code header
+            if (line.startsWith("\tat ")) continue;                   // stack frames
+            if (reason.length() > 0) reason.append('\n');
+            reason.append(line);
+            if (reason.length() > 260) break;
         }
         LinearLayout card = ui.cardTone(FinUi.DANGER);
         card.addView(ui.text("⚠  اجرای قبلی برنامه با خطا بسته شد", 13f, ui.textColor, true), ui.lp(-1, -2));
         TextView body = ui.text(reason.toString(), 11f, ui.textDim, false);
-        body.setMaxLines(4);
+        body.setMaxLines(9);
         card.addView(body, ui.lp(-1, -2));
         LinearLayout row = ui.row();
-        row.addView(ui.ghostButton("کپی گزارش کامل", FinUi.DANGER, v -> {
-            if (listener != null) listener.splashDiagnostics();
+        row.addView(ui.ghostButton("کپی گزارش خطا", FinUi.DANGER, v -> {
+            if (listener != null) listener.splashCopyReport();
         }), ui.lp(0, -2, 1f));
         LinearLayout.LayoutParams rp = ui.lp(-1, -2);
         rp.topMargin = ui.dp(8);

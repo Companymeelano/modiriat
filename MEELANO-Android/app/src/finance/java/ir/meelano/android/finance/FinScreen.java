@@ -43,6 +43,7 @@ public abstract class FinScreen {
 
     /** Build the structure (headings, filter rows, empty containers). */
     public View build() {
+        FinCrash.step(host, "screen-build:" + getClass().getSimpleName());
         box.removeAllViews();
         box.setBackgroundColor(ui.bg);
         ui.pad(box);
@@ -67,7 +68,13 @@ public abstract class FinScreen {
 
     public final void load(boolean force) {
         if (force) refreshNonce++;
-        fetch();
+        FinCrash.step(host, "screen-load:" + getClass().getSimpleName());
+        try {
+            fetch();
+        } catch (Throwable t) {
+            // A screen that cannot even start its query reports itself instead of taking the app down.
+            host.reportUiError(t);
+        }
     }
 
     protected abstract void fetch();

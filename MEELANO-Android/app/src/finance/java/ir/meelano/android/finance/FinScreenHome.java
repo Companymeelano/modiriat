@@ -92,12 +92,35 @@ public class FinScreenHome extends FinScreen {
         }
 
         addCard(kpis(p), 12);
-        collectionCard(p);
-        alerts(p);
-        trend(p);
-        debtors(p);
-        worklist(p);
-        legend();
+        FinCrash.step(host, "home:kpis");
+        // The chart sections are added one frame later: the first real numbers appear immediately and
+        // the cost of building every canvas is spread over frames instead of one large spike.
+        box.postDelayed(() -> {
+            safe("وضعیت وصول و ترکیب دریافت", () -> collectionCard(p));
+            safe("هشدارها و کارهای باز", () -> alerts(p));
+            safe("روند فروش و وصول", () -> trend(p));
+            safe("بزرگ‌ترین بدهکاران", () -> debtors(p));
+            safe("فهرست کارها", () -> worklist(p));
+            safe("راهنمای نمودارها", () -> legend());
+            FinCrash.step(host, "home:sections-done");
+        }, 32L);
+    }
+
+    /**
+     * Runs one section of the home screen. A section that fails shows its own red note with the
+     * exception and does not cost the operator the other seven sections.
+     */
+    private void safe(String label, Runnable section) {
+        try {
+            section.run();
+        } catch (Throwable t) {
+            FinCrash.log(host, "home-section", label + ": " + t.getClass().getName() + ": " + t.getMessage());
+            LinearLayout card = ui.cardTone(FinUi.DANGER);
+            card.addView(ui.text("⚠  نمایش «" + label + "» ممکن نشد", 12.5f, ui.textColor, true), ui.lp(-1, -2));
+            card.addView(ui.text(FinDiag.shortError(t), 11f, ui.textDim, false), ui.lp(-1, -2));
+            card.addView(ui.text("کد رویداد: " + FinCrash.eventCode(t), 11f, FinUi.DANGER, true), ui.lp(-1, -2));
+            addCard(card, 12);
+        }
     }
 
     // ------------------------------------------------------------------ KPI tiles (max 8)
