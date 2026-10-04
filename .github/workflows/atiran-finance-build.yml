@@ -52,12 +52,34 @@ jobs:
           done
 
       - name: Finance unit tests (informative, never blocks the APK)
+        id: finTests
         if: success()
         continue-on-error: true
         working-directory: MEELANO-Android
         run: |
           set -o pipefail
-          gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testFinanceDebugUnitTest 2>&1 | tail -40
+          gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g testFinanceDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/fin-tests.log" | tail -40
+
+      - name: Publish unit test summary when they do not pass
+        if: always() && github.event_name == 'push' && steps.finTests.outcome != 'success'
+        run: |
+          mkdir -p docs/finance
+          {
+            echo "# Finance unit test output"
+            echo
+            echo '```'
+            grep -v -E "derakhshan-install|password" "$RUNNER_TEMP/fin-tests.log" | tail -120
+            echo '```'
+          } > docs/finance/unit-tests-failed.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -f docs/finance/unit-tests-failed.md
+          git commit -q -m "Atiran Finance unit test output [skip ci]" || echo "no changes"
+          for i in 1 2 3; do
+            git pull --rebase -q origin "${GITHUB_REF_NAME}" || true
+            git push -q origin HEAD:${GITHUB_REF_NAME} && break
+            sleep 6
+          done
 
       - name: Publish build diagnostics to the branch
         if: failure() && github.event_name == 'push'

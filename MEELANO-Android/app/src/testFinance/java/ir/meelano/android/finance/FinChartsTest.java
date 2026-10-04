@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import ir.meelano.android.MeelanoJalali;
+
 /**
  * Pure-JVM checks for the pieces of «آتیران مالی» that decide what an operator sees: the rounding of
  * a chart axis, the amount formats, the period presets and the status colour language.
@@ -52,8 +54,14 @@ public class FinChartsTest {
         assertEquals("1405/07/10", FinFmt.periodRange("yesterday", today, null, null)[0]);
         assertEquals("1405/07/05", FinFmt.periodRange("7d", today, null, null)[0]);
         assertEquals("1405/07/01", FinFmt.periodRange("month", today, null, null)[0]);
-        assertEquals("1405/06/01", FinFmt.periodRange("lastmonth", today, null, null)[0]);
-        assertEquals("1405/06/31", FinFmt.periodRange("lastmonth", today, null, null)[1]);
+        // «ماه گذشته» از اولین روز ماه قبل تا آخرین روز ماه قبل است؛ انتظار از خود تقویم پروژه
+        // ساخته می‌شود (نه از یک تاریخ دست‌نویس) تا تست قرارداد را بسنجد، نه حافظه نویسنده را.
+        String thisMonthStart = FinFmt.periodRange("month", today, null, null)[0];
+        String previousMonthEnd = FinFmt.addDays(thisMonthStart, -1);
+        String[] previousMonth = FinFmt.periodRange("lastmonth", today, null, null);
+        assertEquals(previousMonthEnd, previousMonth[1]);
+        assertEquals(MeelanoJalali.monthStart(previousMonthEnd), previousMonth[0]);
+        assertTrue(previousMonth[0].compareTo(previousMonth[1]) < 0);
         assertEquals("امروز", FinFmt.periodLabel("today"));
         // An unknown key falls back to a single day instead of an open-ended range.
         assertEquals(today, FinFmt.periodRange("nonsense", today, null, null)[0]);
