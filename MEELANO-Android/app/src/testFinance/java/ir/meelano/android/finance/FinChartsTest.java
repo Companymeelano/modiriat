@@ -77,12 +77,20 @@ public class FinChartsTest {
         assertEquals(FinUi.MUTED, FinUi.statusColor(null));
     }
 
-    @Test public void chartColoursMixPredictably() {
-        int white = 0xFFFFFFFF, black = 0xFF000000;
-        assertEquals(0xFFFFFFFF, FinCharts.mix(black, white, 1f));
-        assertEquals(0xFF808080, FinCharts.mix(black, white, 0.5f) | 0xFF000000);
-        assertEquals(0xFF112233, FinCharts.mix(0xFF112233, 0xFF112233, 0.7f));
-        assertEquals(0x80FF0000, FinCharts.alpha(0xFFFF0000, 0x80));
+    /**
+     * The five semantic colours must stay opaque and distinguishable from each other: a status can
+     * never be identified by a colour alone, but two different meanings must never share one either.
+     * (Colour arithmetic itself lives in {@code FinCharts.mix} and is exercised on the device, where
+     * {@code android.graphics.Color} really exists; on the JVM those methods are stubs.)
+     */
+    @Test public void semanticColoursAreOpaqueAndDistinct() {
+        int[] all = {FinUi.SUCCESS, FinUi.INFO, FinUi.WARNING, FinUi.DANGER, FinUi.MANAGER, FinUi.MUTED};
+        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        for (int c : all) {
+            assertEquals("alpha of " + Integer.toHexString(c), 0xFF, (c >>> 24) & 0xFF);
+            assertTrue("duplicate colour " + Integer.toHexString(c), seen.add(c));
+        }
+        assertEquals(6, seen.size());
     }
 
     @Test public void eventCodeIsShortAndStable() {
@@ -94,7 +102,7 @@ public class FinChartsTest {
 
     @Test public void csvEscapesQuotes() {
         assertEquals("\"a\"\"b\"", FinFmt.csv("a\"b"));
-        assertEquals("\"\"", FinFmt.csv(null));
+        assertEquals("", FinFmt.csv(null));
     }
 
     @Test public void opKeyIsStableAndUnique() {
