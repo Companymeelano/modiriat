@@ -123,8 +123,13 @@ jobs:
           mkdir -p apk-finance
           cp MEELANO-Android/app/build/outputs/apk/finance/debug/*.apk apk-finance/AtiranFinance-debug.apk
           cp MEELANO-Android/app/build/outputs/apk/finance/release/*.apk apk-finance/AtiranFinance-release.apk
-          FIN_VERSION=$(grep -A 6 "finance {" MEELANO-Android/app/build.gradle | grep -oP "versionName\s+'\K[0-9.]+" | head -1)
-          FIN_CODE=$(grep -A 6 "finance {" MEELANO-Android/app/build.gradle | grep -oP "versionCode\s+\K[0-9]+" | head -1)
+          # Read the finance flavour's own version lines from its block, whatever the comments around
+          # them look like (a fixed-size grep window silently fell back to an old default once).
+          FIN_BLOCK=$(awk '/finance \{/{f=1} f{print} f&&/^        \}/{exit}' MEELANO-Android/app/build.gradle)
+          FIN_VERSION=$(printf '%s\n' "$FIN_BLOCK" | grep -oP "versionName\s+'\K[0-9.]+" | head -1)
+          FIN_CODE=$(printf '%s\n' "$FIN_BLOCK" | grep -oP "versionCode\s+\K[0-9]+" | head -1)
+          echo "finance version detected: code=${FIN_CODE:-?} name=${FIN_VERSION:-?}"
+          test -n "$FIN_VERSION" && test -n "$FIN_CODE"
           printf '{\"versionCode\": %s, \"versionName\": \"%s\", \"url\": \"https://github.com/%s/raw/%s/apk-finance/AtiranFinance-release.apk\"}\n' \
             "${FIN_CODE:-2}" "${FIN_VERSION:-1.1.0}" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" > apk-finance/latest-finance.json
           cat apk-finance/latest-finance.json
