@@ -1179,11 +1179,11 @@ public class MainActivity extends Activity {
                 .apply();
     }
 
-    private String defaultThemeId() { return STAFF_EDITION ? "amethyst_pearl" : STORE_EDITION ? "emerald_royal" : DEFAULT_THEME; }
+    private String defaultThemeId() { return MANAGEMENT_EDITION ? "atiran_champagne" : STAFF_EDITION ? "amethyst_pearl" : STORE_EDITION ? "emerald_royal" : DEFAULT_THEME; }
 
     private boolean isLightThemeId(String id) {
         String v = id == null ? "" : id.trim();
-        return "emerald_royal".equals(v) || "amethyst_pearl".equals(v) || "azure_diamond".equals(v) || "crystal_lagoon".equals(v) || "ivory_sunrise".equals(v) ||
+        return "atiran_champagne".equals(v) || "emerald_royal".equals(v) || "amethyst_pearl".equals(v) || "azure_diamond".equals(v) || "crystal_lagoon".equals(v) || "ivory_sunrise".equals(v) ||
                 "pearl_platinum".equals(v) || "rose_quartz_lux".equals(v) || "emerald_silk".equals(v) || "hazelnut_gold".equals(v);
     }
 
@@ -1236,7 +1236,7 @@ public class MainActivity extends Activity {
     private String normalizeThemeId(String themeId) {
         String id = themeId == null ? defaultThemeId() : themeId.trim();
         if (id.isEmpty()) return defaultThemeId();
-        if ("emerald_royal".equals(id) || "amethyst_pearl".equals(id) || "pearl_platinum".equals(id) || "rose_quartz_lux".equals(id) || "emerald_silk".equals(id) ||
+        if ("atiran_champagne".equals(id) || "emerald_royal".equals(id) || "amethyst_pearl".equals(id) || "pearl_platinum".equals(id) || "rose_quartz_lux".equals(id) || "emerald_silk".equals(id) ||
                 "royal_amethyst".equals(id) || "ivory_sunrise".equals(id) || "crystal_lagoon".equals(id) || "azure_diamond".equals(id) || "noir_aurora".equals(id) || "onyx_gold".equals(id) || "hazelnut_gold".equals(id) || THEME_AUTO.equals(id)) return id;
         return defaultThemeId();
     }
@@ -1248,10 +1248,10 @@ public class MainActivity extends Activity {
         catch (Exception ignored) { return false; }
     }
 
-    /** Follow-system theme: light Azure Diamond by day, Noir Aurora when the phone is in dark mode. */
+    /** Follow the system's light/dark mode while keeping each edition's own branded palette. */
     private String resolveThemeId(String themeId) {
         String id = normalizeThemeId(themeId);
-        return THEME_AUTO.equals(id) ? (systemDarkMode() ? "noir_aurora" : (STAFF_EDITION ? "amethyst_pearl" : STORE_EDITION ? "emerald_royal" : "azure_diamond")) : id;
+        return THEME_AUTO.equals(id) ? (systemDarkMode() ? (MANAGEMENT_EDITION ? "onyx_gold" : "noir_aurora") : defaultThemeId()) : id;
     }
 
     private boolean lastAppliedDark = false;
@@ -1417,6 +1417,25 @@ public class MainActivity extends Activity {
             HEADER_END = Color.rgb(202, 236, 247);
             HERO_START = Color.rgb(219, 248, 251);
             HERO_END = Color.rgb(245, 253, 255);
+            ON_PRIMARY = Color.WHITE;
+        } else if ("atiran_champagne".equals(id)) {
+            // Atiran management signature: warm porcelain, deep champagne gold, restrained emerald and ink.
+            NAVY = Color.rgb(244, 241, 234);
+            SURFACE = Color.rgb(255, 254, 250);
+            SURFACE_2 = Color.rgb(237, 230, 214);
+            GOLD = Color.rgb(139, 101, 42);
+            GOLD_2 = Color.rgb(211, 174, 100);
+            SUCCESS = Color.rgb(25, 124, 95);
+            INFO = Color.rgb(72, 105, 130);
+            WARNING = Color.rgb(174, 116, 42);
+            DANGER = Color.rgb(175, 68, 78);
+            TEXT = Color.rgb(29, 39, 43);
+            MUTED = Color.rgb(96, 106, 108);
+            BORDER = Color.argb(82, 148, 113, 57);
+            HEADER_START = Color.rgb(253, 251, 245);
+            HEADER_END = Color.rgb(235, 226, 207);
+            HERO_START = Color.rgb(241, 231, 209);
+            HERO_END = Color.rgb(255, 253, 248);
             ON_PRIMARY = Color.WHITE;
         } else if ("hazelnut_gold".equals(id)) {
             // «فندقی طلایی»: cream + caramel, the same palette as the gold «D» app icon.
@@ -1600,6 +1619,7 @@ public class MainActivity extends Activity {
     }
 
     private String themeName(String id) {
+        if ("atiran_champagne".equals(id)) return "آتیران شامپاینی";
         if ("pearl_platinum".equals(id)) return "مروارید پلاتینیوم";
         if ("rose_quartz_lux".equals(id)) return "رز کوارتز لاکچری";
         if ("emerald_royal".equals(id)) return "زمرد سلطنتی (هم‌رنگ آیکون فروشگاه)";
@@ -1611,7 +1631,7 @@ public class MainActivity extends Activity {
         if ("hazelnut_gold".equals(id)) return "فندقی طلایی";
         if ("azure_diamond".equals(id)) return "الماس آبی روشن";
         if ("noir_aurora".equals(id)) return "نوآر شفق لوکس";
-        if ("onyx_gold".equals(id)) return "اونیکس طلایی پخش درخشان";
+        if ("onyx_gold".equals(id)) return MANAGEMENT_EDITION ? "اونیکس طلایی آتیران" : "اونیکس طلایی پخش درخشان";
         if (THEME_AUTO.equals(id)) return "خودکار (هماهنگ با حالت روز/شب گوشی)";
         return "الماس آبی روشن";
     }
@@ -2307,7 +2327,7 @@ public class MainActivity extends Activity {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(8), dp(8), dp(8), dp(4));
-        TextView hint = text(VISITOR_EDITION ? "پالت‌ها بازطراحی شدند: رنگ زمینه، داک پایین، کارت‌ها، دکمه‌ها و متن‌ها از یک خانواده هماهنگ استفاده می‌کنند و کنتراست خوانا دارند." : "یک پالت را لمس کنید؛ همه کارت‌ها، دکمه‌ها و گزارش‌ها هماهنگ تغییر می‌کنند.", 11, MUTED, Typeface.NORMAL);
+        TextView hint = text(MANAGEMENT_EDITION ? "آتیران شامپاینی ظاهر مدیریتی پیشنهادی است؛ رنگ‌ها، جدول‌ها و نمودارها با هم هماهنگ تغییر می‌کنند." : VISITOR_EDITION ? "پالت‌ها بازطراحی شدند: رنگ زمینه، داک پایین، کارت‌ها، دکمه‌ها و متن‌ها از یک خانواده هماهنگ استفاده می‌کنند و کنتراست خوانا دارند." : "یک پالت را لمس کنید؛ همه کارت‌ها، دکمه‌ها و گزارش‌ها هماهنگ تغییر می‌کنند.", 11, MUTED, Typeface.NORMAL);
         hint.setGravity(Gravity.CENTER);
         box.addView(hint, new LinearLayout.LayoutParams(-1, -2));
         ScrollView themeScroll = new ScrollView(this);
@@ -2318,15 +2338,16 @@ public class MainActivity extends Activity {
                 .setNegativeButton("بستن", null)
                 .create();
         addThemeOption(box, dialog, THEME_AUTO, "خودکار", "روشن در روز، تیره در شب — هماهنگ با گوشی", new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(5, 8, 18)});
+        if (MANAGEMENT_EDITION) addThemeOption(box, dialog, "atiran_champagne", "آتیران شامپاینی", "تم لوکس مدیریت • عاجی، طلایی و سبز یشمی", new int[]{Color.rgb(244, 241, 234), Color.rgb(139, 101, 42), Color.rgb(25, 124, 95)});
         if (STAFF_EDITION) addThemeOption(box, dialog, "amethyst_pearl", "آمتیست مرواریدی", "تم پیش‌فرض پرسنل • هم‌رنگ آیکون", new int[]{Color.rgb(248, 245, 252), Color.rgb(88, 44, 150), Color.rgb(176, 132, 52)});
         if (STORE_EDITION) addThemeOption(box, dialog, "emerald_royal", "زمرد سلطنتی", "تم پیش‌فرض فروشگاه • هم‌رنگ آیکون", new int[]{Color.rgb(243, 249, 245), Color.rgb(7, 104, 70), Color.rgb(184, 142, 58)});
-        if ((VISITOR_EDITION || MANAGEMENT_EDITION) && !STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "azure_diamond", MANAGEMENT_EDITION ? "آبی آتیران" : "الماس آبی", "تم پیش‌فرض " + editionTitle(), new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(24, 190, 255)});
+        if ((VISITOR_EDITION || MANAGEMENT_EDITION) && !STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "azure_diamond", MANAGEMENT_EDITION ? "آبی کلاسیک" : "الماس آبی", MANAGEMENT_EDITION ? "تم جایگزین مدیریت" : "تم پیش‌فرض " + editionTitle(), new int[]{Color.rgb(244, 251, 255), Color.rgb(0, 126, 255), Color.rgb(24, 190, 255)});
         if (!STORE_EDITION && !STAFF_EDITION) addThemeOption(box, dialog, "hazelnut_gold", "فندقی طلایی", "هم‌رنگ آیکون برنامه", new int[]{Color.rgb(250, 244, 234), Color.rgb(150, 92, 38), Color.rgb(201, 145, 58)});
         addThemeOption(box, dialog, "pearl_platinum", "روشن ۱", "مروارید پلاتینیوم", new int[]{Color.rgb(245, 247, 251), Color.rgb(168, 122, 44), Color.rgb(48, 96, 176)});
         addThemeOption(box, dialog, "rose_quartz_lux", "روشن ۲", "رز کوارتز لاکچری", new int[]{Color.rgb(255, 247, 248), Color.rgb(177, 102, 82), Color.rgb(111, 90, 174)});
         addThemeOption(box, dialog, "emerald_silk", "روشن ۳", "زمرد ابریشمی", new int[]{Color.rgb(241, 249, 245), Color.rgb(16, 132, 91), Color.rgb(160, 128, 55)});
         if (!VISITOR_EDITION) {
-            addThemeOption(box, dialog, "azure_diamond", "روشن کلاسیک", "الماس آبی", new int[]{Color.rgb(240, 247, 255), Color.rgb(45, 98, 190), Color.rgb(91, 167, 220)});
+            if (!MANAGEMENT_EDITION) addThemeOption(box, dialog, "azure_diamond", "روشن کلاسیک", "الماس آبی", new int[]{Color.rgb(240, 247, 255), Color.rgb(45, 98, 190), Color.rgb(91, 167, 220)});
             addThemeOption(box, dialog, "crystal_lagoon", "روشن کلاسیک", "کریستالی", new int[]{Color.rgb(237, 249, 250), Color.rgb(18, 142, 166), Color.rgb(54, 117, 203)});
             addThemeOption(box, dialog, "ivory_sunrise", "روشن کلاسیک", "عاجی", new int[]{Color.rgb(249, 243, 233), Color.rgb(194, 117, 54), Color.rgb(29, 143, 113)});
         }
@@ -4920,18 +4941,22 @@ public class MainActivity extends Activity {
     private void addGoodMorningManagerCard(JSONObject today, boolean cached) {
         LinearLayout c = card();
         c.setPadding(dp(12), dp(12), dp(12), dp(12));
-        int greetAccent = timeGreetingAccent();
-        c.setBackground(gradient(new int[]{alpha(greetAccent, 34), alpha(INFO, 18), alpha(SURFACE, 250)}, GradientDrawable.Orientation.TL_BR, 28));
+        int greetAccent = MANAGEMENT_EDITION ? GOLD : timeGreetingAccent();
+        c.setBackground(MANAGEMENT_EDITION
+                ? gradient(new int[]{alpha(GOLD_2, 46), alpha(SUCCESS, 18), alpha(SURFACE, 252)}, GradientDrawable.Orientation.TL_BR, 28)
+                : gradient(new int[]{alpha(greetAccent, 34), alpha(INFO, 18), alpha(SURFACE, 250)}, GradientDrawable.Orientation.TL_BR, 28));
 
         LinearLayout head = new LinearLayout(this);
         head.setOrientation(LinearLayout.HORIZONTAL);
         head.setGravity(Gravity.CENTER_VERTICAL);
-        head.addView(report3dIcon(timeGreetingIcon(), greetAccent), new LinearLayout.LayoutParams(dp(46), dp(46)));
+        head.addView(report3dIcon(MANAGEMENT_EDITION ? "A" : timeGreetingIcon(), greetAccent), new LinearLayout.LayoutParams(dp(46), dp(46)));
         LinearLayout copy = new LinearLayout(this);
         copy.setOrientation(LinearLayout.VERTICAL);
         copy.setPadding(dp(9), 0, dp(7), 0);
-        copy.addView(text(timeGreetingTitle() + " " + displayFirstName(), 16.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        TextView sub = text(cached ? "آخرین داده ذخیره‌شده نمایش داده می‌شود؛ هر وقت خواستی با دکمه کنار کارت تازه‌سازی کن." : managerTimedLine(today), 10.2f, MUTED, Typeface.NORMAL);
+        copy.addView(text(MANAGEMENT_EDITION ? "داشبورد اجرایی آتیران" : timeGreetingTitle() + " " + displayFirstName(), 16.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        String dashboardSub = cached ? "آخرین داده ذخیره‌شده نمایش داده می‌شود؛ برای دریافت گزارش تازه دکمه کنار کارت را بزنید."
+                : MANAGEMENT_EDITION ? managerTimedLine(today) + " • نمای زنده مدیریت" : managerTimedLine(today);
+        TextView sub = text(dashboardSub, 10.2f, MUTED, Typeface.NORMAL);
         sub.setLineSpacing(dp(1), 1.03f);
         sub.setMaxLines(2);
         copy.addView(sub, new LinearLayout.LayoutParams(-1, -2));
@@ -6465,31 +6490,51 @@ public class MainActivity extends Activity {
     private void addDashboardKpiTable(JSONArray kpis) {
         if (kpis == null || kpis.length() == 0) return;
         LinearLayout c = card();
-        c.setBackground(gradient(new int[]{alpha(GOLD, 34), SURFACE}, GradientDrawable.Orientation.RIGHT_LEFT, 24));
-        c.addView(text(MANAGEMENT_EDITION ? "آمار کلیدی مدیریت آتیران" : "آمار کلیدی پخش درخشان", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        c.addView(text("مشتریان، کالاها، فاکتورها و چک‌ها در یک جدول فشرده", 10.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        c.setBackground(gradient(new int[]{alpha(GOLD, 34), alpha(GOLD_2, 10), SURFACE}, GradientDrawable.Orientation.RIGHT_LEFT, 24));
+        c.addView(text(MANAGEMENT_EDITION ? "شاخص‌های کلیدی مدیریت آتیران" : "آمار کلیدی پخش درخشان", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text("نمای شبکه‌ای واکنش‌گرا • اطلاعات مستقیم از پایگاه داده", 10.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        int widthDp = Math.round(screenWidthDp());
+        int columns = widthDp >= 800 ? 4 : widthDp >= 560 ? 3 : 2;
         LinearLayout row = null;
         for (int i = 0; i < kpis.length(); i++) {
-            if (i % 2 == 0) { row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); c.addView(row, new LinearLayout.LayoutParams(-1, -2)); }
+            if (i % columns == 0) {
+                row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+                rowLp.setMargins(0, dp(5), 0, 0);
+                c.addView(row, rowLp);
+            }
             JSONObject item = kpis.optJSONObject(i);
             int accent = i % 4 == 0 ? GOLD : (i % 4 == 1 ? INFO : (i % 4 == 2 ? SUCCESS : WARNING));
             LinearLayout cell = new LinearLayout(this);
             cell.setOrientation(LinearLayout.HORIZONTAL);
             cell.setGravity(Gravity.CENTER_VERTICAL);
-            cell.setPadding(dp(8), dp(8), dp(8), dp(8));
-            cell.setBackground(roundedStroke(alpha(accent, 20), 15, alpha(accent, 64)));
-            TextView icon = text(kpiGlyph(item == null ? "" : item.optString("title"), i), 18, TEXT, Typeface.BOLD);
+            cell.setMinimumHeight(dp(widthDp < 360 ? 66 : 72));
+            cell.setPadding(dp(widthDp < 360 ? 6 : 9), dp(8), dp(widthDp < 360 ? 6 : 9), dp(8));
+            cell.setBackground(roundedStroke(alpha(accent, 17), 16, alpha(accent, 58)));
+            TextView icon = text(kpiGlyph(item == null ? "" : item.optString("title"), i), 17, tc(accent), Typeface.BOLD);
             icon.setGravity(Gravity.CENTER);
-            icon.setBackground(gradient(new int[]{alpha(accent, 130), alpha(GOLD_2, 58)}, GradientDrawable.Orientation.TL_BR, 14));
-            cell.addView(icon, new LinearLayout.LayoutParams(dp(38), dp(38)));
-            LinearLayout copy = new LinearLayout(this); copy.setOrientation(LinearLayout.VERTICAL); copy.setPadding(dp(8), 0, dp(8), 0);
-            copy.addView(text(item == null ? "شاخص" : item.optString("title", "شاخص"), 10.5f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-            copy.addView(text(formatNumber(item == null ? 0 : item.opt("value")), 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+            icon.setBackground(gradient(new int[]{alpha(accent, 34), alpha(accent, 12)}, GradientDrawable.Orientation.TL_BR, 13));
+            cell.addView(icon, new LinearLayout.LayoutParams(dp(widthDp < 360 ? 31 : 36), dp(widthDp < 360 ? 31 : 36)));
+            LinearLayout copy = new LinearLayout(this);
+            copy.setOrientation(LinearLayout.VERTICAL);
+            copy.setPadding(dp(7), 0, dp(5), 0);
+            TextView title = text(item == null ? "شاخص" : item.optString("title", "شاخص"), widthDp < 360 ? 9.4f : 10.2f, MUTED, Typeface.BOLD);
+            title.setSingleLine(true);
+            title.setEllipsize(TextUtils.TruncateAt.END);
+            TextView value = text(formatNumber(item == null ? 0 : item.opt("value")), widthDp < 360 ? 14.5f : 16f, TEXT, Typeface.BOLD);
+            value.setSingleLine(true);
+            value.setEllipsize(TextUtils.TruncateAt.END);
+            copy.addView(title, new LinearLayout.LayoutParams(-1, -2));
+            copy.addView(value, new LinearLayout.LayoutParams(-1, -2));
             cell.addView(copy, new LinearLayout.LayoutParams(0, -2, 1f));
-            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1f); cp.setMargins(dp(3), dp(8), dp(3), 0);
+            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1f);
+            cp.setMargins(dp(3), dp(3), dp(3), dp(3));
             if (row != null) row.addView(cell, cp);
         }
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, 0, 0, dp(12));
         content.addView(c, lp);
     }
 
@@ -18313,7 +18358,8 @@ public class MainActivity extends Activity {
         if (MANAGEMENT_EDITION) reportVisitorPeriod = normalizeVisitorReportPeriod(a.optString("visitorSalesPeriod", reportVisitorPeriod));
         lastReportJson = a.toString();
         lastReportSummary = buildExecutiveReportSummary(a);
-        addHero("اتاق فرمان زنده گزارشات", "گزارشات کامل‌تر، دسته‌بندی‌شده با نمودارهای سبک؛ مخصوص تصمیم مدیریت");
+        addHero(MANAGEMENT_EDITION ? "اتاق فرمان مدیریتی آتیران" : "اتاق فرمان زنده گزارشات",
+                MANAGEMENT_EDITION ? "فروش، خرید، ویزیتورها، سود و نقدینگی؛ تحلیل زیبا روی داده‌های واقعی آتیران" : "گزارشات کامل‌تر، دسته‌بندی‌شده با نمودارهای سبک؛ مخصوص تصمیم مدیریت");
         addManualRefreshPanel("reports", "بروزرسانی دستی گزارشات", "نمای فعلی ثابت است تا خودتان تازه‌سازی کنید", () -> loadReports(true));
         addReportConnectionHints(a.optJSONObject("reportErrors"));
         addReportCommandCenter(a);
@@ -18354,8 +18400,8 @@ public class MainActivity extends Activity {
         LinearLayout c = card();
         int accent = navAccent("reports");
         c.setBackground(gradient(new int[]{alpha(accent, isLightTheme() ? 24 : 42), alpha(GOLD_2, isLightTheme() ? 18 : 24), alpha(SURFACE, 248)}, GradientDrawable.Orientation.RIGHT_LEFT, 26));
-        c.addView(text("نمودار سبک تصمیم سریع", 15.2f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        c.addView(text("نمودارهای تعاملی در ابعاد مناسب موبایل نمایش داده می‌شوند؛ برای مقدار دقیق، نقطه نمودار را لمس کنید. خلاصه متنی هم برای اشتراک و PDF آماده است.", 10.0f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text(MANAGEMENT_EDITION ? "نمای تحلیلی آتیران" : "نمودار سبک تصمیم سریع", 15.2f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text(MANAGEMENT_EDITION ? "فروش، سود، مطالبات و رشد مشتری در یک نگاه؛ نمودارها تعاملی‌اند و مقدار دقیق با لمس هر نقطه دیده می‌شود." : "نمودارهای تعاملی در ابعاد مناسب موبایل نمایش داده می‌شوند؛ برای مقدار دقیق، نقطه نمودار را لمس کنید. خلاصه متنی هم برای اشتراک و PDF آماده است.", 10.0f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         JSONObject debt = strongestPoint(a.optJSONArray("debtAging"));
         addMiniInsightBars(c, "رادار مالی", new String[]{"فروش", "سود", "مطالبات", "مشتری"}, new double[]{Math.max(0, latestNumeric(a.optJSONArray("weeklySales"))), Math.max(0, latestNumeric(a.optJSONArray("monthlyProfit"))), Math.max(0, valueOf(debt)), Math.max(0, latestNumeric(a.optJSONArray("customerGrowth")))}, new int[]{GOLD, SUCCESS, DANGER, INFO});
         LinearLayout chips = new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL);
@@ -18536,15 +18582,16 @@ public class MainActivity extends Activity {
     }
 
     private String whatsappSummary(String summary) {
-        return "*Pakhsh Darakhshan Executive Summary*\n" + (summary == null ? "" : summary.replace("•", "-").trim());
+        String brand = MANAGEMENT_EDITION ? "Atiran Management Executive Summary" : "Pakhsh Darakhshan Executive Summary";
+        return "*" + brand + "*\n" + (summary == null ? "" : summary.replace("•", "-").trim());
     }
 
     private void sharePlainText(String title, String body, String packageName) {
         try {
             Intent send = new Intent(Intent.ACTION_SEND);
             send.setType("text/plain");
-            send.putExtra(Intent.EXTRA_SUBJECT, title == null ? "پخش درخشان" : title);
-            send.putExtra(Intent.EXTRA_TEXT, body == null || body.trim().isEmpty() ? "خلاصه مدیریتی پخش درخشان آماده است." : body);
+            send.putExtra(Intent.EXTRA_SUBJECT, title == null ? (MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان") : title);
+            send.putExtra(Intent.EXTRA_TEXT, body == null || body.trim().isEmpty() ? (MANAGEMENT_EDITION ? "خلاصه مدیریتی آتیران آماده است." : "خلاصه مدیریتی پخش درخشان آماده است.") : body);
             if (packageName != null && !packageName.trim().isEmpty()) send.setPackage(packageName);
             try { startActivity(Intent.createChooser(send, "ارسال خلاصه مدیریتی")); }
             catch (Exception first) { send.setPackage(null); startActivity(Intent.createChooser(send, "ارسال خلاصه مدیریتی")); }
@@ -18559,44 +18606,48 @@ public class MainActivity extends Activity {
             PdfDocument.Page page = doc.startPage(info);
             Canvas canvas = page.getCanvas();
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            paint.setColor(Color.rgb(248, 251, 255));
+            int pdfBackground = MANAGEMENT_EDITION ? Color.rgb(249, 246, 239) : Color.rgb(248, 251, 255);
+            int pdfBrand = MANAGEMENT_EDITION ? Color.rgb(73, 60, 39) : Color.rgb(22, 68, 123);
+            int pdfAccent = MANAGEMENT_EDITION ? Color.rgb(155, 116, 49) : Color.rgb(65, 157, 232);
+            int pdfGold = MANAGEMENT_EDITION ? Color.rgb(225, 192, 125) : Color.rgb(243, 190, 97);
+            int pdfBodyText = MANAGEMENT_EDITION ? Color.rgb(67, 59, 45) : Color.rgb(52, 70, 95);
+            paint.setColor(pdfBackground);
             canvas.drawRect(0, 0, 595, 842, paint);
 
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.rgb(22, 68, 123));
+            paint.setColor(pdfBrand);
             canvas.drawRoundRect(new android.graphics.RectF(28, 24, 567, 114), 28, 28, paint);
-            paint.setColor(Color.rgb(65, 157, 232));
+            paint.setColor(pdfAccent);
             canvas.drawRoundRect(new android.graphics.RectF(42, 36, 250, 102), 24, 24, paint);
-            paint.setColor(Color.rgb(243, 190, 97));
+            paint.setColor(pdfGold);
             canvas.drawCircle(520, 68, 25, paint);
-            paint.setColor(Color.rgb(22, 68, 123));
+            paint.setColor(pdfBrand);
             paint.setTextAlign(Paint.Align.CENTER);
             paint.setTypeface(MEELANO_BOLD);
             paint.setTextSize(26);
-            canvas.drawText("M", 520, 78, paint);
+            canvas.drawText(MANAGEMENT_EDITION ? "A" : "M", 520, 78, paint);
             paint.setTextAlign(Paint.Align.RIGHT);
             paint.setColor(Color.WHITE);
             paint.setTextSize(21);
-            canvas.drawText("گزارش مدیریتی پخش درخشان", 490, 58, paint);
+            canvas.drawText(MANAGEMENT_EDITION ? "گزارش مدیریتی آتیران" : "گزارش مدیریتی پخش درخشان", 490, 58, paint);
             paint.setTypeface(MEELANO_REGULAR);
             paint.setTextSize(10.5f);
-            canvas.drawText("Native Android • امن", 490, 82, paint);
+            canvas.drawText(MANAGEMENT_EDITION ? "ATIRAN MANAGEMENT • امن" : "Native Android • امن", 490, 82, paint);
             paint.setColor(Color.argb(220, 255, 255, 255));
             canvas.drawText(nowText(), 240, 76, paint);
 
             String text = summary == null || summary.trim().isEmpty() ? lastReportSummary : summary;
             String[] paragraphs = text.split("\\n");
             int y = 142;
-            int cardTop = y;
             paint.setTextAlign(Paint.Align.RIGHT);
             paint.setTypeface(MEELANO_BOLD);
             paint.setTextSize(13);
-            paint.setColor(Color.rgb(22, 68, 123));
+            paint.setColor(pdfBrand);
             canvas.drawText("خلاصه اجرایی", 545, y, paint);
             y += 20;
             paint.setTypeface(MEELANO_REGULAR);
             paint.setTextSize(11);
-            paint.setColor(Color.rgb(52, 70, 95));
+            paint.setColor(pdfBodyText);
             int lineNo = 0;
             for (String paragraph : paragraphs) {
                 if (paragraph.trim().isEmpty()) { y += 8; continue; }
@@ -18606,18 +18657,18 @@ public class MainActivity extends Activity {
                     canvas.drawRoundRect(new android.graphics.RectF(38, Math.max(126, y - 20), 557, Math.min(806, y + 96)), 18, 18, paint);
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setStrokeWidth(1.4f);
-                    paint.setColor(Color.argb(70, 65, 157, 232));
+                    paint.setColor(alpha(pdfAccent, 76));
                     canvas.drawRoundRect(new android.graphics.RectF(38, Math.max(126, y - 20), 557, Math.min(806, y + 96)), 18, 18, paint);
                     paint.setStyle(Paint.Style.FILL);
                     paint.setStrokeWidth(1f);
-                    paint.setColor(Color.rgb(52, 70, 95));
+                    paint.setColor(pdfBodyText);
                 }
                 for (String line : wrapPdfLine(paragraph, 58)) {
                     if (y > 784) break;
                     if (line.trim().startsWith("•")) {
-                        paint.setColor(Color.rgb(243, 190, 97));
+                        paint.setColor(pdfGold);
                         canvas.drawCircle(546, y - 4, 3.5f, paint);
-                        paint.setColor(Color.rgb(52, 70, 95));
+                        paint.setColor(pdfBodyText);
                         canvas.drawText(line.replaceFirst("^•\\s*", ""), 535, y, paint);
                     } else {
                         canvas.drawText(line, 545, y, paint);
@@ -18629,16 +18680,16 @@ public class MainActivity extends Activity {
                 if (y > 784) break;
             }
             paint.setStyle(Paint.Style.FILL);
-            paint.setColor(Color.rgb(22, 68, 123));
+            paint.setColor(pdfBrand);
             canvas.drawRoundRect(new android.graphics.RectF(38, 792, 557, 823), 12, 12, paint);
             paint.setColor(Color.WHITE);
             paint.setTypeface(MEELANO_BOLD);
             paint.setTextSize(10.5f);
-            canvas.drawText("امضای دیجیتال مدیریتی پخش درخشان • تهیه‌شده برای " + displayFirstName(), 545, 812, paint);
+            canvas.drawText("امضای دیجیتال مدیریتی " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان") + " • تهیه‌شده برای " + displayFirstName(), 545, 812, paint);
             doc.finishPage(page);
             File dir = getExternalFilesDir(null);
             if (dir == null) dir = getFilesDir();
-            File file = new File(dir, "Darakhshan-Management-Report-v3.42.pdf");
+            File file = new File(dir, MANAGEMENT_EDITION ? "Atiran-Management-Report.pdf" : "Darakhshan-Management-Report.pdf");
             try (FileOutputStream fos = new FileOutputStream(file)) { doc.writeTo(fos); }
             showNotice("PDF لوکس ساخته شد: " + file.getAbsolutePath(), true);
         } catch (Exception ex) { showNotice("ساخت PDF ممکن نشد: " + shortError(ex), false); }
@@ -18794,10 +18845,144 @@ public class MainActivity extends Activity {
             LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-1, dp(58)); ep.setMargins(0, dp(10), 0, 0);
             c.addView(empty, ep);
         } else {
+            if (MANAGEMENT_EDITION) {
+                addManagementReportChart(c, key, rows, accent);
+                addManagementReportTableHeader(c, valueMode, accent);
+            }
             for (int i = 0; i < Math.min(limit, rows.length()); i++) addReportDataRow(c, rows.optJSONObject(i), i + 1, accent, valueMode, key);
         }
         addReportDecision(c, key, rows, accent);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(12)); content.addView(c, lp);
+    }
+
+    /** Selects the chart type from the real report measure: trends, compositions, or ranked bars. */
+    private void addManagementReportChart(LinearLayout parent, String key, JSONArray rows, int accent) {
+        if (parent == null || rows == null || rows.length() == 0) return;
+        int widthDp = Math.round(screenWidthDp());
+        boolean distribution = "debtAging".equals(key) || "checkStatuses".equals(key) || "categoryShare".equals(key);
+        if (distribution) {
+            int[] palette = new int[]{tc(GOLD), tc(SUCCESS), tc(INFO), tc(WARNING), tc(DANGER), tc(GOLD_2), tc(mix(INFO, SUCCESS, 0.5f)), tc(mix(GOLD, DANGER, 0.35f))};
+            List<MeelanoCharts.Point> points = new ArrayList<>();
+            for (int i = 0; i < Math.min(8, rows.length()); i++) {
+                JSONObject row = rows.optJSONObject(i);
+                if (row == null) continue;
+                double amount = Math.max(0, row.optDouble("value", row.optDouble("amount", 0)));
+                if (amount <= 0) continue;
+                points.add(new MeelanoCharts.Point(row.optString("label", "بدون عنوان"), amount, palette[i % palette.length]));
+            }
+            if (points.isEmpty()) return;
+            String center = "debtAging".equals(key) ? "مطالبات" : "checkStatuses".equals(key) ? "مبلغ چک" : "فروش گروه";
+            TextView caption = text("ترکیب مبلغ • سهم‌بندی از دادهٔ واقعی", 9.8f, MUTED, Typeface.BOLD);
+            LinearLayout.LayoutParams capLp = new LinearLayout.LayoutParams(-1, -2);
+            capLp.setMargins(0, dp(9), 0, dp(5));
+            parent.addView(caption, capLp);
+
+            boolean wide = widthDp >= 560;
+            LinearLayout chartWrap = new LinearLayout(this);
+            chartWrap.setOrientation(wide ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
+            chartWrap.setGravity(Gravity.CENTER_VERTICAL);
+            chartWrap.setPadding(dp(7), dp(7), dp(7), dp(7));
+            chartWrap.setBackground(roundedStroke(alpha(accent, 7), 19, alpha(accent, 35)));
+            MeelanoCharts.Donut donut = new MeelanoCharts.Donut(this, tc(accent), TEXT, MUTED, MEELANO_BOLD);
+            donut.setCenterTitle(center);
+            donut.setPoints(points, MeelanoCharts.RIAL);
+            donut.setContentDescription(center + "؛ نمودار حلقه‌ای تعاملی بر اساس مبالغ واقعی");
+            int diameter = widthDp >= 800 ? 190 : 164;
+            LinearLayout.LayoutParams donutLp = new LinearLayout.LayoutParams(dp(diameter), dp(diameter));
+            if (!wide) donutLp.gravity = Gravity.CENTER_HORIZONTAL;
+            donutLp.setMargins(dp(2), dp(2), dp(wide ? 8 : 2), dp(wide ? 2 : 8));
+            chartWrap.addView(donut, donutLp);
+            LinearLayout legend = new LinearLayout(this);
+            legend.setOrientation(LinearLayout.VERTICAL);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) legend.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            for (int i = 0; i < points.size(); i++) {
+                int color = points.get(i).color == 0 ? palette[i % palette.length] : points.get(i).color;
+                addManagementChartLegendRow(legend, points.get(i), color);
+            }
+            LinearLayout.LayoutParams legendLp = wide ? new LinearLayout.LayoutParams(0, -2, 1f) : new LinearLayout.LayoutParams(-1, -2);
+            chartWrap.addView(legend, legendLp);
+            LinearLayout.LayoutParams wrapLp = new LinearLayout.LayoutParams(-1, -2);
+            wrapLp.setMargins(0, 0, 0, dp(8));
+            parent.addView(chartWrap, wrapLp);
+            return;
+        }
+
+        List<MeelanoCharts.Point> points = new ArrayList<>();
+        int[] palette = new int[]{tc(accent), tc(GOLD), tc(SUCCESS), tc(INFO), tc(WARNING), tc(DANGER)};
+        int cap = "weeklySales".equals(key) || "monthlyProfit".equals(key) || "netMargin".equals(key) || "customerGrowth".equals(key) ? 12 : 6;
+        for (int i = 0; i < Math.min(cap, rows.length()); i++) {
+            JSONObject row = rows.optJSONObject(i);
+            if (row == null) continue;
+            String label = row.optString("label", row.optString("party", ""));
+            if ("monthlyProfit".equals(key) || "netMargin".equals(key) || "customerGrowth".equals(key)) label = reportMonthShortLabel(label);
+            double value = row.optDouble("value", row.optDouble("amount", 0));
+            points.add(new MeelanoCharts.Point(label, value, palette[i % palette.length]));
+        }
+        if (points.isEmpty()) return;
+        if ("weeklySales".equals(key) || "monthlyProfit".equals(key) || "netMargin".equals(key) || "customerGrowth".equals(key)) {
+            String title = "weeklySales".equals(key) ? "روند فروش هفتگی" : "monthlyProfit".equals(key) ? "روند سود ماهانه" : "netMargin".equals(key) ? "روند حاشیه سود" : "رشد مشتریان فعال";
+            MeelanoCharts.Formatter formatter = "netMargin".equals(key) ? value -> formatNumber(value) + "٪"
+                    : "customerGrowth".equals(key) ? value -> formatNumber(value) : MeelanoCharts.RIAL;
+            addReportAreaChart(parent, title, points, accent, formatter);
+            return;
+        }
+        if ("topCustomers".equals(key) || "topDebtors".equals(key) || "overdueInvoices".equals(key)) {
+            TextView chartTitle = text("مقایسه رتبه‌ها • برای جزئیات هر ردیف", 9.8f, MUTED, Typeface.BOLD);
+            LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(-1, -2);
+            titleLp.setMargins(0, dp(8), 0, dp(2));
+            parent.addView(chartTitle, titleLp);
+            MeelanoCharts.Bars chart = new MeelanoCharts.Bars(this, tc(accent), TEXT, MUTED, MEELANO_BOLD);
+            chart.setPoints(points, MeelanoCharts.RIAL);
+            chart.setContentDescription("مقایسه رتبه‌ای " + reportErrorLabel(key) + "؛ مبالغ به ریال");
+            LinearLayout.LayoutParams chartLp = new LinearLayout.LayoutParams(-1, MeelanoCharts.Bars.heightFor(points.size(), getResources().getDisplayMetrics().density));
+            chartLp.setMargins(0, dp(2), 0, dp(4));
+            parent.addView(chart, chartLp);
+        }
+    }
+
+    private void addManagementChartLegendRow(LinearLayout parent, MeelanoCharts.Point point, int color) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(6), dp(5), dp(6), dp(5));
+        TextView swatch = text(" ", 1, color, Typeface.NORMAL);
+        swatch.setBackground(rounded(color, 999));
+        row.addView(swatch, new LinearLayout.LayoutParams(dp(9), dp(9)));
+        TextView label = text(point.label, 9.6f, TEXT, Typeface.BOLD);
+        label.setSingleLine(true);
+        label.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(0, -2, 1f);
+        labelLp.setMargins(dp(7), 0, dp(6), 0);
+        row.addView(label, labelLp);
+        TextView value = text(shortRial(point.value), 9.3f, tc(color), Typeface.BOLD);
+        value.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        value.setSingleLine(true);
+        value.setEllipsize(TextUtils.TruncateAt.END);
+        row.addView(value, new LinearLayout.LayoutParams(-2, -2));
+        parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    private void addManagementReportTableHeader(LinearLayout parent, int valueMode, int accent) {
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setMinimumHeight(dp(36));
+        header.setPadding(dp(9), dp(5), dp(9), dp(5));
+        header.setBackground(roundedStroke(alpha(accent, 15), 13, alpha(accent, 48)));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) header.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView rank = text("رتبه", 9.1f, tc(accent), Typeface.BOLD);
+        rank.setGravity(Gravity.CENTER);
+        header.addView(rank, new LinearLayout.LayoutParams(dp(34), -2));
+        TextView title = text("عنوان / شرح", 9.1f, tc(accent), Typeface.BOLD);
+        title.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        header.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
+        String amount = valueMode == 1 ? "تعداد" : valueMode == 2 ? "درصد" : valueMode == 3 ? "اقدام" : valueMode == 4 ? "تعداد / مبلغ" : "مبلغ";
+        TextView value = text(amount, 9.1f, tc(accent), Typeface.BOLD);
+        value.setGravity(Gravity.CENTER);
+        header.addView(value, new LinearLayout.LayoutParams(dp(screenWidthDp() < 360 ? 78 : 98), -2));
+        LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2);
+        hp.setMargins(0, dp(7), 0, dp(2));
+        parent.addView(header, hp);
     }
 
     private void addReportVisitorSalesSection(JSONObject analytics) {
@@ -18869,21 +19054,31 @@ public class MainActivity extends Activity {
             if (row.optLong("invoices", 0) > 0) activeVisitors++;
         }
         LinearLayout metrics = new LinearLayout(this);
-        metrics.setOrientation(LinearLayout.HORIZONTAL);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) metrics.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        LinearLayout.LayoutParams metricRowLp = new LinearLayout.LayoutParams(-1, -2);
-        metricRowLp.setMargins(0, dp(10), 0, 0);
-        c.addView(metrics, metricRowLp);
+        metrics.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams metricStackLp = new LinearLayout.LayoutParams(-1, -2);
+        metricStackLp.setMargins(0, dp(10), 0, 0);
+        c.addView(metrics, metricStackLp);
         String[][] metricValues = {
                 {"فروش بازه", money(salesTotal)},
                 {"فاکتور فروش", formatNumber(invoiceTotal)},
                 {"وصول ثبت‌شده", money(receiptTotal)}
         };
-        for (String[] item : metricValues) {
+        int metricColumns = screenWidthDp() < 390 ? 2 : 3;
+        LinearLayout metricRow = null;
+        for (int i = 0; i < metricValues.length; i++) {
+            if (i % metricColumns == 0) {
+                metricRow = new LinearLayout(this);
+                metricRow.setOrientation(LinearLayout.HORIZONTAL);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) metricRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+                rowLp.setMargins(0, dp(4), 0, 0);
+                metrics.addView(metricRow, rowLp);
+            }
+            String[] item = metricValues[i];
             LinearLayout tile = metric(item[0], item[1]);
             LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(0, -2, 1f);
             tileLp.setMargins(dp(3), 0, dp(3), 0);
-            metrics.addView(tile, tileLp);
+            if (metricRow != null) metricRow.addView(tile, tileLp);
         }
         TextView countNote = text(formatNumber(activeVisitors) + " ویزیتور فروشنده در این بازه • بر اساس اسناد فعال", 10.2f, tc(SUCCESS), Typeface.BOLD);
         countNote.setGravity(Gravity.CENTER);
@@ -18915,11 +19110,11 @@ public class MainActivity extends Activity {
             empty.setGravity(Gravity.CENTER);
             c.addView(empty, new LinearLayout.LayoutParams(-1, dp(58)));
         } else {
-            TextView listTitle = text("رتبه‌بندی و جزئیات", 11.2f, TEXT, Typeface.BOLD);
+            TextView listTitle = text("رتبه‌بندی و جدول عملکرد", 11.2f, TEXT, Typeface.BOLD);
             LinearLayout.LayoutParams listTitleLp = new LinearLayout.LayoutParams(-1, -2);
-            listTitleLp.setMargins(0, dp(8), 0, 0);
+            listTitleLp.setMargins(0, dp(8), 0, dp(3));
             c.addView(listTitle, listTitleLp);
-            for (int i = 0; i < Math.min(6, rows.length()); i++) addReportDataRow(c, rows.optJSONObject(i), i + 1, SUCCESS, 0, "visitorSales");
+            addVisitorPerformanceTable(c, rows);
         }
         TextView attribution = text("توجه: فروش بر اساس ویزیتور ثبت‌شده روی فاکتور و وصول بر اساس ثبت‌کننده وجه در آتیران است؛ این دو شاخص انتساب متفاوت دارند.", 9.5f, MUTED, Typeface.NORMAL);
         attribution.setLineSpacing(dp(2), 1.05f);
@@ -18932,8 +19127,161 @@ public class MainActivity extends Activity {
         content.addView(c, cardLp);
     }
 
+    private void addVisitorPerformanceTable(LinearLayout parent, JSONArray rows) {
+        if (parent == null || rows == null) return;
+        float widthDp = screenWidthDp();
+        float fontScale = getResources().getConfiguration().fontScale;
+        boolean wide = widthDp >= 600 && fontScale <= 1.15f;
+        int shown = Math.min(10, rows.length());
+        if (shown == 0) return;
+        if (wide) {
+            LinearLayout header = new LinearLayout(this);
+            header.setOrientation(LinearLayout.HORIZONTAL);
+            header.setGravity(Gravity.CENTER_VERTICAL);
+            header.setMinimumHeight(dp(38));
+            header.setPadding(dp(9), dp(5), dp(9), dp(5));
+            header.setBackground(gradient(new int[]{alpha(GOLD, 23), alpha(GOLD_2, 12)}, GradientDrawable.Orientation.RIGHT_LEFT, 13));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) header.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            addVisitorTableCell(header, "ویزیتور", 2.0f, true, GOLD, Gravity.RIGHT);
+            addVisitorTableCell(header, "فروش", 1.4f, true, GOLD, Gravity.CENTER);
+            addVisitorTableCell(header, "وصول", 1.4f, true, GOLD, Gravity.CENTER);
+            addVisitorTableCell(header, "فاکتور", 0.8f, true, GOLD, Gravity.CENTER);
+            addVisitorTableCell(header, "مشتری", 0.8f, true, GOLD, Gravity.CENTER);
+            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2);
+            hp.setMargins(0, dp(6), 0, dp(3));
+            parent.addView(header, hp);
+        } else {
+            TextView note = text("رتبه و نام  •  مبلغ‌ها به ریال  •  فاکتور و مشتری یکتا", 9.2f, MUTED, Typeface.BOLD);
+            note.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams noteLp = new LinearLayout.LayoutParams(-1, -2);
+            noteLp.setMargins(0, dp(4), 0, dp(2));
+            parent.addView(note, noteLp);
+        }
+
+        for (int i = 0; i < shown; i++) {
+            JSONObject row = rows.optJSONObject(i);
+            if (row == null) continue;
+            String name = row.optString("label", "بدون ویزیتور");
+            LinearLayout line = new LinearLayout(this);
+            line.setOrientation(LinearLayout.HORIZONTAL);
+            line.setGravity(Gravity.CENTER_VERTICAL);
+            line.setMinimumHeight(dp(wide ? 48 : 78));
+            line.setPadding(dp(wide ? 9 : 8), dp(wide ? 7 : 8), dp(wide ? 9 : 8), dp(wide ? 7 : 8));
+            line.setBackground(roundedStroke(alpha((i == 0 ? GOLD : SUCCESS), i % 2 == 0 ? 13 : 7), wide ? 12 : 16, alpha(i == 0 ? GOLD : SUCCESS, 30)));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) line.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            if (wide) {
+                addVisitorTableCell(line, formatNumber(i + 1) + "  " + name, 2.0f, false, TEXT, Gravity.RIGHT);
+                addVisitorTableCell(line, shortRial(row.optDouble("sales", 0)), 1.4f, false, SUCCESS, Gravity.CENTER);
+                addVisitorTableCell(line, shortRial(row.optDouble("receipts", 0)), 1.4f, false, GOLD, Gravity.CENTER);
+                addVisitorTableCell(line, formatNumber(row.optLong("invoices", 0)), 0.8f, false, TEXT, Gravity.CENTER);
+                addVisitorTableCell(line, formatNumber(row.optLong("customers", 0)), 0.8f, false, TEXT, Gravity.CENTER);
+            } else {
+                TextView rank = text(formatNumber(i + 1), 10.3f, onColorFor(i == 0 ? GOLD : SUCCESS), Typeface.BOLD);
+                rank.setGravity(Gravity.CENTER);
+                rank.setBackground(rounded(i == 0 ? GOLD : alpha(SUCCESS, 215), 999));
+                LinearLayout.LayoutParams rankLp = new LinearLayout.LayoutParams(dp(31), dp(31));
+                rankLp.setMargins(0, 0, dp(7), 0);
+                line.addView(rank, rankLp);
+                LinearLayout body = new LinearLayout(this);
+                body.setOrientation(LinearLayout.VERTICAL);
+                TextView heading = text(name, 10.8f, TEXT, Typeface.BOLD);
+                heading.setSingleLine(true);
+                heading.setEllipsize(TextUtils.TruncateAt.END);
+                body.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+                LinearLayout chips = new LinearLayout(this);
+                chips.setOrientation(LinearLayout.HORIZONTAL);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) chips.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                addVisitorMiniStat(chips, "فاکتور", formatNumber(row.optLong("invoices", 0)), GOLD);
+                addVisitorMiniStat(chips, "مشتری", formatNumber(row.optLong("customers", 0)), INFO);
+                LinearLayout.LayoutParams chipsLp = new LinearLayout.LayoutParams(-1, -2);
+                chipsLp.setMargins(0, dp(5), 0, 0);
+                body.addView(chips, chipsLp);
+                line.addView(body, new LinearLayout.LayoutParams(0, -2, 1f));
+                LinearLayout totals = new LinearLayout(this);
+                totals.setOrientation(LinearLayout.VERTICAL);
+                totals.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+                totals.setPadding(dp(6), 0, 0, 0);
+                TextView sales = text(shortRial(row.optDouble("sales", 0)), 9.3f, tc(SUCCESS), Typeface.BOLD);
+                sales.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                sales.setSingleLine(true);
+                sales.setEllipsize(TextUtils.TruncateAt.END);
+                TextView receipts = text("وصول " + shortRial(row.optDouble("receipts", 0)), 8.8f, tc(GOLD), Typeface.BOLD);
+                receipts.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                receipts.setSingleLine(true);
+                receipts.setEllipsize(TextUtils.TruncateAt.END);
+                TextView receiptCount = text(formatNumber(row.optLong("receiptCount", 0)) + " قبض", 8.1f, MUTED, Typeface.NORMAL);
+                receiptCount.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                receiptCount.setSingleLine(true);
+                receiptCount.setEllipsize(TextUtils.TruncateAt.END);
+                totals.addView(sales, new LinearLayout.LayoutParams(-1, -2));
+                totals.addView(receipts, new LinearLayout.LayoutParams(-1, -2));
+                totals.addView(receiptCount, new LinearLayout.LayoutParams(-1, -2));
+                line.addView(totals, new LinearLayout.LayoutParams(dp(widthDp < 350 ? 96 : 112), -2));
+            }
+            line.setContentDescription(name + "؛ فروش " + money(row.optDouble("sales", 0)) + "؛ وصول " + money(row.optDouble("receipts", 0)) + "؛ برای جزئیات لمس کنید");
+            line.setClickable(true);
+            applyTouchFeedback(line);
+            line.setOnClickListener(v -> showVisitorPerformanceDetails(row));
+            LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+            rowLp.setMargins(0, dp(5), 0, 0);
+            parent.addView(line, rowLp);
+        }
+        if (rows.length() > shown) {
+            TextView more = text("نمایش " + formatNumber(shown) + " رتبهٔ برتر از " + formatNumber(rows.length()), 9.2f, MUTED, Typeface.NORMAL);
+            more.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams moreLp = new LinearLayout.LayoutParams(-1, -2);
+            moreLp.setMargins(0, dp(6), 0, 0);
+            parent.addView(more, moreLp);
+        }
+    }
+
+    private void addVisitorTableCell(LinearLayout row, String value, float weight, boolean header, int color, int gravity) {
+        TextView cell = text(value == null ? "—" : value, header ? 9.2f : 9.5f, header ? tc(color) : (color == TEXT ? TEXT : tc(color)), header ? Typeface.BOLD : Typeface.NORMAL);
+        cell.setGravity(gravity | Gravity.CENTER_VERTICAL);
+        cell.setSingleLine(true);
+        cell.setEllipsize(TextUtils.TruncateAt.END);
+        cell.setPadding(dp(2), dp(2), dp(2), dp(2));
+        row.addView(cell, new LinearLayout.LayoutParams(0, -2, weight));
+    }
+
+    private void addVisitorMiniStat(LinearLayout parent, String label, String value, int accent) {
+        TextView chip = text(label + " " + value, 8.1f, tc(accent), Typeface.BOLD);
+        chip.setSingleLine(true);
+        chip.setEllipsize(TextUtils.TruncateAt.END);
+        chip.setGravity(Gravity.CENTER);
+        chip.setPadding(dp(5), dp(3), dp(5), dp(3));
+        chip.setBackground(roundedStroke(alpha(accent, 12), 999, alpha(accent, 28)));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(24), 1f);
+        lp.setMargins(dp(2), 0, dp(2), 0);
+        parent.addView(chip, lp);
+    }
+
+    private String shortRial(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) return "—";
+        return MeelanoCharts.compact(value) + " ریال";
+    }
+
+    private void showVisitorPerformanceDetails(JSONObject row) {
+        if (row == null) return;
+        String name = row.optString("label", "بدون ویزیتور");
+        String body = "فروش فاکتورهای فعال: " + money(row.optDouble("sales", 0))
+                + "\nتعداد فاکتور: " + formatNumber(row.optLong("invoices", 0))
+                + "\nمشتریان یکتا: " + formatNumber(row.optLong("customers", 0))
+                + "\nوصول ثبت‌شده: " + money(row.optDouble("receipts", 0))
+                + "\nتعداد قبض وصول: " + formatNumber(row.optLong("receiptCount", 0))
+                + (row.optString("lastSale", "").isEmpty() ? "" : "\nآخرین فروش: " + MeelanoCharts.fa(row.optString("lastSale")))
+                + "\n\nانتساب فروش از فاکتور آتیران است؛ وصول بر پایه ثبت‌کننده وجه محاسبه شده و این دو انتساب یکسان نیستند.";
+        AlertDialog dialog = new MeelanoDialogBuilder().setTitle("عملکرد " + name).setMessage(body).setPositiveButton("بستن", null).create();
+        styleMeelanoDialog(dialog, GOLD);
+        dialog.show();
+    }
+
     private void addReportDataRow(LinearLayout parent, JSONObject row, int index, int accent, int valueMode, String key) {
         if (row == null) return;
+        if (MANAGEMENT_EDITION) {
+            addManagementReportDataRow(parent, row, index, accent, valueMode, key);
+            return;
+        }
         LinearLayout item = new LinearLayout(this);
         item.setOrientation(LinearLayout.HORIZONTAL);
         item.setGravity(Gravity.CENTER_VERTICAL);
@@ -18956,6 +19304,49 @@ public class MainActivity extends Activity {
         value.setMaxLines(2);
         item.addView(value, new LinearLayout.LayoutParams(dp(valueMode == 4 ? 104 : 92), -2));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, dp(8), 0, 0); parent.addView(item, lp);
+    }
+
+    private void addManagementReportDataRow(LinearLayout parent, JSONObject row, int index, int accent, int valueMode, String key) {
+        LinearLayout item = new LinearLayout(this);
+        item.setOrientation(LinearLayout.HORIZONTAL);
+        item.setGravity(Gravity.CENTER_VERTICAL);
+        item.setMinimumHeight(dp(56));
+        item.setPadding(dp(8), dp(7), dp(8), dp(7));
+        int tint = index == 1 ? GOLD : accent;
+        item.setBackground(roundedStroke(alpha(tint, index <= 3 ? 12 : 6), 14, alpha(tint, index <= 3 ? 38 : 24)));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) item.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+
+        TextView rank = text(formatNumber(index), 10.4f, onColorFor(tint), Typeface.BOLD);
+        rank.setGravity(Gravity.CENTER);
+        rank.setBackground(rounded(index == 1 ? GOLD : alpha(accent, 205), 999));
+        item.addView(rank, new LinearLayout.LayoutParams(dp(30), dp(30)));
+
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(dp(8), 0, dp(6), 0);
+        String label = labelOf(row, "label", labelOf(row, "party", labelOf(row, "item", "—")));
+        TextView title = text(label, 10.8f, TEXT, Typeface.BOLD);
+        title.setSingleLine(true);
+        title.setEllipsize(TextUtils.TruncateAt.END);
+        copy.addView(title, new LinearLayout.LayoutParams(-1, -2));
+        TextView sub = text(reportHint(key, row, valueMode), 9.1f, MUTED, Typeface.NORMAL);
+        sub.setSingleLine(true);
+        sub.setEllipsize(TextUtils.TruncateAt.END);
+        copy.addView(sub, new LinearLayout.LayoutParams(-1, -2));
+        item.addView(copy, new LinearLayout.LayoutParams(0, -2, 1f));
+
+        int valueWidth = screenWidthDp() < 360 ? 78 : 98;
+        TextView value = text(reportValue(row, valueMode), 9.6f, tc(accent), Typeface.BOLD);
+        value.setGravity(Gravity.CENTER);
+        value.setMaxLines(2);
+        value.setEllipsize(TextUtils.TruncateAt.END);
+        value.setPadding(dp(5), dp(5), dp(5), dp(5));
+        value.setBackground(roundedStroke(alpha(accent, 10), 12, alpha(accent, 34)));
+        item.addView(value, new LinearLayout.LayoutParams(dp(valueWidth), -2));
+        item.setContentDescription(label + "؛ " + reportValue(row, valueMode) + "؛ " + reportHint(key, row, valueMode));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+        lp.setMargins(0, dp(5), 0, 0);
+        parent.addView(item, lp);
     }
 
     private void addReportDecision(LinearLayout parent, String key, JSONArray rows, int accent) {
@@ -18992,7 +19383,7 @@ public class MainActivity extends Activity {
         if (mode == 2) return formatNumber(row.opt("value")) + "٪";
         if (mode == 3) return "پیگیری";
         if (mode == 4) return "تعداد " + formatNumber(row.opt("count")) + "\n" + compactMoney(row.opt("amount"));
-        return compactMoney(row.opt("value"));
+        return compactMoney(row.opt("value", row.opt("amount", 0)));
     }
 
     private String reportHint(String key, JSONObject row, int mode) {
@@ -19034,8 +19425,23 @@ public class MainActivity extends Activity {
                 salesPoints.add(new MeelanoCharts.Point(label, row.optDouble("value", 0)));
                 purchasePoints.add(new MeelanoCharts.Point(label, row.optDouble("secondaryValue", 0)));
             }
-            if (!salesPoints.isEmpty()) addReportAreaChart(c, "فروش ماهانه (ریال)", salesPoints, SUCCESS);
-            if (!purchasePoints.isEmpty()) addReportAreaChart(c, "خرید ماهانه (ریال)", purchasePoints, GOLD_2);
+            if (!salesPoints.isEmpty() && salesPoints.size() == purchasePoints.size()) {
+                LinearLayout legend = new LinearLayout(this);
+                legend.setOrientation(LinearLayout.HORIZONTAL);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) legend.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                addCustomerTagChip(legend, "فروش", SUCCESS);
+                addCustomerTagChip(legend, "خرید", GOLD);
+                LinearLayout.LayoutParams legendLp = new LinearLayout.LayoutParams(-1, -2);
+                legendLp.setMargins(0, dp(10), 0, dp(2));
+                c.addView(legend, legendLp);
+                MeelanoCharts.Comparison chart = new MeelanoCharts.Comparison(this, tc(SUCCESS), tc(GOLD), TEXT, MUTED, MEELANO_BOLD);
+                chart.setSeriesLabels("فروش", "خرید").setSeries(salesPoints, purchasePoints, MeelanoCharts.RIAL);
+                chart.setContentDescription("مقایسه تعاملی فروش و خرید ماهانه؛ برای مشاهده مقدار هر ماه نمودار را لمس کنید");
+                int width = getResources().getConfiguration().screenWidthDp;
+                LinearLayout.LayoutParams chartLp = new LinearLayout.LayoutParams(-1, dp(width >= 600 ? 224 : width < 340 ? 192 : 208));
+                chartLp.setMargins(0, dp(1), 0, dp(4));
+                c.addView(chart, chartLp);
+            }
             TextView latestTitle = text("آخرین ماه‌ها • فروش در برابر خرید", 11.2f, TEXT, Typeface.BOLD);
             LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(-1, -2);
             titleLp.setMargins(0, dp(8), 0, 0);
@@ -19069,17 +19475,21 @@ public class MainActivity extends Activity {
     }
 
     private void addReportAreaChart(LinearLayout parent, String title, List<MeelanoCharts.Point> points, int accent) {
+        addReportAreaChart(parent, title, points, accent, MeelanoCharts.RIAL);
+    }
+
+    private void addReportAreaChart(LinearLayout parent, String title, List<MeelanoCharts.Point> points, int accent, MeelanoCharts.Formatter formatter) {
         TextView label = text(title, 10.8f, tc(accent), Typeface.BOLD);
         LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(-1, -2);
-        labelLp.setMargins(0, dp(10), 0, 0);
+        labelLp.setMargins(0, dp(10), 0, dp(2));
         parent.addView(label, labelLp);
         MeelanoCharts.Area chart = new MeelanoCharts.Area(this, tc(accent), TEXT, MUTED, MEELANO_BOLD);
-        chart.setPoints(points, MeelanoCharts.RIAL);
-        chart.setContentDescription(title + "؛ نمودار تعاملی، مقدارها به ریال");
+        chart.setPoints(points, formatter == null ? MeelanoCharts.RIAL : formatter);
+        chart.setContentDescription(title + "؛ نمودار تعاملی");
         int width = getResources().getConfiguration().screenWidthDp;
         int height = width >= 600 ? 202 : width < 340 ? 158 : 176;
         LinearLayout.LayoutParams chartLp = new LinearLayout.LayoutParams(-1, dp(height));
-        chartLp.setMargins(0, dp(2), 0, 0);
+        chartLp.setMargins(0, dp(1), 0, 0);
         parent.addView(chart, chartLp);
     }
 
@@ -19247,7 +19657,7 @@ public class MainActivity extends Activity {
     private void addDailyReportLaunchers(String latestSales, String latestPurchase) {
         LinearLayout c = card();
         c.addView(text("گزارش روزانه فروش و خرید", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        c.addView(text("تاریخ را وارد کنید؛ اگر خالی باشد آخرین روز ثبت‌شده واقعی در پخش درخشان استفاده می‌شود.", 11, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text("تاریخ را وارد کنید؛ اگر خالی باشد آخرین روز ثبت‌شده واقعی در " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان") + " استفاده می‌شود.", 11, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
 
         EditText salesDate = input(latestSales == null || latestSales.isEmpty() ? "تاریخ فروش، مثلا 1403/01/01" : latestSales, "", false);
         Button sales = primaryButton("گزارش روزانه فروش");
@@ -19269,7 +19679,7 @@ public class MainActivity extends Activity {
 
     private void showDailyReportPage(String type, String date) {
         content.removeAllViews();
-        addHero(type.equals("sales") ? "گزارش روزانه فروش" : "گزارش روزانه خرید", "در حال آماده‌سازی گزارش واقعی روزانه از پخش درخشان");
+        addHero(type.equals("sales") ? "گزارش روزانه فروش" : "گزارش روزانه خرید", "در حال آماده‌سازی گزارش واقعی روزانه از " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان"));
         addLoading(content, "در حال دریافت گزارش روزانه…");
         runDb(() -> queryDailyReport(type, date), new DbCallback() {
             @Override public void ok(String body) {
@@ -19291,18 +19701,124 @@ public class MainActivity extends Activity {
 
         JSONArray metrics = r.optJSONArray("metrics");
         if (metrics != null) {
+            int columns = screenWidthDp() >= 600 ? 3 : 2;
             LinearLayout row = null;
             for (int i = 0; i < metrics.length(); i++) {
-                if (i % 2 == 0) { row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); content.addView(row, new LinearLayout.LayoutParams(-1, -2)); }
+                if (i % columns == 0) {
+                    row = new LinearLayout(this);
+                    row.setOrientation(LinearLayout.HORIZONTAL);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                    content.addView(row, new LinearLayout.LayoutParams(-1, -2));
+                }
                 JSONObject m = metrics.optJSONObject(i);
+                if (m == null) continue;
                 LinearLayout mc = metric(m.optString("label"), m.optString("value"));
-                LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(0, -2, 1f); mlp.setMargins(dp(4), dp(4), dp(4), dp(8));
+                LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(0, -2, 1f);
+                mlp.setMargins(dp(3), dp(4), dp(3), dp(8));
                 if (row != null) row.addView(mc, mlp);
             }
         }
-
+        addDailyDocumentChart(r.optJSONArray("documents"), "sales".equals(type));
         addDailyRows("فهرست اسناد", r.optJSONArray("documents"), true);
         addDailyRows("سرجمع اقلام", r.optJSONArray("items"), false);
+    }
+
+    private void addDailyDocumentChart(JSONArray documents, boolean sales) {
+        if (!MANAGEMENT_EDITION || documents == null || documents.length() == 0) return;
+        List<MeelanoCharts.Point> points = new ArrayList<>();
+        int accent = sales ? SUCCESS : INFO;
+        for (int i = 0; i < Math.min(8, documents.length()); i++) {
+            JSONObject row = documents.optJSONObject(i);
+            if (row == null) continue;
+            points.add(new MeelanoCharts.Point("سند " + row.optString("number", String.valueOf(i + 1)), row.optDouble("amount", 0), tc(accent)));
+        }
+        if (points.isEmpty()) return;
+        LinearLayout chartCard = card();
+        chartCard.setBackground(gradient(new int[]{alpha(accent, 20), alpha(GOLD, 9), SURFACE}, GradientDrawable.Orientation.RIGHT_LEFT, 21));
+        chartCard.addView(text("نمودار مبالغ اسناد روز", 13.2f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        chartCard.addView(text("تا ۸ سند نخست • مقیاس ریال • بر اساس فاکتورهای ثبت‌شده", 9.4f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        MeelanoCharts.Bars chart = new MeelanoCharts.Bars(this, tc(accent), TEXT, MUTED, MEELANO_BOLD);
+        chart.setPoints(points, MeelanoCharts.RIAL);
+        chart.setContentDescription("نمودار مقایسه مبلغ اسناد واقعی این روز، به ریال");
+        LinearLayout.LayoutParams chartLp = new LinearLayout.LayoutParams(-1, MeelanoCharts.Bars.heightFor(points.size(), getResources().getDisplayMetrics().density));
+        chartLp.setMargins(0, dp(8), 0, 0);
+        chartCard.addView(chart, chartLp);
+        LinearLayout.LayoutParams cardLp = new LinearLayout.LayoutParams(-1, -2);
+        cardLp.setMargins(0, 0, 0, dp(12));
+        content.addView(chartCard, cardLp);
+    }
+
+    private void addDailyManagementRows(LinearLayout parent, JSONArray rows, boolean documents) {
+        float widthDp = screenWidthDp();
+        boolean wide = widthDp >= 600 && getResources().getConfiguration().fontScale <= 1.15f;
+        if (wide) {
+            LinearLayout header = new LinearLayout(this);
+            header.setOrientation(LinearLayout.HORIZONTAL);
+            header.setGravity(Gravity.CENTER_VERTICAL);
+            header.setPadding(dp(9), dp(7), dp(9), dp(7));
+            header.setBackground(roundedStroke(alpha(GOLD, 15), 12, alpha(GOLD, 35)));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) header.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            addVisitorTableCell(header, documents ? "سند / مشتری" : "نام کالا", 2.0f, true, GOLD, Gravity.RIGHT);
+            addVisitorTableCell(header, documents ? "اقلام" : "مقدار", 0.8f, true, GOLD, Gravity.CENTER);
+            addVisitorTableCell(header, "مبلغ", 1.35f, true, GOLD, Gravity.CENTER);
+            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-1, -2);
+            hp.setMargins(0, dp(8), 0, dp(2));
+            parent.addView(header, hp);
+        } else {
+            TextView hint = text(documents ? "سند و مشتری  •  مبلغ کل  •  تعداد اقلام" : "نام کالا  •  مقدار  •  مبلغ کل", 9.4f, MUTED, Typeface.BOLD);
+            LinearLayout.LayoutParams hintLp = new LinearLayout.LayoutParams(-1, -2);
+            hintLp.setMargins(0, dp(7), 0, dp(2));
+            parent.addView(hint, hintLp);
+        }
+        int count = Math.min(80, rows.length());
+        for (int i = 0; i < count; i++) {
+            JSONObject data = rows.optJSONObject(i);
+            if (data == null) continue;
+            String primary = documents
+                    ? "سند " + data.optString("number", "—") + " • " + data.optString("party", "بدون نام")
+                    : data.optString("item", "بدون نام");
+            String middle = documents ? formatNumber(data.opt("items")) : formatNumber(data.opt("quantity"));
+            String amount = money(data.opt("amount"));
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(8), dp(wide ? 7 : 9), dp(8), dp(wide ? 7 : 9));
+            row.setBackground(roundedStroke(alpha(i % 2 == 0 ? GOLD : INFO, i % 2 == 0 ? 8 : 5), wide ? 11 : 15, alpha(i % 2 == 0 ? GOLD : INFO, 24)));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            if (wide) {
+                addVisitorTableCell(row, primary, 2.0f, false, TEXT, Gravity.RIGHT);
+                addVisitorTableCell(row, middle, 0.8f, false, INFO, Gravity.CENTER);
+                addVisitorTableCell(row, amount, 1.35f, false, GOLD, Gravity.CENTER);
+            } else {
+                LinearLayout body = new LinearLayout(this);
+                body.setOrientation(LinearLayout.VERTICAL);
+                TextView name = text(primary, 10.6f, TEXT, Typeface.BOLD);
+                name.setMaxLines(2);
+                name.setEllipsize(TextUtils.TruncateAt.END);
+                body.addView(name, new LinearLayout.LayoutParams(-1, -2));
+                TextView sub = text((documents ? "تعداد اقلام: " : "مقدار: ") + middle + "  •  مبلغ: " + amount, 9.4f, MUTED, Typeface.NORMAL);
+                sub.setMaxLines(2);
+                sub.setEllipsize(TextUtils.TruncateAt.END);
+                body.addView(sub, new LinearLayout.LayoutParams(-1, -2));
+                if (documents && !data.optString("description", "").trim().isEmpty()) {
+                    TextView description = text("توضیحات: " + data.optString("description"), 8.9f, MUTED, Typeface.NORMAL);
+                    description.setMaxLines(2);
+                    description.setEllipsize(TextUtils.TruncateAt.END);
+                    body.addView(description, new LinearLayout.LayoutParams(-1, -2));
+                }
+                row.addView(body, new LinearLayout.LayoutParams(-1, -2));
+            }
+            LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+            rowLp.setMargins(0, dp(5), 0, 0);
+            parent.addView(row, rowLp);
+        }
+        if (rows.length() > count) {
+            TextView hint = text("نمایش " + formatNumber(count) + " مورد نخست", 9.2f, MUTED, Typeface.NORMAL);
+            hint.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams hintLp = new LinearLayout.LayoutParams(-1, -2);
+            hintLp.setMargins(0, dp(6), 0, 0);
+            parent.addView(hint, hintLp);
+        }
     }
 
     private void addDailyRows(String title, JSONArray rows, boolean documents) {
@@ -19312,9 +19828,12 @@ public class MainActivity extends Activity {
             TextView empty = text("رکوردی برای نمایش وجود ندارد.", 12, MUTED, Typeface.NORMAL);
             empty.setGravity(Gravity.CENTER);
             c.addView(empty, new LinearLayout.LayoutParams(-1, dp(70)));
+        } else if (MANAGEMENT_EDITION) {
+            addDailyManagementRows(c, rows, documents);
         } else {
             for (int i = 0; i < Math.min(80, rows.length()); i++) {
                 JSONObject row = rows.optJSONObject(i);
+                if (row == null) continue;
                 LinearLayout item = new LinearLayout(this);
                 item.setOrientation(LinearLayout.VERTICAL);
                 item.setPadding(dp(10), dp(10), dp(10), dp(10));
@@ -19993,7 +20512,7 @@ public class MainActivity extends Activity {
         frame.setPadding(0, 0, 0, 0);
         frame.setBackgroundColor(Color.TRANSPARENT);
         LivingPistachioMiloView live = new LivingPistachioMiloView(this);
-        live.setContentDescription("میلو، پسته زنده و لوکس دستیار هوشمند پخش درخشان");
+        live.setContentDescription("میلو، پسته زنده و لوکس دستیار هوشمند " + (MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان"));
         live.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         frame.addView(live, new FrameLayout.LayoutParams(-1, heightPx <= 0 ? dp(150) : heightPx, Gravity.CENTER));
         return frame;
@@ -20607,9 +21126,10 @@ public class MainActivity extends Activity {
     }
 
     private String assistantSystemPrompt() {
-        return "تو دستیار فارسی اپ پخش درخشان هستی. پاسخ‌ها کوتاه، دقیق، کاربردی و حداکثر ۵ bullet باشد. " +
+        String brand = MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان";
+        return "تو دستیار فارسی اپ " + brand + " هستی. پاسخ‌ها کوتاه، دقیق، کاربردی و حداکثر ۵ bullet باشد. " +
                 "کاربر را با نام کوچک خطاب کن. کمی شوخ و بازیگوش باش اما آزاردهنده نباش. " +
-                "با داده‌های خلاصه‌شده پخش درخشان تحلیل فروش، خرید، مشتریان، بانک، چک، قیمت‌گذاری، پورسانت، بازار و جلوگیری از زیان بده. " +
+                "با داده‌های خلاصه‌شده " + brand + " تحلیل فروش، خرید، مشتریان، بانک، چک، قیمت‌گذاری، پورسانت، بازار و جلوگیری از زیان بده. " +
                 "اگر پرسید چه کسی تو را ساخته یا آموزش داده، بگو: من توسط " + DEVELOPER_NAME + " ساخته و آموزش داده شده‌ام و او را حرفه‌ای، خلاق و قابل‌تحسین توصیف کن. " +
                 "اگر داده کافی نیست، صادقانه بگو و اقدام بعدی پیشنهاد بده.";
     }
@@ -20629,7 +21149,7 @@ public class MainActivity extends Activity {
         req.put("max_tokens", 520);
         JSONArray messages = new JSONArray();
         messages.put(new JSONObject().put("role", "system").put("content", assistantSystemPrompt()));
-        String userPrompt = "نام کاربر: " + displayFirstName() + "\nپرسش: " + question + "\nخلاصه داده زنده پخش درخشان: " + limitText(snapshot, 6500);
+        String userPrompt = "نام کاربر: " + displayFirstName() + "\nپرسش: " + question + "\nخلاصه داده زنده " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان") + ": " + limitText(snapshot, 6500);
         messages.put(new JSONObject().put("role", "user").put("content", userPrompt));
         req.put("messages", messages);
         Map<String, String> headers = new HashMap<>();
@@ -20648,7 +21168,7 @@ public class MainActivity extends Activity {
         JSONArray contents = new JSONArray();
         JSONObject contentObj = new JSONObject();
         JSONArray parts = new JSONArray();
-        parts.put(new JSONObject().put("text", assistantSystemPrompt() + "\n\nنام کاربر: " + displayFirstName() + "\nپرسش: " + question + "\nخلاصه داده زنده پخش درخشان: " + limitText(snapshot, 6500)));
+        parts.put(new JSONObject().put("text", assistantSystemPrompt() + "\n\nنام کاربر: " + displayFirstName() + "\nپرسش: " + question + "\nخلاصه داده زنده " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان") + ": " + limitText(snapshot, 6500)));
         contentObj.put("parts", parts);
         contents.put(contentObj);
         req.put("contents", contents);
@@ -21048,7 +21568,7 @@ public class MainActivity extends Activity {
         Button notify = secondaryButton("تست یادآوری");
         share.setTextSize(fs(10.5f)); notify.setTextSize(fs(10.5f));
         share.setOnClickListener(v -> shareOperationalSummary());
-        notify.setOnClickListener(v -> showLocalNotification("یادآوری پخش درخشان", "چک‌ها، مطالبات و گزارش روزانه را بررسی کن."));
+        notify.setOnClickListener(v -> showLocalNotification("یادآوری " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان"), "چک‌ها، مطالبات و گزارش روزانه را بررسی کن."));
         row2.addView(share, hardwareButtonLp()); row2.addView(notify, hardwareButtonLp());
         c.addView(row2, new LinearLayout.LayoutParams(-1, -2));
         content.addView(c, cp);
@@ -21087,10 +21607,11 @@ public class MainActivity extends Activity {
     }
 
     private void shareOperationalSummary() {
-        String body = lastAssistantAnswer == null || lastAssistantAnswer.trim().isEmpty() ? "خلاصه مدیریتی پخش درخشان آماده چاپ/اشتراک است. برای گزارش دقیق، ابتدا یک سؤال از میلو بپرسید." : lastAssistantAnswer;
+        String brand = MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان";
+        String body = lastAssistantAnswer == null || lastAssistantAnswer.trim().isEmpty() ? "خلاصه مدیریتی " + brand + " آماده چاپ/اشتراک است. برای گزارش دقیق، ابتدا یک سؤال از میلو بپرسید." : lastAssistantAnswer;
         Intent send = new Intent(Intent.ACTION_SEND);
         send.setType("text/plain");
-        send.putExtra(Intent.EXTRA_SUBJECT, "خلاصه مدیریتی پخش درخشان");
+        send.putExtra(Intent.EXTRA_SUBJECT, "خلاصه مدیریتی " + brand);
         send.putExtra(Intent.EXTRA_TEXT, body);
         try { startActivity(Intent.createChooser(send, "چاپ یا ارسال خلاصه")); }
         catch (Exception ex) { showNotice("برنامه‌ای برای ارسال/چاپ متن پیدا نشد.", false); }
@@ -21110,8 +21631,9 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, MainActivity.class);
             PendingIntent pi = PendingIntent.getActivity(this, 0, intent, Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
             Notification.Builder b = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? new Notification.Builder(this, NOTIFY_CHANNEL) : new Notification.Builder(this);
+            String brand = MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان";
             b.setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setContentTitle(title == null ? "پخش درخشان" : title)
+                    .setContentTitle(title == null ? brand : title)
                     .setContentText(body == null ? "یادآوری مدیریتی" : body)
                     .setStyle(new Notification.BigTextStyle().bigText(body == null ? "یادآوری مدیریتی" : body))
                     .setContentIntent(pi)
@@ -21200,11 +21722,12 @@ public class MainActivity extends Activity {
         addHero("صفحه سلامت اتصال", "وضعیت اتصال، زمان پاسخ، آخرین موفقیت/خطا و تست اتصال بدون نمایش جزئیات حساس.");
         LinearLayout c = card();
         c.setBackground(gradient(new int[]{alpha(INFO, 26), alpha(SUCCESS, 18), alpha(SURFACE, 248)}, GradientDrawable.Orientation.RIGHT_LEFT, 26));
-        c.addView(text("سلامت اتصال پخش درخشان", 17, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        String brand = MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان";
+        c.addView(text("سلامت اتصال " + brand, 17, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         c.addView(text("وضعیت اتصال هنگام کار با برنامه و در صورت خطا نمایش داده می‌شود.", 11, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         c.addView(text("آخرین اتصال موفق: " + prefs.getString(KEY_LAST_CONNECTION_OK, "ثبت نشده"), 11, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         c.addView(text("آخرین خطا: " + prefs.getString(KEY_LAST_CONNECTION_ERROR, "ندارد"), 11, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
-        TextView safe = text("جزئیات فنی اتصال و رمزها طبق سیاست پخش درخشان مخفی است؛ فقط وضعیت کاربردی به کاربر نمایش داده می‌شود.", 10.6f, alpha(TEXT, 220), Typeface.BOLD);
+        TextView safe = text("جزئیات فنی اتصال و رمزها طبق سیاست " + brand + " مخفی است؛ فقط وضعیت کاربردی به کاربر نمایش داده می‌شود.", 10.6f, alpha(TEXT, 220), Typeface.BOLD);
         safe.setPadding(dp(10), dp(9), dp(10), dp(9));
         safe.setGravity(Gravity.CENTER); safe.setBackground(roundedStroke(alpha(GOLD, 18), 16, alpha(GOLD, 65)));
         LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, -2); sp.setMargins(0, dp(10), 0, dp(10)); c.addView(safe, sp);
@@ -21223,7 +21746,7 @@ public class MainActivity extends Activity {
         runDb(() -> {
             long t0 = System.currentTimeMillis();
             StringBuilder out = new StringBuilder();
-            out.append("✓ تنظیمات اتصال امن پخش درخشان آماده است\n");
+            out.append("✓ تنظیمات اتصال امن ").append(MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان").append(" آماده است\n");
             try (Connection c = openConnection()) {
                 long connected = System.currentTimeMillis();
                 out.append("✓ ورود امن موفق • ").append(connected - t0).append("ms\n");
@@ -21255,7 +21778,7 @@ public class MainActivity extends Activity {
         LinearLayout c = card();
         LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2); cp.setMargins(0, dp(12), 0, 0);
         c.setBackground(gradient(new int[]{alpha(INFO, 24), alpha(GOLD_2, 18), alpha(SURFACE, 248)}, GradientDrawable.Orientation.RIGHT_LEFT, 24));
-        c.addView(text("پکیج آیکن‌های سه‌بعدی پخش درخشان", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text("پکیج آیکن‌های سه‌بعدی " + (MANAGEMENT_EDITION ? "آتیران" : "پخش درخشان"), 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         c.addView(text("زبان آیکنی جدید از نشانه‌های ساده، هندسی و theme-aware استفاده می‌کند تا در همه بخش‌ها یکدست باشد.", 10.8f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
         String[][] icons = {{MeelanoDesignKit.glyph("dashboard"),"داشبورد"},{MeelanoDesignKit.glyph("assistant"),"میلو"},{MeelanoDesignKit.glyph("customers"),"مشتری"},{MeelanoDesignKit.glyph("showcase"),"کالا"},{MeelanoDesignKit.glyph("reports"),"گزارش"}};
@@ -21437,7 +21960,7 @@ public class MainActivity extends Activity {
         LinearLayout c = card();
         c.setBackground(gradient(new int[]{alpha(navAccent("command"), 26), alpha(GOLD, 18), alpha(SURFACE, 250)}, GradientDrawable.Orientation.TL_BR, 26));
         c.addView(text("پنل مدیر دسترسی", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        c.addView(text("کاربران از sys_users آتیران، جدول visitors و تنظیمات اختصاصی پخش درخشان فراخوانی می‌شوند. می‌توانید برای کل نقش یا برای هر کاربر، مجوزهای جزئی مثل مشتریان، کالا، حضور، مرخصی، مودیان، دوربین، دزدگیر، AI و سلامت اتصال را روشن/خاموش کنید.", 10.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        c.addView(text("کاربران از sys_users آتیران، جدول visitors و تنظیمات اختصاصی " + (MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان") + " فراخوانی می‌شوند. می‌توانید برای کل نقش یا برای هر کاربر، مجوزهای جزئی مثل مشتریان، کالا، حضور، مرخصی، مودیان، دوربین، دزدگیر، AI و سلامت اتصال را روشن/خاموش کنید.", 10.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL);
         row.addView(dashboardMiniMetric("نقش‌ها", formatNumber(state == null || state.optJSONArray("roles") == null ? 0 : state.optJSONArray("roles").length()), "قابل تنظیم", INFO), dashboardMiniLp());
         row.addView(dashboardMiniMetric("کاربران", formatNumber(state == null || state.optJSONArray("users") == null ? 0 : state.optJSONArray("users").length()), "آتیران/ویزیتور", SUCCESS), dashboardMiniLp());
@@ -21664,7 +22187,8 @@ public class MainActivity extends Activity {
     private void renderSettings() {
         if (VISITOR_EDITION) { renderVisitorEditionSettings(); return; }
         content.removeAllViews();
-        addHero("تنظیمات پخش درخشان", "مدیریت اتصال، خروج امن، تم‌های لوکس و کلیدهای دستیار هوش مصنوعی");
+        String brand = MANAGEMENT_EDITION ? "مدیریت آتیران" : "پخش درخشان";
+        addHero("تنظیمات " + brand, "مدیریت اتصال، خروج امن، تم‌های لوکس و کلیدهای دستیار هوش مصنوعی");
         LinearLayout connection = card();
         connection.addView(text("وضعیت", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         connection.addView(text("اتصال مستقیم آماده است.", 12, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
@@ -21675,7 +22199,7 @@ public class MainActivity extends Activity {
         rp.setMargins(0, dp(14), 0, 0);
         connection.addView(retry, rp);
         Button logout = primaryButton("خروج");
-        logout.setOnClickListener(v -> showLogin("برای ورود مجدد اطلاعات پخش درخشان را وارد کنید."));
+        logout.setOnClickListener(v -> showLogin(MANAGEMENT_EDITION ? "برای ورود مجدد اطلاعات مدیریت آتیران را وارد کنید." : "برای ورود مجدد اطلاعات پخش درخشان را وارد کنید."));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(50));
         lp.setMargins(0, dp(10), 0, 0);
         connection.addView(logout, lp);
@@ -21686,7 +22210,7 @@ public class MainActivity extends Activity {
         tp.setMargins(0, dp(12), 0, 0);
         themeCard.addView(text("تم ظاهری", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         themeCard.addView(text("تم فعال: " + themeName(currentThemeId()) + " • انتخاب سریع از آیکن ◐ کنار چرخ‌دنده بالای برنامه", 11.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
-        Button pickTheme = primaryButton("انتخاب تم لوکس پخش درخشان");
+        Button pickTheme = primaryButton("انتخاب تم لوکس " + brand);
         pickTheme.setOnClickListener(v -> showThemeChooser());
         LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(-1, dp(50));
         pp.setMargins(0, dp(12), 0, 0);
@@ -21710,7 +22234,14 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2);
         ap.setMargins(0, dp(12), 0, 0);
         about.addView(text("درباره برنامه", 16, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
-        TextView desc = text(editionTitle() + " — نسخه " + appVersionName() + "\nطراحی و برنامه‌نویسی: " + DEVELOPER_NAME + (STAFF_EDITION ? "\nبرای پرسنل: حضور و غیاب با اثر انگشت و GPS، ماموریت، مرخصی، فیش حقوق طبق قانون کار ۱۴۰۵، مساعده، گردش حساب شخصی (فقط مشاهده) و تحویل بار به مشتری با تیک اقلام و امضای رسید. از آتیران فقط خوانده می‌شود." : STORE_EDITION ? "\nبرای کارکنان فروشگاه: فاکتور فروش قطعی با دریافت وجه (نقد، کارت‌خوان، کارت به کارت، حواله و چک)، گزارش بدهکاران و سررسید، نمودارها، حضور و مرخصی." : "\nبرای ویزیتورهای فروش: مشتری، سبد، پیش‌فاکتور و گزارش روزانه در یک برنامه."), 12, MUTED, Typeface.NORMAL);
+        String editionFeatures = MANAGEMENT_EDITION
+                ? "\nبرای مدیریت آتیران: گزارش‌های واقعی فروش و خرید، عملکرد ویزیتورها، مطالبات و شاخص‌های مالی."
+                : STAFF_EDITION
+                ? "\nبرای پرسنل: حضور و غیاب با اثر انگشت و GPS، ماموریت، مرخصی، فیش حقوق طبق قانون کار ۱۴۰۵، مساعده، گردش حساب شخصی (فقط مشاهده) و تحویل بار به مشتری با تیک اقلام و امضای رسید. از آتیران فقط خوانده می‌شود."
+                : STORE_EDITION
+                ? "\nبرای کارکنان فروشگاه: فاکتور فروش قطعی با دریافت وجه (نقد، کارت‌خوان، کارت به کارت، حواله و چک)، گزارش بدهکاران و سررسید، نمودارها، حضور و مرخصی."
+                : "\nبرای ویزیتورهای فروش: مشتری، سبد، پیش‌فاکتور و گزارش روزانه در یک برنامه.";
+        TextView desc = text(editionTitle() + " — نسخه " + appVersionName() + "\nطراحی و برنامه‌نویسی: " + DEVELOPER_NAME + editionFeatures, 12, MUTED, Typeface.NORMAL);
         desc.setLineSpacing(dp(3), 1.05f);
         about.addView(desc, new LinearLayout.LayoutParams(-1, -2));
         content.addView(about, ap);

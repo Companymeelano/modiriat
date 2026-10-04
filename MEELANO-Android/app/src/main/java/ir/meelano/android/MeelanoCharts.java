@@ -18,8 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Small, dependency-free animated charts for the store edition (area, horizontal bars, donut).
- * Colours and fonts are passed in from the active theme; numbers are drawn with Persian digits.
+ * Small, dependency-free animated charts shared by the store and Atiran management editions.
+ * Includes touchable area/comparison trends, ranked bars and a donut; colors and fonts follow the
+ * active theme, and displayed values use Persian digits.
  */
 final class MeelanoCharts {
     private MeelanoCharts() { }
@@ -262,6 +263,166 @@ final class MeelanoCharts {
         }
 
         private int indexOfMax() { int m = 0; for (int i = 1; i < points.size(); i++) if (points.get(i).value > points.get(m).value) m = i; return m; }
+    }
+
+    /**
+     * Two-series executive trend chart. Both real series share one scale so sales and purchases are
+     * directly comparable; tapping the plot reveals the exact month and both values.
+     */
+    static final class Comparison extends Base {
+        private List<Point> secondary = new ArrayList<>();
+        private int secondaryColor;
+        private int selected = -1;
+        private float plotLeft = 0, plotRight = 0;
+        private String primaryTitle = "فروش", secondaryTitle = "خرید";
+
+        Comparison(Context c, int primaryColor, int secondaryColor, int textColor, int muted, Typeface font) {
+            super(c, primaryColor, textColor, muted, font);
+            this.secondaryColor = secondaryColor;
+        }
+
+        Comparison setSeries(List<Point> primary, List<Point> other, Formatter f) {
+            points = primary == null ? new ArrayList<>() : primary;
+            secondary = other == null ? new ArrayList<>() : other;
+            if (f != null) formatter = f;
+            StringBuilder cd = new StringBuilder();
+            int n = Math.min(points.size(), secondary.size());
+            for (int i = 0; i < n; i++) {
+                Point a = points.get(i), b = secondary.get(i);
+                cd.append(a.label).append("؛ ").append(primaryTitle).append(' ').append(formatter.format(a.value))
+                        .append("؛ ").append(secondaryTitle).append(' ').append(formatter.format(b.value)).append('،');
+            }
+            setContentDescription(cd.toString());
+            animateIn();
+            return this;
+        }
+
+        Comparison setSeriesLabels(String primary, String other) {
+            primaryTitle = primary == null ? "فروش" : primary;
+            secondaryTitle = other == null ? "خرید" : other;
+            invalidate();
+            return this;
+        }
+
+        @Override public boolean onTouchEvent(MotionEvent e) {
+            int n = Math.min(points.size(), secondary.size());
+            if (n < 1 || plotRight <= plotLeft) return false;
+            if (e.getAction() == MotionEvent.ACTION_DOWN || e.getAction() == MotionEvent.ACTION_MOVE) {
+                float step = n > 1 ? (plotRight - plotLeft) / (n - 1) : 1f;
+                int i = n > 1 ? Math.round((plotRight - e.getX()) / step) : 0;
+                selected = Math.max(0, Math.min(n - 1, i));
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
+                invalidate();
+                return true;
+            }
+            if (e.getAction() == MotionEvent.ACTION_UP || e.getAction() == MotionEvent.ACTION_CANCEL) {
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
+                return true;
+            }
+            return true;
+        }
+
+        @Override protected void onDraw(Canvas canvas) {
+            int n = Math.min(points.size(), secondary.size());
+            float w = getWidth(), h = getHeight(), sc = scale();
+            if (w <= 0 || h <= 0 || n == 0) return;
+            double max = 0;
+            for (int i = 0; i < n; i++) max = Math.max(max, Math.max(points.get(i).value, secondary.get(i).value));
+            max = niceMax(max);
+
+            float axisSize = dp(9.2f) * sc;
+            text.setFakeBoldText(false); text.setTextSize(axisSize); text.setColor(muted);
+            String[] yLabels = new String[4]; float yWidth = 0;
+            for (int g = 0; g <= 3; g++) {
+                double value = max * (3 - g) / 3.0;
+                yLabels[g] = formatter == RIAL ? compact(value) : formatter.format(value);
+                yWidth = Math.max(yWidth, text.measureText(yLabels[g]));
+            }
+            float left = Math.min(w * 0.33f, yWidth + dp(12));
+            float right = w - dp(12);
+            float top = dp(26) * sc;
+            float bottom = h - axisSize - dp(15);
+            if (bottom <= top) return;
+            plotLeft = left; plotRight = right;
+
+            paint.setShader(null); paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(1)); paint.setColor(grid);
+            text.setTextAlign(Paint.Align.RIGHT);
+            for (int g = 0; g <= 3; g++) {
+                float y = top + (bottom - top) * g / 3f;
+                canvas.drawLine(left, y, right, y, paint);
+                canvas.drawText(yLabels[g], left - dp(5), y + axisSize * 0.35f, text);
+            }
+
+            float step = n > 1 ? (right - left) / (n - 1) : 0;
+            float[] xs = new float[n], primaryY = new float[n], secondaryY = new float[n];
+            for (int i = 0; i < n; i++) {
+                xs[i] = n > 1 ? right - step * i : (left + right) / 2f;
+                primaryY[i] = bottom - (float) (Math.max(0, points.get(i).value) / max) * (bottom - top) * progress;
+                secondaryY[i] = bottom - (float) (Math.max(0, secondary.get(i).value) / max) * (bottom - top) * progress;
+            }
+            drawSeries(canvas, xs, secondaryY, bottom, secondaryColor, sc);
+            drawSeries(canvas, xs, primaryY, bottom, accent, sc);
+
+            text.setTextSize(axisSize); text.setColor(muted); text.setTextAlign(Paint.Align.CENTER); text.setFakeBoldText(false);
+            float labelWidth = 0;
+            for (int i = 0; i < n; i++) labelWidth = Math.max(labelWidth, text.measureText(fa(points.get(i).label)));
+            int fit = Math.max(2, (int) ((right - left) / (labelWidth + dp(12))) + 1);
+            int every = Math.max(1, (int) Math.ceil((n - 1) / (double) Math.max(1, fit - 1)));
+            float lastX = Float.NaN;
+            for (int i = 0; i < n; i += every) { drawX(canvas, i, xs[i], w, h); lastX = xs[i]; }
+            if ((n - 1) % every != 0 && (Float.isNaN(lastX) || Math.abs(lastX - xs[n - 1]) >= labelWidth + dp(8))) drawX(canvas, n - 1, xs[n - 1], w, h);
+
+            int s = selected >= 0 ? Math.min(n - 1, selected) : latestIndex(n);
+            paint.setShader(null); paint.setStyle(Paint.Style.FILL); paint.setColor(alpha(muted, 90));
+            canvas.drawLine(xs[s], top, xs[s], bottom, paint);
+            drawMarker(canvas, xs[s], secondaryY[s], secondaryColor, sc);
+            drawMarker(canvas, xs[s], primaryY[s], accent, sc);
+
+            text.setTextSize(dp(10.2f) * sc); text.setColor(textColor); text.setFakeBoldText(true); text.setTextAlign(Paint.Align.CENTER);
+            String tip = fa(points.get(s).label) + "  •  " + primaryTitle + " " + compact(points.get(s).value)
+                    + "  •  " + secondaryTitle + " " + compact(secondary.get(s).value);
+            tip = fitEllipsis(tip, w - dp(22));
+            float tw = text.measureText(tip);
+            float bx = Math.max(tw / 2 + dp(10), Math.min(w - tw / 2 - dp(10), xs[s]));
+            paint.setColor(withAlpha(accent, 23));
+            canvas.drawRoundRect(new RectF(bx - tw / 2 - dp(8), dp(1), bx + tw / 2 + dp(8), dp(1) + dp(22) * sc), dp(10), dp(10), paint);
+            canvas.drawText(tip, bx, dp(1) + dp(15) * sc, text);
+            text.setFakeBoldText(false);
+        }
+
+        private void drawSeries(Canvas canvas, float[] xs, float[] ys, float bottom, int color, float sc) {
+            if (xs.length == 0) return;
+            float[] tangents = monotoneTangents(ys);
+            Path line = new Path(), fill = new Path();
+            line.moveTo(xs[0], ys[0]); fill.moveTo(xs[0], bottom); fill.lineTo(xs[0], ys[0]);
+            for (int i = 0; i < xs.length - 1; i++) {
+                float dx = (xs[i + 1] - xs[i]) / 3f;
+                float c1x = xs[i] + dx, c1y = Math.min(bottom, ys[i] + tangents[i] / 3f);
+                float c2x = xs[i + 1] - dx, c2y = Math.min(bottom, ys[i + 1] - tangents[i + 1] / 3f);
+                line.cubicTo(c1x, c1y, c2x, c2y, xs[i + 1], ys[i + 1]);
+                fill.cubicTo(c1x, c1y, c2x, c2y, xs[i + 1], ys[i + 1]);
+            }
+            fill.lineTo(xs[xs.length - 1], bottom); fill.close();
+            paint.setStyle(Paint.Style.FILL);
+            paint.setShader(new LinearGradient(0, 0, 0, bottom, withAlpha(color, 48), withAlpha(color, 0), Shader.TileMode.CLAMP));
+            canvas.drawPath(fill, paint); paint.setShader(null);
+            paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(2.35f) * sc); paint.setStrokeCap(Paint.Cap.ROUND); paint.setColor(color);
+            canvas.drawPath(line, paint);
+        }
+
+        private void drawMarker(Canvas canvas, float x, float y, int color, float sc) {
+            paint.setShader(null); paint.setStyle(Paint.Style.FILL); paint.setColor(color);
+            canvas.drawCircle(x, y, dp(5) * sc, paint);
+            paint.setColor(Color.WHITE); canvas.drawCircle(x, y, dp(2.1f) * sc, paint);
+        }
+
+        private void drawX(Canvas canvas, int i, float x, float w, float h) {
+            String label = fa(points.get(i).label);
+            float half = text.measureText(label) / 2f;
+            canvas.drawText(label, Math.max(half + dp(2), Math.min(w - half - dp(2), x)), h - dp(5), text);
+        }
+
+        private int latestIndex(int n) { return n <= 1 ? 0 : n - 1; }
     }
 
     /** Horizontal bars: label on the right, value on the left, bars grow right→left. Long labels are cut with «…». */
