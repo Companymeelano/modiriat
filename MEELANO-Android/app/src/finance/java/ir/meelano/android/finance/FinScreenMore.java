@@ -123,7 +123,9 @@ public class FinScreenMore extends FinScreen {
         card.addView(row2("شناسه اپراتور (vis_rdf)", s.visitorId == null ? "—" : FinFmt.faNumber(s.visitorId)), ui.lp(-1, -2));
         card.addView(row2("شناسه کاربر آتیران", s.atiranUserId == null ? "—" : FinFmt.faNumber(s.atiranUserId)), ui.lp(-1, -2));
         card.addView(row2("نقش", s.roleLabel + " (" + s.roleKey + ")"), ui.lp(-1, -2));
-        card.addView(row2("منبع نقش", s.roleFromDatabase ? "جدول‌های دسترسی دیتابیس" : "قاعدهٔ هویت/پیش‌فرض"), ui.lp(-1, -2));
+        card.addView(row2("منبع نقش", s.roleFromDatabase ? "جدول‌های دسترسی دیتابیس"
+                : (s.isManager() ? "نام کاربری مدیریتی (admin / modir)" : "قاعدهٔ هویت/پیش‌فرض")), ui.lp(-1, -2));
+        card.addView(row2("سطح دسترسی", s.isManager() ? "کامل — همهٔ بخش‌ها و گزارش‌ها باز است" : "محدود به نقش"), ui.lp(-1, -2));
         card.addView(row2("تعداد دسترسی‌ها", FinFmt.faNumber(s.permissions.size())), ui.lp(-1, -2));
         card.addView(row2("زمان ورود", clock(s.loginAt)), ui.lp(-1, -2));
         card.addView(ui.text("پیش‌بارگذاری: پس از ورود، همهٔ بخش‌ها یک‌بار از دیتابیس خوانده و ذخیره می‌شوند "

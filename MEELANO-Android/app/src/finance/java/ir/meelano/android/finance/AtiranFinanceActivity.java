@@ -1048,7 +1048,8 @@ public class AtiranFinanceActivity extends Activity {
         chips.setGravity(Gravity.END);
         if (s != null) {
             String access = s.isManager() ? "دسترسی کامل" : ("دسترسی: " + s.roleLabel);
-            String where = s.roleFromDatabase ? " · از دیتابیس" : " · پیش‌فرض نسخهٔ مالی";
+            String where = s.roleFromDatabase ? " · از دیتابیس"
+                    : (s.isManager() ? " · از نام کاربری مدیریتی" : " · پیش‌فرض نسخهٔ مالی");
             boolean blocked = !s.isManager() && !s.canWrite();
             chips.addView(ui.chip(access + where, blocked ? FinUi.WARNING : ui.goldAccent), ui.lp(-2, -2));
         }

@@ -282,6 +282,15 @@ public final class FinAuth {
      */
     private static Profile resolveProfile(Connection c, String login, String display, Integer userId, Integer visitorId) {
         Profile p = new Profile();
+        // 0) the management accounts, by the login name itself. These are the accounts that have to read
+        // every report of the finance edition, so this rule is checked before anything the database says
+        // — an access row, a role column or a role table can never take a report away from «modir».
+        if (identityLooksManagerAccount(login)) {
+            p.role = "admin";
+            p.roleSource = "manager-login";
+            p.permissions = FinSession.defaultPermissions("admin");
+            return p;
+        }
         if (identityLooksAdmin(login, display)) {
             p.role = "admin";
             p.roleSource = "identity";
@@ -462,6 +471,26 @@ public final class FinAuth {
     }
 
     // ------------------------------------------------------------------ identity rules (same as the other apps)
+
+    /**
+     * The management accounts of the finance edition, recognised from the login name alone:
+     * {@code admin}, {@code administrator}, {@code manager}, {@code modir}, {@code modiriat},
+     * {@code modir_mali} … and anything that starts with them. They always receive every finance
+     * permission ({@link FinSession#FINANCE_PERMISSIONS}), whatever the database rows say.
+     */
+    static boolean identityLooksManagerAccount(String login) {
+        String raw = login == null ? "" : login.trim();
+        if (raw.isEmpty()) return false;
+        String compact = normalizeIdentity(raw).replace(" ", "").replace("_", "").replace("-", "").replace(".", "");
+        if (compact.isEmpty()) return false;
+        for (String name : new String[]{"admin", "administrator", "root", "manager", "modir", "modiriat",
+                "modirmali", "modiremal", "modirmeelano", "\u0645\u062f\u06cc\u0631", "\u0645\u062f\u064a\u0631",
+                "\u0645\u062f\u06cc\u0631\u06cc\u062a", "\u0645\u062f\u06cc\u0631\u0645\u0627\u0644\u06cc"}) {
+            String n = normalizeIdentity(name).replace(" ", "").replace("_", "").replace("-", "").replace(".", "");
+            if (compact.equals(n)) return true;
+        }
+        return compact.startsWith("admin") || compact.startsWith("manager") || compact.startsWith("modir");
+    }
 
     /** The full-access account, by the same rule the other Meelano applications use. */
     static boolean identityLooksAdmin(String login, String display) {
