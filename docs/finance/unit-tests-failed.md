@@ -1,4 +1,0 @@
-# Finance unit test output
-
-```
-```

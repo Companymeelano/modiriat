@@ -1048,7 +1048,7 @@ public class AtiranFinanceActivity extends Activity {
 
         LinearLayout dataRow = ui.row();
         dataRow.setPadding(0, ui.dp(6), 0, 0);
-        TextView dataChip = ui.chip(dataStatusLabel(), ui.textDim);
+        LinearLayout dataChip = ui.chip(dataStatusLabel(), ui.textDim);
         dataChip.setOnClickListener(v -> showDataStatus());
         dataRow.addView(dataChip, ui.lp(-2, -2));
         headerBar.addView(dataRow, ui.lp(-1, -2));
