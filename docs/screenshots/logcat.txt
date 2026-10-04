@@ -1,6 +1,6 @@
-10-04 01:06:09.824   554  1753 D CoreBackPreview: Window{abd8fc u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@4b85da8, mPriority=-1, mIsAnimationCallback=false}
-10-04 01:06:11.051  7708  7747 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
-10-04 01:06:11.055  7708  7747 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
-10-04 01:06:11.068   554   576 I ActivityTaskManager: Displayed ir.meelano.staff.debug/ir.meelano.android.MainActivity for user 0: +3s391ms
-10-04 01:06:17.656   554  1814 D CoreBackPreview: Window{abd8fc u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback null
-10-04 01:06:17.667   554  1814 W InputManager-JNI: Input channel object 'abd8fc ir.meelano.staff.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-04 01:42:42.609  7641  7665 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(wmsSync-VRI[MainActivity]#0) as ready
+10-04 01:42:42.612  7641  7665 E SurfaceSyncGroup: Failed to receive transaction ready in 1000ms. Marking SurfaceSyncGroup(VRI[MainActivity]#1) as ready
+10-04 01:42:42.640   563   582 I ActivityTaskManager: Displayed ir.meelano.staff.debug/ir.meelano.android.MainActivity for user 0: +2s929ms
+10-04 01:42:49.298   563  1658 D CoreBackPreview: Window{21a1b30 u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback null
+10-04 01:42:49.301   563  2031 W InputManager-JNI: Input channel object '21a1b30 ir.meelano.staff.debug/ir.meelano.android.MainActivity (client)' was disposed without first being removed with the input manager!
+10-04 01:42:49.432   563  1712 D CoreBackPreview: Window{a07b469 u0 ir.meelano.staff.debug/ir.meelano.android.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@bde2e25, mPriority=-1, mIsAnimationCallback=false}
