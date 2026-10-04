@@ -92,6 +92,7 @@ public class AtiranFinanceActivity extends Activity {
 
     // ---- startup narration
     private FinBoot boot;
+    private FinSplash splash;
     private View bootView;
     private String runningStep;
     private long stepStartedAt;
@@ -148,13 +149,51 @@ public class AtiranFinanceActivity extends Activity {
         main.postDelayed(this::runStep4, 24L);
     }
 
-    /** 4/6 — who is signed in: the desk, or the sign-in screen. */
+    /** 4/6 — who is signed in, then the startup screen that checks the whole chain. */
     private void runStep4() {
         if (!beginStep("بررسی نشست کاربر")) return;
         boolean loggedIn = FinSession.isLoggedIn();
         endStep("بررسی نشست کاربر", loggedIn ? "نشست فعال است" : "ورود لازم است");
-        if (loggedIn) main.postDelayed(this::openDesk, 24L);
-        else main.postDelayed(this::openLogin, 24L);
+        main.postDelayed(this::openSplash, 24L);
+    }
+
+    /**
+     * 5/6 — the startup health screen: connectivity, server name, SQL port, database login, server
+     * date and a sample read of the finance tables, all in front of the operator, with the duration of
+     * every step. Only when it is done does the app move on to the sign-in screen (or the desk).
+     */
+    private void openSplash() {
+        if (!beginStep("ساخت بخش بررسی سلامت و بارگذاری")) return;
+        try {
+            splash = new FinSplash(this, ui, db, new SplashListener());
+            setContentView(splash.view());
+            splash.start();
+        } catch (Throwable t) {
+            failStep("ساخت بخش بررسی سلامت و بارگذاری", t, true);
+            return;
+        }
+        endStep("ساخت بخش بررسی سلامت و بارگذاری", null);
+        watchdogOn = false;
+    }
+
+    /** What the startup screen asks the activity to do when the walk is over. */
+    private final class SplashListener implements FinSplash.Listener {
+        @Override public void splashReady() {
+            if (FinSession.isLoggedIn()) openDesk();
+            else openLogin();
+        }
+        @Override public void splashRetry() {
+            if (splash != null) splash.start();
+        }
+        @Override public void splashPlainLogin() { showPlainPanel(); }
+        @Override public void splashDiagnostics() { showDiagnostics(null); }
+    }
+
+    /** Falls back to the plain panel (with its own sign-in form) — always available. */
+    private void showPlainPanel() {
+        if (boot == null) return;
+        boot.showLogin();
+        setContentView(boot.view());
     }
 
     /** 5a/6 — the operator desk. */
@@ -478,44 +517,42 @@ public class AtiranFinanceActivity extends Activity {
         if (db == null) db = new FinDb(this);
         ui.applySystemBars();
 
-        LinearLayout root = ui.column();
-        root.setBackground(ui.gradient(ui.bg, FinUi.mix(ui.bg, ui.goldAccent, 0.14f), 0));
-        root.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.setPadding(ui.dp(20), ui.dp(28), ui.dp(20), ui.dp(24));
+        LinearLayout page = ui.column();
+        page.setBackground(ui.gradient(ui.bg, FinUi.mix(ui.bg, ui.goldAccent, 0.12f), 0));
+        page.setGravity(Gravity.CENTER_HORIZONTAL);
+        page.setPadding(ui.dp(18), ui.dp(18), ui.dp(18), ui.dp(20));
 
         FinCharts.Logo logo = new FinCharts.Logo(this, ui.goldAccent, ui.silver, ui.surface, ui.bg);
-        LinearLayout.LayoutParams logoLp = ui.lp(ui.dp(116), ui.dp(116));
+        LinearLayout.LayoutParams logoLp = ui.lp(ui.dp(74), ui.dp(74));
         logoLp.gravity = Gravity.CENTER_HORIZONTAL;
-        root.addView(logo, logoLp);
+        page.addView(logo, logoLp);
 
-        TextView name = ui.text("آتیران مالی", 25f, ui.goldAccent, true);
+        TextView name = ui.text("آتیران مالی", 20f, ui.goldAccent, true);
         name.setGravity(Gravity.CENTER);
-        root.addView(name, ui.lp(-1, -2));
-        TextView sub = ui.text("مرکز عملیات مالی، خزانه، مطالبات و مغایرت", 12.5f, ui.textDim, false);
-        sub.setGravity(Gravity.CENTER);
-        root.addView(sub, ui.lp(-1, -2));
-        LinearLayout badges = ui.row();
-        badges.setGravity(Gravity.CENTER);
-        badges.setPadding(0, ui.dp(10), 0, 0);
-        badges.addView(ui.chip("نسخه " + FinSession.appVersion(), ui.goldAccent), ui.lp(-2, -2));
-        badges.addView(ui.spacer(6), ui.lp(ui.dp(6), -2));
-        badges.addView(ui.chip("خزانه · مطالبات · مغایرت · POS", ui.textFaint), ui.lp(-2, -2));
-        root.addView(badges, ui.lp(-1, -2));
-        addSpace(root, 18);
+        page.addView(name, ui.lp(-1, -2));
 
-        LinearLayout card = ui.gradientCard(ui.goldAccent, 20);
-        card.addView(ui.sectionTitle("ورود", "با حساب واقعی آتیران", "🔐"), ui.lp(-1, -2));
+        TextView sub = ui.text("ورود با حساب واقعی آتیران", 11.5f, ui.textDim, false);
+        sub.setGravity(Gravity.CENTER);
+        page.addView(sub, ui.lp(-1, -2));
+
+        // The form is placed directly under the header, with no stretching spacer and no ScrollView
+        // fill: on every screen size the fields are on screen without scrolling.
+        final LinearLayout card = ui.gradientCard(ui.goldAccent, 18);
+        LinearLayout.LayoutParams cp = ui.lp(-1, -2);
+        cp.topMargin = ui.dp(12);
+        page.addView(card, cp);
+        card.addView(ui.sectionTitle("ورود", "نام کاربری و رمز حساب آتیران", "🔐"), ui.lp(-1, -2));
 
         JSONObject last = FinSession.lastUser(this);
-        EditText user = fieldWithGlyph(card, "♙", getString(R.string.fin_username), false);
+        final EditText user = fieldWithGlyph(card, "♙", getString(R.string.fin_username), false);
         user.setInputType(InputType.TYPE_CLASS_TEXT);
         String lastUser = last.optString("username", "");
         if (!lastUser.isEmpty()) user.setText(lastUser);
 
-        EditText pass = fieldWithGlyph(card, "🔒", getString(R.string.fin_password), true);
+        final EditText pass = fieldWithGlyph(card, "🔒", getString(R.string.fin_password), true);
         pass.setImeOptions(EditorInfo.IME_ACTION_DONE);
         final boolean[] visible = {false};
-        TextView toggle = ui.text("نمایش", 11f, ui.goldAccent, true);
+        TextView toggle = ui.text("نمایش رمز", 11f, ui.goldAccent, true);
         toggle.setPadding(ui.dp(8), ui.dp(4), ui.dp(2), ui.dp(4));
         toggle.setOnClickListener(v -> {
             visible[0] = !visible[0];
@@ -523,7 +560,7 @@ public class AtiranFinanceActivity extends Activity {
                     ? InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                     : InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             pass.setSelection(pass.getText().length());
-            toggle.setText(visible[0] ? "پنهان" : "نمایش");
+            toggle.setText(visible[0] ? "پنهان کردن رمز" : "نمایش رمز");
         });
         LinearLayout toggleRow = ui.row();
         toggleRow.setGravity(Gravity.END);
@@ -567,22 +604,33 @@ public class AtiranFinanceActivity extends Activity {
             }
             return false;
         });
-        root.addView(card, ui.lp(-1, -2));
 
-        TextView env = ui.text(FinEnv.describe(), 11f, ui.textFaint, false);
-        env.setGravity(Gravity.CENTER);
-        env.setPadding(0, ui.dp(14), 0, 0);
-        root.addView(env, ui.lp(-1, -2));
+        TextView footer = ui.text("نسخهٔ " + FinSession.appVersion() + " · " + FinEnv.describe(), 11f, ui.textFaint, false);
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0, ui.dp(12), 0, 0);
+        page.addView(footer, ui.lp(-1, -2));
 
-        TextView support = ui.text("اگر برنامه درست کار نکرد، از «بررسی اتصال به سرور» گزارش بگیرید و برای پشتیبانی بفرستید.",
+        TextView support = ui.text("اگر ورود ناموفق بود، «بررسی اتصال به سرور» را بزنید و گزارش را برای پشتیبانی بفرستید.",
                 11f, ui.textFaint, false);
         support.setGravity(Gravity.CENTER);
         support.setPadding(0, ui.dp(6), 0, 0);
-        root.addView(support, ui.lp(-1, -2));
+        page.addView(support, ui.lp(-1, -2));
 
         ScrollView sc = ui.scroll();
-        sc.addView(root);
+        sc.setFillViewport(false);
+        sc.addView(page);
         setContentView(sc);
+        // Belt and braces: if this device ever lays the page out taller than the window, bring the
+        // form into view by itself instead of leaving the operator in front of an empty screen.
+        sc.post(() -> {
+            try {
+                int viewport = sc.getHeight();
+                if (viewport <= 0) return;
+                if (card.getTop() + card.getHeight() > viewport) {
+                    sc.scrollTo(0, Math.max(0, card.getTop() - ui.dp(8)));
+                }
+            } catch (Throwable ignored) { }
+        });
     }
 
     /**
@@ -593,7 +641,7 @@ public class AtiranFinanceActivity extends Activity {
         LinearLayout box = ui.row();
         box.setBackground(ui.rounded(ui.surface2, 14, ui.stroke, 1));
         box.setPadding(ui.dp(10), ui.dp(4), ui.dp(12), ui.dp(4));
-        LinearLayout.LayoutParams boxLp = ui.lp(-1, ui.dp(54));
+        LinearLayout.LayoutParams boxLp = ui.lp(-1, ui.dp(50));
         boxLp.topMargin = ui.dp(6);
         TextView badge = ui.text(glyph, 14f, ui.goldAccent, true);
         badge.setGravity(Gravity.CENTER);

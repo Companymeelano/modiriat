@@ -40,9 +40,9 @@ android {
             dimension 'edition'
             applicationId 'ir.meelano.atiran.finance'
             // Charts, themed buttons and the reworked data paths of the financial cockpit,
-            // plus the self-diagnosing startup (1.1.1) that makes a failed start readable on the phone.
-            versionCode 3
-            versionName '1.1.1'
+            // the self-diagnosing startup (1.1.1) and the health/loading screen of 1.2.0.
+            versionCode 4
+            versionName '1.2.0'
         }
     }
 

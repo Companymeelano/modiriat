@@ -62,6 +62,7 @@ final class FinBoot {
     private final ProgressBar bar;
     private final TextView logView;
     private final ScrollView logScroll;
+    private LinearLayout tools;
     private final LinearLayout form;
     private final EditText user, pass;
     private final Button loginButton, continueButton;
@@ -184,13 +185,24 @@ final class FinBoot {
         lp2.topMargin = dp(14);
         root.addView(logScroll, lp2);
 
-        LinearLayout tools = new LinearLayout(activity);
+        tools = new LinearLayout(activity);
         tools.setOrientation(LinearLayout.HORIZONTAL);
         tools.setGravity(Gravity.CENTER_VERTICAL);
         tools.setPadding(0, dp(10), 0, 0);
         tools.addView(small("آزمون فنی کامل", () -> { if (listener != null) listener.bootSelfTest(); }), lp(0, -2, 1f));
         tools.addView(small("کپی گزارش", () -> { if (listener != null) listener.bootCopy(); }), lp(0, -2, 1f));
         root.addView(tools, lp(-1, -2));
+
+        // The technical trail stays hidden while everything works: the normal startup is the
+        // designed health screen, and this panel is only the safety net behind it.
+        logScroll.setVisibility(View.GONE);
+        tools.setVisibility(View.GONE);
+    }
+
+    /** Shows the technical trail (log + tools); called when something needs explaining. */
+    private void revealLog() {
+        logScroll.setVisibility(View.VISIBLE);
+        tools.setVisibility(View.VISIBLE);
     }
 
     View view() { return root; }
@@ -217,6 +229,7 @@ final class FinBoot {
     }
 
     void fail(String label, Throwable t) {
+        revealLog();
         String detail = t == null ? "" : t.getClass().getName() + ": " + String.valueOf(t.getMessage());
         append("✗ " + label + " — " + detail);
         status.setText("توقف در: " + label);
@@ -250,6 +263,7 @@ final class FinBoot {
     }
 
     void showLogin() {
+        revealLog();
         form.setVisibility(View.VISIBLE);
         bar.setVisibility(View.GONE);
     }
@@ -261,6 +275,7 @@ final class FinBoot {
 
     void showCrash(String crash) {
         if (crash == null || crash.trim().isEmpty()) return;
+        revealLog();
         append("—— اجرای قبلی با خطا پایان یافت ——");
         append(crash.trim());
         status.setText("اجرای قبلی کامل نشده بود؛ گزارش آن در پایین است.");

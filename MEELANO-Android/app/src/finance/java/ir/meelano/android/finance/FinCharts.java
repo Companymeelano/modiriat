@@ -877,4 +877,75 @@ public final class FinCharts {
             canvas.drawCircle(xs[values.length - 1], ys[values.length - 1], Math.max(1.6f, dp(2.4f)), paint);
         }
     }
+
+    // ------------------------------------------------------------------ progress
+
+    /**
+     * The progress bar of the startup screen: a rounded track, a gold gradient fill that always
+     * animates to its new value, and the percentage in the middle. It fills from the right, like
+     * every other reading in the application.
+     */
+    public static final class Progress extends View {
+        private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint t = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final int track, from, to, textColor;
+        private final float density;
+        private float value = 0f;
+        private float shown = 0f;
+        private String label = "";
+        private ValueAnimator anim;
+        private final Typeface bold;
+
+        public Progress(Context c, int track, int from, int to, int textColor, Typeface bold) {
+            super(c);
+            this.track = track;
+            this.from = from;
+            this.to = to;
+            this.textColor = textColor;
+            this.bold = bold;
+            this.density = c.getResources().getDisplayMetrics().density;
+            t.setTypeface(bold != null ? Typeface.create(bold, Typeface.BOLD) : Typeface.DEFAULT_BOLD);
+            t.setTextAlign(Paint.Align.CENTER);
+            setContentDescription("درصد پیشرفت");
+        }
+
+        /** Sets the target value (0..1) with a short animation and the label drawn inside the bar. */
+        public void set(float target, String label) {
+            float v = Math.max(0f, Math.min(1f, target));
+            this.label = label == null ? "" : label;
+            if (anim != null) anim.cancel();
+            anim = ValueAnimator.ofFloat(shown, v);
+            anim.setDuration(360);
+            anim.setInterpolator(new DecelerateInterpolator(1.6f));
+            anim.addUpdateListener(a -> {
+                shown = (float) a.getAnimatedValue();
+                invalidate();
+            });
+            anim.start();
+            value = v;
+        }
+
+        public float value() { return value; }
+
+        @Override protected void onDraw(Canvas canvas) {
+            float w = getWidth(), h = getHeight();
+            if (w <= 0 || h <= 0) return;
+            float r = h / 2f;
+            p.setShader(null);
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(track);
+            canvas.drawRoundRect(new RectF(0, 0, w, h), r, r, p);
+            float fillW = Math.max(0f, Math.min(w, w * shown));
+            if (fillW > 1f) {
+                p.setShader(new LinearGradient(w - fillW, 0, w, 0, from, to, Shader.TileMode.CLAMP));
+                canvas.drawRoundRect(new RectF(w - fillW, 0, w, h), r, r, p);
+                p.setShader(null);
+            }
+            t.setColor(textColor);
+            t.setTextSize(h * 0.52f);
+            t.setFakeBoldText(true);
+            canvas.drawText(label, w / 2f, h / 2f + h * 0.19f, t);
+            t.setFakeBoldText(false);
+        }
+    }
 }
