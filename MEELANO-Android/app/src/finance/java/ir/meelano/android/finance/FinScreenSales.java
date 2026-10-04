@@ -252,10 +252,4 @@ public class FinScreenSales extends FinScreen {
                 {"توضیح", "برای دیدن فاکتورها وارد پرونده مشتری یا مطالبات شوید."}
         }, null);
     }
-
-    private LinearLayout.LayoutParams top(int dp) {
-        LinearLayout.LayoutParams p = ui.lp(-1, -2);
-        p.topMargin = ui.dp(dp);
-        return p;
-    }
 }

@@ -173,9 +173,9 @@ public class FinScreenPos extends FinScreen {
         }
 
         JSONArray byDay = arr(p, "byDay");
-        if (byDay.length >= 2) {
+        if (byDay.length() >= 2) {
             LinearLayout card = section("▦", "روند روزانه POS", "جمع تراکنش‌های متصل به قبض در هر روز");
-            int n = Math.min(30, byDay.length);
+            int n = Math.min(30, byDay.length());
             String[] labels = new String[n];
             double[] values = new double[n];
             double[] counts = new double[n];

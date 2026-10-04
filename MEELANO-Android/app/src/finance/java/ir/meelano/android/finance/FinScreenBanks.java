@@ -146,9 +146,9 @@ public class FinScreenBanks extends FinScreen {
     /** Daily in/out of the last 30 days as grouped columns. */
     private void dailyChart(JSONObject p) {
         JSONArray daily = arr(p, "daily");
-        if (daily.length < 2) return;
+        if (daily.length() < 2) return;
         LinearLayout card = section("▤", "روند واریز و برداشت", "ban_act — ۳۰ روز گذشته؛ واریز و برداشت کنار هم");
-        int n = Math.min(30, daily.length);
+        int n = Math.min(30, daily.length());
         String[] labels = new String[n];
         double[] in = new double[n], out = new double[n];
         for (int i = 0; i < n; i++) {

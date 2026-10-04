@@ -56,9 +56,9 @@ public class FinScreenBank extends FinScreen {
     /** Daily in/out of this account, plus a donut of the settled vs unsettled volume. */
     private void bankCharts(JSONObject p, double in, double out) {
         JSONArray daily = arr(p, "daily");
-        if (daily.length >= 2) {
+        if (daily.length() >= 2) {
             LinearLayout card = section("▤", "روند روزانه حساب", "واریز و برداشت هر روز در بازه انتخاب‌شده");
-            int n = Math.min(30, daily.length);
+            int n = Math.min(30, daily.length());
             String[] labels = new String[n];
             double[] inV = new double[n], outV = new double[n];
             for (int i = 0; i < n; i++) {
