@@ -2540,7 +2540,20 @@ public class MainActivity extends Activity {
         }
         b.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG_RTL);
         b.setGravity(Gravity.CENTER);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { b.setStateListAnimator(null); b.setElevation(0); b.setLetterSpacing(0f); }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            b.setElevation(primary ? dp(2) : 0);
+            b.setLetterSpacing(0f);
+            android.animation.StateListAnimator sla = new android.animation.StateListAnimator();
+            android.animation.ObjectAnimator down = android.animation.ObjectAnimator.ofPropertyValuesHolder(b,
+                    android.util.PropertyValuesHolder.ofFloat("scaleX", 0.96f), android.util.PropertyValuesHolder.ofFloat("scaleY", 0.96f));
+            down.setDuration(110);
+            android.animation.ObjectAnimator up = android.animation.ObjectAnimator.ofPropertyValuesHolder(b,
+                    android.util.PropertyValuesHolder.ofFloat("scaleX", 1f), android.util.PropertyValuesHolder.ofFloat("scaleY", 1f));
+            up.setDuration(170);
+            sla.addState(new int[]{android.R.attr.state_pressed}, down);
+            sla.addState(new int[]{}, up);
+            b.setStateListAnimator(sla);
+        }
         applyTouchFeedback(b);
     }
 
@@ -4563,11 +4576,21 @@ public class MainActivity extends Activity {
         props.setProperty("password", hidden(S_PASS));
         props.setProperty("charset", "UTF-8");
         props.setProperty("sendStringParametersAsUnicode", "true");
+        preflightTcp(host, port);
         try {
             return DriverManager.getConnection(url, props);
         } catch (Exception first) {
             Thread.sleep(700); // one automatic retry — mobile networks drop first attempts often
             try { return DriverManager.getConnection(url, props); } catch (Exception second) { throw new DbException(diagnoseDbError(second)); }
+        }
+    }
+
+    /** Fail in ~3s instead of hanging for the full JDBC timeout when the server is unreachable. */
+    private void preflightTcp(String host, int port) throws Exception {
+        try (java.net.Socket s = new java.net.Socket()) {
+            s.connect(new java.net.InetSocketAddress(host, port), 3000);
+        } catch (Exception e) {
+            throw new DbException(diagnoseDbError(e));
         }
     }
 
@@ -11836,13 +11859,18 @@ public class MainActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(2), dp(3), dp(2), dp(3));
+        if (parent.getChildCount() % 2 == 1) row.setBackground(rounded(alpha(MUTED, 12), dp(10)));
+        row.setPadding(dp(8), dp(5), dp(8), dp(5));
+        View dot = new View(this); dot.setBackgroundColor(valueColor);
+        LinearLayout.LayoutParams ddp = new LinearLayout.LayoutParams(dp(6), dp(6)); ddp.setMargins(0, 0, dp(7), 0);
+        row.addView(dot, ddp);
         TextView l = text(label, 10.8f, MUTED, Typeface.NORMAL);
         l.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
         TextView v = text(value, 11.4f, valueColor, Typeface.BOLD);
         v.setSingleLine(true); v.setEllipsize(TextUtils.TruncateAt.START);
         row.addView(l); row.addView(v);
-        parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(2), 0, dp(2));
+        parent.addView(row, rp);
     }
 
     private LinearLayout addReportCard(String title, String glyph, int accent) {
@@ -12704,6 +12732,11 @@ public class MainActivity extends Activity {
 
     private void addBarLine(LinearLayout parent, String label, String valueText, double value, double max, int color) {
         LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
+        TextView rk = text(MeelanoCharts.fa(String.valueOf(parent.getChildCount() + 1)), 9.4f, color, Typeface.BOLD);
+        rk.setBackground(rounded(alpha(color, 22), dp(8)));
+        rk.setPadding(dp(6), dp(2), dp(6), dp(2));
+        LinearLayout.LayoutParams rkp = new LinearLayout.LayoutParams(-2, -2); rkp.setMargins(0, 0, dp(6), 0);
+        row.addView(rk, rkp);
         TextView lt = text(label, 10.2f, MUTED, Typeface.NORMAL);
         lt.setSingleLine(true); lt.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(0, -2, 1.25f); llp.setMargins(0, 0, dp(5), 0);
@@ -12926,6 +12959,15 @@ public class MainActivity extends Activity {
             LinearLayout.LayoutParams dp2 = new LinearLayout.LayoutParams(-1, -2); dp2.setMargins(dp(4), 0, 0, dp(4));
             c.addView(detailRow, dp2);
         }
+        double grand = 0; long cnt = 0;
+        for (int i = 0; i < rows.length(); i++) { JSONObject o = rows.optJSONObject(i); if (o != null) { grand += o.optDouble("amount", o.optDouble("sum", o.optDouble("sales", 0))); cnt++; } }
+        LinearLayout foot = new LinearLayout(this); foot.setOrientation(LinearLayout.HORIZONTAL); foot.setGravity(Gravity.CENTER_VERTICAL);
+        foot.setBackground(rounded(alpha(GOLD, 18), dp(12)));
+        foot.setPadding(dp(10), dp(7), dp(10), dp(7));
+        foot.addView(text("جمع کل", 10.5f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(0, -2, 1f));
+        foot.addView(text(money(Math.round(grand)) + " • " + formatNumber(cnt) + " ردیف", 11.5f, tc(GOLD), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout.LayoutParams flp = new LinearLayout.LayoutParams(-1, -2); flp.setMargins(0, dp(8), 0, 0);
+        c.addView(foot, flp);
         content.addView(c, new LinearLayout.LayoutParams(-1, -2));
         addDeveloperCredit(content);
     }
