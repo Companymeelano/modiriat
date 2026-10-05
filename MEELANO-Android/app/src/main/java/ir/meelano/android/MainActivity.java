@@ -11743,6 +11743,9 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
         HorizontalScrollView fhs = hScrollWrap(filters);
         content.addView(fhs, fp);
+        addManagerKpiStrip(dash);
+        addTodayYesterdayCard(dash.optJSONArray("dailySeries"));
+        addMonthlyGrowthCard(dash.optJSONArray("monthlySeries"));
         JSONObject sales = dash.optJSONObject("sales");
         JSONObject purchases = dash.optJSONObject("purchases");
         addReportRangeSection("فروش", "↗", navAccent("reports"), sales, range);
@@ -11756,6 +11759,12 @@ public class MainActivity extends Activity {
         }
         addReportCheckBucketsCard(dash.optJSONObject("checkBuckets"));
         addReportVisitorShareCard(dash.optJSONArray("visitorShare"), dash.optJSONObject("sales"));
+        LinearLayout tcCard = addReportCard("\u0631\u062a\u0628\u0647\u200c\u0628\u0646\u062f\u06cc \u0645\u0634\u062a\u0631\u06cc\u0627\u0646 (\u0641\u0631\u0648\u0634 \u0628\u0627\u0632\u0647)", "\ud83c\udfc6", navAccent("reports"));
+        addRankRows(tcCard, dash.optJSONArray("topCustomers"), navAccent("reports"), "\u0641\u0631\u0648\u0634 \u06f1\u06f0 \u0645\u0634\u062a\u0631\u06cc \u0628\u0631\u062a\u0631");
+        LinearLayout tpCard = addReportCard("\u06a9\u0627\u0644\u0627\u0647\u0627\u06cc \u067e\u0631\u0641\u0631\u0648\u0634 \u0628\u0627\u0632\u0647", "\u2605", navAccent("reports"));
+        addRankRows(tpCard, dash.optJSONArray("topProducts"), 0xFFA87A2C, "\u0641\u0631\u0648\u0634 \u06f1\u06f0 \u06a9\u0627\u0644\u0627\u06cc \u0628\u0631\u062a\u0631");
+        addAgingCard(dash.optJSONArray("agingBuckets"));
+        addCollectionEfficiencyCard(sales);
         addReportCustomersSection(dash);
         addReportTeamSection(dash.optJSONObject("teamBrief"));
         LinearLayout actions = new LinearLayout(this);
@@ -11769,6 +11778,201 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2); ap.setMargins(0, 0, 0, dp(12));
         content.addView(actions, ap);
         addDeveloperCredit(content);
+    }
+
+    // ================= round-12 presentation: KPI strip + creative report cards =================
+    private void addManagerKpiStrip(JSONObject dash) {
+        JSONObject sales = dash.optJSONObject("sales");
+        JSONArray debtors = dash.optJSONArray("topDebtors");
+        double sold = sales == null ? 0 : sales.optDouble("total", 0);
+        double paid = sales == null ? 0 : sales.optDouble("paid", 0);
+        long docs = sales == null ? 0 : sales.optLong("docs", 0);
+        double owed = 0;
+        if (debtors != null) for (int i = 0; i < debtors.length(); i++) owed += debtors.optJSONObject(i) == null ? 0 : debtors.optJSONObject(i).optDouble("amount", 0);
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        addKpiTile(row, "\u0641\u0631\u0648\u0634 \u0628\u0627\u0632\u0647", money(Math.round(sold)), "\u2197", new int[]{0xFF3060B0, 0xFF1F3A68});
+        addKpiTile(row, "\u0627\u0633\u0646\u0627\u062f \u062b\u0628\u062a\u200c\u0634\u062f\u0647", faDigits(formatNumber(docs)), "\u2261", new int[]{0xFFA87A2C, 0xFF7A5618});
+        addKpiTile(row, "\u0648\u0635\u0648\u0644 \u0628\u0627\u0632\u0647", money(Math.round(paid)), sold > 0 ? faDigits(String.format(java.util.Locale.US, "%.0f", paid / sold * 100)) + "\u066a" : "\u2014", new int[]{0xFF2E8B57, 0xFF1D6B41});
+        addKpiTile(row, "\u0628\u062f\u0647\u06cc \u0645\u0634\u062a\u0631\u06cc\u0627\u0646", money(Math.round(owed)), "\u26a0", new int[]{0xFFC0564F, 0xFF8E3A34});
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, 0, 0, dp(14));
+        content.addView(row, lp);
+    }
+
+    private void addKpiTile(LinearLayout row, String title, String value, String glyph, int[] grad) {
+        LinearLayout t = new LinearLayout(this);
+        t.setOrientation(LinearLayout.VERTICAL);
+        t.setPadding(dp(10), dp(12), dp(10), dp(12));
+        t.setBackground(gradient(grad, GradientDrawable.Orientation.TL_BR, 22));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) t.setElevation(dp(4));
+        TextView g = text(glyph, 15, 0xFFFFFFFF, Typeface.BOLD);
+        t.addView(g, new LinearLayout.LayoutParams(-1, -2));
+        TextView v = text(value, 12.6f, 0xFFFFFFFF, Typeface.BOLD);
+        v.setSingleLine(true); v.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
+        LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(-1, -2); vp.setMargins(0, dp(4), 0, 0);
+        t.addView(v, vp);
+        TextView tt = text(title, 9.4f, 0xE6FFFFFF, Typeface.BOLD);
+        tt.setSingleLine(true);
+        t.addView(tt, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -2, 1f); lp.setMargins(dp(3), 0, dp(3), 0);
+        row.addView(t, lp);
+    }
+
+    private void addTodayYesterdayCard(JSONArray daily) {
+        if (daily == null || daily.length() == 0) return;
+        LinearLayout c = addReportCard("\u0641\u0631\u0648\u0634 \u0627\u0645\u0631\u0648\u0632 \u062f\u0631 \u0645\u0642\u0627\u06cc\u0633\u0647 \u0628\u0627 \u062f\u06cc\u0631\u0648\u0632", "\u2600", navAccent("reports"));
+        JSONObject today = daily.optJSONObject(daily.length() - 1);
+        JSONObject yest = daily.length() > 1 ? daily.optJSONObject(daily.length() - 2) : null;
+        double tv = today == null ? 0 : today.optDouble("total", 0);
+        double yv = yest == null ? 0 : yest.optDouble("total", 0);
+        LinearLayout nums = new LinearLayout(this); nums.setOrientation(LinearLayout.HORIZONTAL);
+        addBigNumber(nums, "\u0627\u0645\u0631\u0648\u0632", money(Math.round(tv)), 0xFF3060B0);
+        addBigNumber(nums, "\u062f\u06cc\u0631\u0648\u0632", money(Math.round(yv)), MUTED);
+        c.addView(nums, new LinearLayout.LayoutParams(-1, -2));
+        if (yv > 0) {
+            double pct = (tv - yv) / yv * 100.0;
+            String sign = pct >= 0 ? "\u25b2 " : "\u25bc ";
+            addReportLine(c, "\u062a\u063a\u06cc\u06cc\u0631 \u0646\u0633\u0628\u062a \u0628\u0647 \u062f\u06cc\u0631\u0648\u0632", sign + faDigits(String.format(java.util.Locale.US, "%.0f", Math.abs(pct))) + "\u066a", pct >= 0 ? tc(SUCCESS) : tc(DANGER));
+        }
+        JSONArray chart = new JSONArray();
+        for (int i = 0; i < daily.length(); i++) {
+            JSONObject o = daily.optJSONObject(i);
+            if (o == null) continue;
+            String d = o.optString("day", "");
+            JSONObject p = new JSONObject();
+            try { p.put("label", d.length() >= 10 ? faDigits(d.substring(5)) : faDigits(d)); p.put("value", o.optDouble("total", 0)); } catch (Exception ignored) { }
+            chart.put(p);
+        }
+        c.addView(new ManagerTrendChartView(this, chart), new LinearLayout.LayoutParams(-1, dp(140)));
+    }
+
+    private void addBigNumber(LinearLayout row, String title, String value, int color) {
+        LinearLayout b = new LinearLayout(this); b.setOrientation(LinearLayout.VERTICAL);
+        b.setBackground(gradient(new int[]{alpha(color, 26), alpha(SURFACE_2, 235)}, GradientDrawable.Orientation.TL_BR, 18));
+        b.setPadding(dp(12), dp(10), dp(12), dp(10));
+        TextView v = text(value, 14.5f, color == MUTED ? TEXT : color, Typeface.BOLD);
+        v.setSingleLine(true); v.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
+        b.addView(v, new LinearLayout.LayoutParams(-1, -2));
+        b.addView(text(title, 9.8f, MUTED, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -2, 1f); lp.setMargins(dp(3), dp(8), dp(3), dp(4));
+        row.addView(b, lp);
+    }
+
+    private void addMonthlyGrowthCard(JSONArray monthly) {
+        if (monthly == null || monthly.length() == 0) return;
+        LinearLayout c = addReportCard("\u0631\u0648\u0646\u062f \u0641\u0631\u0648\u0634 \u06f1\u06f2 \u0645\u0627\u0647", "\u25b2", navAccent("reports"));
+        JSONArray chart = new JSONArray();
+        double peak = 0; String peakM = "";
+        double first = monthly.optJSONObject(0) == null ? 0 : monthly.optJSONObject(0).optDouble("total", 0);
+        JSONObject lastO = monthly.optJSONObject(monthly.length() - 1);
+        double last = lastO == null ? 0 : lastO.optDouble("total", 0);
+        for (int i = 0; i < monthly.length(); i++) {
+            JSONObject o = monthly.optJSONObject(i);
+            if (o == null) continue;
+            String m = o.optString("month", "");
+            double v = o.optDouble("total", 0);
+            if (v > peak) { peak = v; peakM = m; }
+            JSONObject p = new JSONObject();
+            try { p.put("label", m.length() >= 7 ? faDigits(m.substring(5)) : faDigits(m)); p.put("value", v); } catch (Exception ignored) { }
+            chart.put(p);
+        }
+        c.addView(new ManagerTrendChartView(this, chart), new LinearLayout.LayoutParams(-1, dp(150)));
+        if (peak > 0) addReportLine(c, "\u0627\u0648\u062c \u0641\u0631\u0648\u0634", (peakM.length() >= 7 ? faDigits(peakM.substring(5)) : faDigits(peakM)) + " \u2014 " + money(Math.round(peak)), tc(SUCCESS));
+        if (first > 0) {
+            double g = (last - first) / first * 100.0;
+            addReportLine(c, "\u0631\u0634\u062f \u0627\u0648\u0644 \u0628\u0647 \u0622\u062e\u0631", (g >= 0 ? "\u25b2 " : "\u25bc ") + faDigits(String.format(java.util.Locale.US, "%.0f", Math.abs(g))) + "\u066a", g >= 0 ? tc(SUCCESS) : tc(DANGER));
+        }
+    }
+
+    private void addRankRows(LinearLayout c, JSONArray arr, int accent, String amountHint) {
+        if (arr == null || arr.length() == 0) { c.addView(text("\u062f\u0627\u062f\u0647\u200c\u0627\u06cc \u0628\u0631\u0627\u06cc \u0627\u06cc\u0646 \u06af\u0632\u0627\u0631\u0634 \u062b\u0628\u062a \u0646\u0634\u062f\u0647 \u0627\u0633\u062a.", 10.6f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2)); return; }
+        double max = 1, total = 0;
+        for (int i = 0; i < arr.length(); i++) { JSONObject o = arr.optJSONObject(i); if (o == null) continue; max = Math.max(max, o.optDouble("amount", 0)); total += o.optDouble("amount", 0); }
+        String[] medals = {"\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49"};
+        for (int i = 0; i < arr.length(); i++) {
+            JSONObject o = arr.optJSONObject(i);
+            if (o == null) continue;
+            double v = o.optDouble("amount", 0);
+            LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout top = new LinearLayout(this); top.setOrientation(LinearLayout.HORIZONTAL); top.setGravity(Gravity.CENTER_VERTICAL);
+            TextView rank = text(i < 3 ? medals[i] : faDigits(String.valueOf(i + 1)), 13, i < 3 ? TEXT : MUTED, Typeface.BOLD);
+            rank.setGravity(Gravity.CENTER);
+            rank.setBackground(luxuryButtonBg(i == 0 ? 0xFFA87A2C : accent, true, 999));
+            top.addView(rank, new LinearLayout.LayoutParams(dp(30), dp(30)));
+            TextView nm = text(o.optString("party", "\u2014"), 11.4f, TEXT, Typeface.BOLD);
+            nm.setSingleLine(true); nm.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(0, -2, 1f); nlp.setMargins(dp(8), 0, dp(8), 0);
+            top.addView(nm, nlp);
+            top.addView(text(money(Math.round(v)), 10.6f, accent, Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+            row.addView(top, new LinearLayout.LayoutParams(-1, -2));
+            View bar = new View(this);
+            bar.setBackground(gradient(new int[]{accent, alpha(accent, 120)}, GradientDrawable.Orientation.LEFT_RIGHT, 999));
+            LinearLayout track = new LinearLayout(this);
+            track.setBackground(gradient(new int[]{alpha(MUTED, 40)}, GradientDrawable.Orientation.LEFT_RIGHT, 999));
+            LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams((int) Math.max(dp(10), (getWidthOrScreen() - dp(64)) * (v / max)), dp(6));
+            track.addView(bar, blp);
+            LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(-1, dp(6)); tlp.setMargins(dp(38), dp(5), 0, 0);
+            row.addView(track, tlp);
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2); rlp.setMargins(0, dp(7), 0, 0);
+            c.addView(row, rlp);
+        }
+        if (total > 0) addReportLine(c, "\u062c\u0645\u0639 " + amountHint, money(Math.round(total)), TEXT);
+    }
+
+    private int getWidthOrScreen() {
+        try { return Math.max(content.getWidth(), getResources().getDisplayMetrics().widthPixels); } catch (Exception e) { return getResources().getDisplayMetrics().widthPixels; }
+    }
+
+    private void addAgingCard(JSONArray buckets) {
+        if (buckets == null || buckets.length() == 0) return;
+        LinearLayout c = addReportCard("\u0633\u0646\u06cc\u0646 \u0645\u0637\u0627\u0644\u0628\u0627\u062a \u0645\u0639\u0648\u0642", "\u231b", navAccent("reports"));
+        double total = 0;
+        for (int i = 0; i < buckets.length(); i++) { JSONObject o = buckets.optJSONObject(i); if (o != null) total += o.optDouble("amount", 0); }
+        if (total <= 0) { c.addView(text("\u0645\u0637\u0627\u0644\u0628\u0647 \u0645\u0639\u0648\u0642\u06cc \u0648\u062c\u0648\u062f \u0646\u062f\u0627\u0631\u062f \u2014 \u0648\u0636\u0639\u06cc\u062a \u0633\u0627\u0644\u0645.", 10.8f, tc(SUCCESS), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2)); return; }
+        int[] palette = {0xFF4F8EF7, 0xFF3FBF7F, 0xFFE0A93E, 0xFFE07B3E, 0xFFD15B52};
+        LinearLayout seg = new LinearLayout(this); seg.setOrientation(LinearLayout.HORIZONTAL);
+        for (int i = 0; i < buckets.length(); i++) {
+            JSONObject o = buckets.optJSONObject(i);
+            if (o == null) continue;
+            double v = o.optDouble("amount", 0);
+            if (v <= 0) continue;
+            int k = o.optInt("k", i);
+            View part = new View(this);
+            part.setBackground(gradient(new int[]{k >= 0 && k < palette.length ? palette[k] : MUTED}, GradientDrawable.Orientation.LEFT_RIGHT, 8));
+            seg.addView(part, new LinearLayout.LayoutParams(0, dp(14), (float) (v / total)));
+        }
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-1, dp(14)); slp.setMargins(0, dp(4), 0, dp(8));
+        c.addView(seg, slp);
+        for (int i = 0; i < buckets.length(); i++) {
+            JSONObject o = buckets.optJSONObject(i);
+            if (o == null) continue;
+            double v = o.optDouble("amount", 0);
+            int k = o.optInt("k", i);
+            addReportLine(c, o.optString("bucket", "?"), money(Math.round(v)) + "  (" + faDigits(String.format(java.util.Locale.US, "%.0f", v / total * 100)) + "\u066a)", k >= 0 && k < palette.length ? palette[k] : TEXT);
+        }
+        addReportLine(c, "\u062c\u0645\u0639 \u0645\u0639\u0648\u0642", money(Math.round(total)), tc(DANGER));
+    }
+
+    private void addCollectionEfficiencyCard(JSONObject sales) {
+        double total = sales == null ? 0 : sales.optDouble("total", 0);
+        double paid = sales == null ? 0 : sales.optDouble("paid", 0);
+        if (total <= 0) return;
+        double ratio = paid / total;
+        LinearLayout c = addReportCard("\u06a9\u0627\u0631\u0627\u06cc\u06cc \u0648\u0635\u0648\u0644 \u0645\u0637\u0627\u0644\u0628\u0627\u062a", "\u25ce", ratio >= 0.6 ? navAccent("reports") : WARNING);
+        LinearLayout seg = new LinearLayout(this); seg.setOrientation(LinearLayout.HORIZONTAL);
+        View got = new View(this);
+        got.setBackground(gradient(new int[]{0xFF3FBF7F, 0xFF2E8B57}, GradientDrawable.Orientation.LEFT_RIGHT, 999));
+        seg.addView(got, new LinearLayout.LayoutParams(0, dp(16), (float) Math.max(0.02, ratio)));
+        View rest = new View(this);
+        rest.setBackground(gradient(new int[]{0xFFD15B52, 0xFFA64039}, GradientDrawable.Orientation.LEFT_RIGHT, 999));
+        seg.addView(rest, new LinearLayout.LayoutParams(0, dp(16), (float) Math.max(0.02, 1 - ratio)));
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-1, dp(16)); slp.setMargins(0, dp(4), 0, dp(8));
+        c.addView(seg, slp);
+        TextView big = text(faDigits(String.format(java.util.Locale.US, "%.0f", ratio * 100)) + "\u066a \u0648\u0635\u0648\u0644 \u0634\u062f\u0647", 17, ratio >= 0.6 ? tc(SUCCESS) : tc(WARNING), Typeface.BOLD);
+        big.setGravity(Gravity.CENTER);
+        c.addView(big, new LinearLayout.LayoutParams(-1, -2));
+        addReportLine(c, "\u0648\u0635\u0648\u0644\u200c\u0634\u062f\u0647", money(Math.round(paid)), tc(SUCCESS));
+        addReportLine(c, "\u0628\u0627\u0642\u06cc\u200c\u0645\u0627\u0646\u062f\u0647", money(Math.round(total - paid)), tc(DANGER));
     }
 
     private void addReportRangeSection(String title, String glyph, int accent, JSONObject block, int range) {
@@ -11944,8 +12148,133 @@ public class MainActivity extends Activity {
             out.put("topDebtors", queryTopDebtors(c));
             out.put("overdueInvoices", queryOverdueInvoices(c));
             out.put("teamBrief", queryCollaborationBrief(c));
+            try { out.put("dailySeries", queryDailySeries(c)); } catch (Exception ex) { }
+            try { out.put("monthlySeries", queryMonthlySeries(c)); } catch (Exception ex) { }
+            try { out.put("topCustomers", queryTopCustomers(c, range)); } catch (Exception ex) { }
+            try { out.put("topProducts", queryTopProducts(c, range)); } catch (Exception ex) { }
+            try { out.put("agingBuckets", queryAgingBuckets(c)); } catch (Exception ex) { }
             return out.toString();
         }
+    }
+
+    // ================= essential management reports (round 12) — SQL-2014-safe, validated offline on the customer backup =================
+    private JSONArray queryDailySeries(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        String latest = dateCol == null ? null : latestDate(c, "sailfact", dateCol);
+        if (dateCol == null || amountCol == null || latest == null || latest.isEmpty()) return arr;
+        String q = "N'" + latest.replace("'", "''") + "'";
+        String cond = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))>=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
+        String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
+        String day = "LEFT(TRY_CONVERT(nvarchar(30),h.[" + dateCol + "]),10)";
+        String sql = "SELECT " + day + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1) FROM " + source + " GROUP BY " + day + " ORDER BY " + day;
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery(sql)) {
+            while (r.next()) { JSONObject o = new JSONObject(); o.put("day", stringOr(r.getString(1), "")); o.put("total", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); }
+        }
+        return arr;
+    }
+
+    private JSONArray queryMonthlySeries(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        String latest = dateCol == null ? null : latestDate(c, "sailfact", dateCol);
+        if (dateCol == null || amountCol == null || latest == null || latest.isEmpty()) return arr;
+        String q = "N'" + latest.replace("'", "''") + "'";
+        String cond = "LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),7)>=LEFT(CONVERT(nvarchar(7),DATEADD(month,-11,TRY_CONVERT(date," + q + ")),120),7)";
+        String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
+        String mon = "LEFT(TRY_CONVERT(nvarchar(30),h.[" + dateCol + "]),7)";
+        String sql = "SELECT " + mon + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0) FROM " + source + " GROUP BY " + mon + " ORDER BY " + mon;
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery(sql)) {
+            while (r.next()) { JSONObject o = new JSONObject(); o.put("month", stringOr(r.getString(1), "")); o.put("total", r.getDouble(2)); arr.put(o); }
+        }
+        return arr;
+    }
+
+    private JSONArray queryTopCustomers(Connection c, int range) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        Set<String> cu = columns(c, "CUSTOMERS");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        String partyCol = resolve(cols, "shmo");
+        String cuKey = resolve(cu, "SHMO", "shmo");
+        String cuName = resolve(cu, "MONAME", "Name", "CusName");
+        String latest = dateCol == null ? null : latestDate(c, "sailfact", dateCol);
+        if (dateCol == null || amountCol == null || partyCol == null || cuKey == null || latest == null || latest.isEmpty()) return arr;
+        String q = "N'" + latest.replace("'", "''") + "'";
+        String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
+        String cond;
+        if (range == 0) cond = "(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=" + q + " OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(" + q + ",10))";
+        else if (range == 1) cond = dX + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
+        else cond = dX + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
+        String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
+        String label = "COALESCE(" + (cuName == null ? "" : "TRY_CONVERT(nvarchar(250),cu2.[" + cuName + "]),") + "TRY_CONVERT(nvarchar(120),h.[" + partyCol + "]),N'\u2014')";
+        String sql = "SELECT TOP (10) " + label + ", ISNULL(SUM(" + sqlNumberExpr("h", amountCol, "decimal(19,2)") + "),0), COUNT_BIG(1) FROM " + source +
+                " LEFT JOIN dbo.CUSTOMERS cu2 ON TRY_CONVERT(nvarchar(100),cu2.[" + cuKey + "])=TRY_CONVERT(nvarchar(100),h.[" + partyCol + "]) GROUP BY " + label + " ORDER BY 2 DESC";
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery(sql)) {
+            while (r.next()) { JSONObject o = new JSONObject(); o.put("party", stringOr(r.getString(1), "\u2014")); o.put("amount", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); }
+        }
+        return arr;
+    }
+
+    private JSONArray queryTopProducts(Connection c, int range) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        Set<String> sub = columns(c, "subsailfact");
+        Set<String> inv = columns(c, "inventory");
+        String dateCol = resolve(cols, "date");
+        String amountCol = resolve(cols, "all");
+        String numberCol = resolve(cols, "shfacfo");
+        String line = resolve(sub, "LINESUM", "linesum");
+        String shka = resolve(sub, "SHKA", "shka");
+        String name = resolve(inv, "naka", "NAKA", "name", "Name");
+        String latest = dateCol == null ? null : latestDate(c, "sailfact", dateCol);
+        if (dateCol == null || amountCol == null || line == null || shka == null || latest == null || latest.isEmpty()) return arr;
+        String q = "N'" + latest.replace("'", "''") + "'";
+        String dX = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]))";
+        String cond;
+        if (range == 0) cond = "(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "])=" + q + " OR LEFT(TRY_CONVERT(nvarchar(30),x.[" + dateCol + "]),10)=LEFT(" + q + ",10))";
+        else if (range == 1) cond = dX + ">=DATEADD(day,-6,TRY_CONVERT(date," + q + "))";
+        else cond = dX + ">=DATEADD(month,-1,TRY_CONVERT(date," + q + "))";
+        String innerWhere = "WHERE " + cond + activeAnd(cols, "x");
+        String soft = softDeleteCondition(cols, "x"); if (!soft.isEmpty()) innerWhere += " AND " + soft;
+        String source = dedupeFactorSource("sailfact", cols, numberCol, "h", innerWhere);
+        String label = "COALESCE(" + (name == null ? "" : "TRY_CONVERT(nvarchar(250),i2.[" + name + "]),") + "TRY_CONVERT(nvarchar(150),d.[" + shka + "]),N'\u2014')";
+        String sql = "SELECT TOP (10) " + label + ", ISNULL(SUM(TRY_CONVERT(decimal(19,2),d.[" + line + "])),0), COUNT_BIG(1) FROM " + source +
+                " JOIN dbo.subsailfact d ON TRY_CONVERT(nvarchar(100),d.shfacfo)=TRY_CONVERT(nvarchar(100),h.shfacfo)" +
+                " LEFT JOIN dbo.inventory i2 ON TRY_CONVERT(nvarchar(100),i2.shka)=TRY_CONVERT(nvarchar(100),d.[" + shka + "]) GROUP BY " + label + " ORDER BY 2 DESC";
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery(sql)) {
+            while (r.next()) { JSONObject o = new JSONObject(); o.put("party", stringOr(r.getString(1), "\u2014")); o.put("amount", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); }
+        }
+        return arr;
+    }
+
+    private JSONArray queryAgingBuckets(Connection c) throws Exception {
+        JSONArray arr = new JSONArray();
+        Set<String> cols = columns(c, "sailfact");
+        if (resolve(cols, "t_date") == null || resolve(cols, "tasvieh") == null || resolve(cols, "all") == null) return arr;
+        boolean hasFn = false;
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery("SELECT COUNT(1) FROM sys.objects WHERE name='dif_date_alan'")) { if (r.next()) hasFn = r.getInt(1) > 0; }
+        if (!hasFn) return arr;
+        String sql = "SELECT k, ISNULL(SUM(amount),0) FROM (SELECT CASE WHEN dbo.dif_date_alan([t_date])<0 THEN 0 WHEN dbo.dif_date_alan([t_date])<=30 THEN 1 WHEN dbo.dif_date_alan([t_date])<=60 THEN 2 WHEN dbo.dif_date_alan([t_date])<=90 THEN 3 ELSE 4 END k, TRY_CONVERT(decimal(19,2),[all]) amount FROM dbo.sailfact WHERE [tasvieh]='f' AND NULLIF([t_date],'') IS NOT NULL) g GROUP BY k ORDER BY k";
+        String[] labels = {"\u0633\u0631\u0631\u0633\u06cc\u062f \u0646\u0634\u062f\u0647", "0-30 \u0631\u0648\u0632", "31-60 \u0631\u0648\u0632", "61-90 \u0631\u0648\u0632", "+90 \u0631\u0648\u0632"};
+        try (Statement st = c.createStatement(); ResultSet r = st.executeQuery(sql)) {
+            while (r.next()) { int k = r.getInt(1); JSONObject o = new JSONObject(); o.put("k", k); o.put("bucket", k >= 0 && k < labels.length ? labels[k] : "?"); o.put("amount", r.getDouble(2)); arr.put(o); }
+        }
+        return arr;
     }
 
     private JSONObject queryRangeBlock(Connection c, boolean sales, int range) throws Exception {
