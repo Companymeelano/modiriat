@@ -11669,11 +11669,13 @@ public class MainActivity extends Activity {
         for (int i = 0; i < labels.length; i++) {
             final int rr = i;
             Button b = i == range ? primaryButton(labels[i]) : secondaryButton(labels[i]);
+            b.setMinimumWidth(dp(84));
             b.setOnClickListener(v -> { managerReportRange = rr; prefs.edit().putInt("mgr_range", rr).apply(); loadManagerReports(); });
             filters.addView(b, weightedButtonLp());
         }
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
-        content.addView(filters, fp);
+        HorizontalScrollView fhs = hScrollWrap(filters);
+        content.addView(fhs, fp);
         JSONObject sales = dash.optJSONObject("sales");
         JSONObject purchases = dash.optJSONObject("purchases");
         addReportRangeSection("فروش", "↗", navAccent("reports"), sales, range);
@@ -12383,13 +12385,22 @@ public class MainActivity extends Activity {
     }
 
     // =============================== Phase 10-13: Cockpit / Collection center / Visitor goals / Product radar ===============================
-    private LinearLayout managerRangeRow(Runnable reload) {
+    private HorizontalScrollView hScrollWrap(View v) {
+        HorizontalScrollView h = new HorizontalScrollView(this);
+        h.setHorizontalScrollBarEnabled(false);
+        h.setFillViewport(true);
+        h.addView(v, new LinearLayout.LayoutParams(-2, -2));
+        return h;
+    }
+
+    private View managerRangeRow(Runnable reload) {
         LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
         String[] labels = {"امروز", "۷ روز", "۳۰ روز", "۱۲ ماه"};
-        for (int i = 0; i < labels.length; i++) { final int rr = i; Button b = i == managerReportRange ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; prefs.edit().putInt("mgr_range", rr).apply(); reload.run(); }); filters.addView(b, weightedButtonLp()); }
+        for (int i = 0; i < labels.length; i++) { final int rr = i; Button b = i == managerReportRange ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setMinimumWidth(dp(84)); b.setOnClickListener(v -> { managerReportRange = rr; prefs.edit().putInt("mgr_range", rr).apply(); reload.run(); }); filters.addView(b, weightedButtonLp()); }
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
-        filters.setLayoutParams(fp);
-        return filters;
+        HorizontalScrollView h = hScrollWrap(filters);
+        h.setLayoutParams(fp);
+        return h;
     }
 
     private void loadManagerCockpit() {
@@ -12413,7 +12424,8 @@ public class MainActivity extends Activity {
         LinearLayout exp = new LinearLayout(this); exp.setOrientation(LinearLayout.HORIZONTAL);
         Button cp = primaryButton("PDF اتاق فروش"); cp.setTextSize(fs(10.2f)); cp.setOnClickListener(v -> exportCockpitPdf()); exp.addView(cp, weightedButtonLp());
         LinearLayout.LayoutParams cpLp = new LinearLayout.LayoutParams(-1, -2); cpLp.setMargins(0, 0, 0, dp(10));
-        content.addView(exp, cpLp);
+        for (int ei = 0; ei < exp.getChildCount(); ei++) exp.getChildAt(ei).setMinimumWidth(dp(150));
+        content.addView(hScrollWrap(exp), cpLp);
         JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases");
         LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
         double sv = sales == null ? 0 : sales.optDouble("total", 0);
@@ -12649,6 +12661,7 @@ public class MainActivity extends Activity {
         if (delta != null && !delta.isEmpty()) { TextView dv = text(delta, 10.2f, delta.contains("▼") ? tc(DANGER) : tc(SUCCESS), Typeface.BOLD); dv.setSingleLine(true); dv.setEllipsize(TextUtils.TruncateAt.END); c.addView(dv, new LinearLayout.LayoutParams(-1, -2)); }
         if (sub != null && !sub.isEmpty()) { TextView sv2 = text(sub, 9.6f, MUTED, Typeface.NORMAL); sv2.setSingleLine(true); sv2.setEllipsize(TextUtils.TruncateAt.END); c.addView(sv2, new LinearLayout.LayoutParams(-1, -2)); }
         if (drillKind != null) { c.setClickable(true); applyTouchFeedback(c); c.setOnClickListener(v -> { managerDrillKind = drillKind; showApp("mgr_drill"); }); c.setContentDescription(title + " — نمایش جزئیات"); }
+        c.setMinimumWidth(dp(140));
         parent.addView(c, new LinearLayout.LayoutParams(0, -2, 1f));
     }
 
@@ -12680,7 +12693,8 @@ public class MainActivity extends Activity {
         String[] labels = {"امروز", "۷ روز", "۳۰ روز"};
         for (int i = 0; i < 3; i++) { final int rr = i; Button b = i == m.optInt("range", 0) ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; loadManagerExecutive(); }); filters.addView(b, weightedButtonLp()); }
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
-        content.addView(filters, fp);
+        HorizontalScrollView fhs = hScrollWrap(filters);
+        content.addView(fhs, fp);
         JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases"), recv = m.optJSONObject("receivables"), cust = m.optJSONObject("customers"), chk = m.optJSONObject("checkBuckets");
         JSONArray visitors = m.optJSONArray("visitors");
         LinearLayout quick = new LinearLayout(this); quick.setOrientation(LinearLayout.HORIZONTAL);
@@ -12688,12 +12702,14 @@ public class MainActivity extends Activity {
         Button q2 = secondaryButton("وصول"); q2.setTextSize(fs(9.6f)); q2.setOnClickListener(v -> showApp("mgr_collection")); quick.addView(q2, weightedButtonLp());
         Button q3 = secondaryButton("ویزیتورها"); q3.setTextSize(fs(9.6f)); q3.setOnClickListener(v -> showApp("mgr_visits")); quick.addView(q3, weightedButtonLp());
         Button q4 = secondaryButton("کالا"); q4.setTextSize(fs(9.6f)); q4.setOnClickListener(v -> showApp("mgr_products")); quick.addView(q4, weightedButtonLp());
-        content.addView(quick, new LinearLayout.LayoutParams(-1, -2));
+        for (int qi = 0; qi < quick.getChildCount(); qi++) quick.getChildAt(qi).setMinimumWidth(dp(92));
+        content.addView(hScrollWrap(quick), new LinearLayout.LayoutParams(-1, -2));
         LinearLayout export = new LinearLayout(this); export.setOrientation(LinearLayout.HORIZONTAL);
         Button pdf = primaryButton("گزارش PDF مدیریت"); pdf.setTextSize(fs(10.2f)); pdf.setOnClickListener(v -> exportManagerIntelPdf()); export.addView(pdf, weightedButtonLp());
         Button csv = secondaryButton("CSV"); csv.setTextSize(fs(10.2f)); csv.setOnClickListener(v -> exportManagerIntelCsv()); export.addView(csv, weightedButtonLp());
         LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-1, -2); ep.setMargins(0, dp(8), 0, dp(12));
-        content.addView(export, ep);
+        for (int ei = 0; ei < export.getChildCount(); ei++) export.getChildAt(ei).setMinimumWidth(dp(150));
+        content.addView(hScrollWrap(export), ep);
         LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
         double sv = sales == null ? 0 : sales.optDouble("total", 0);
         double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
@@ -22838,7 +22854,8 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(10), 0, 0); quick.addView(row, rp);
         Button logout = themedActionButton(STAFF_EDITION ? "خروج از حساب" : "خروج از حساب ویزیتور", DANGER, false); logout.setOnClickListener(v -> showLogin("برای ورود مجدد ویزیتور اطلاعات پخش درخشان را وارد کنید."));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(48)); lp.setMargins(0, dp(9), 0, 0); quick.addView(logout, lp);
-        content.addView(quick, new LinearLayout.LayoutParams(-1, -2));
+        for (int qi = 0; qi < quick.getChildCount(); qi++) quick.getChildAt(qi).setMinimumWidth(dp(92));
+        content.addView(hScrollWrap(quick), new LinearLayout.LayoutParams(-1, -2));
         if (STORE_EDITION) addStoreLocationSettingsCard();
         addVisitorSecurityCard();
         addAppUpdateCard();

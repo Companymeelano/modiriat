@@ -551,7 +551,7 @@ final class ManagerAnalytics {
         String where = "WHERE [tasvieh]='f' AND NULLIF([t_date],'') IS NOT NULL" + activeAnd(cols, "");
         String soft = softDeleteCondition(cols, ""); if (!soft.isEmpty()) where += " AND " + soft;
         String bucket = "CASE WHEN dbo.dif_date_alan([t_date]) >= 0 THEN N'\u062c\u0627\u0631\u06cc' WHEN -dbo.dif_date_alan([t_date]) <= 30 THEN N'1-30 \u0631\u0648\u0632' WHEN -dbo.dif_date_alan([t_date]) <= 60 THEN N'31-60 \u0631\u0648\u0632' WHEN -dbo.dif_date_alan([t_date]) <= 90 THEN N'61-90 \u0631\u0648\u0632' WHEN -dbo.dif_date_alan([t_date]) <= 180 THEN N'91-180 \u0631\u0648\u0632' ELSE N'180+ \u0631\u0648\u0632' END";
-        String sql = "WITH x AS (SELECT " + bucket + " bucket, (" + remain + ") amount FROM dbo.sailfact " + where + ") SELECT bucket, ISNULL(SUM(CASE WHEN amount>0 THEN amount ELSE 0 END),0), COUNT_BIG(CASE WHEN amount>0 THEN 1 END) FROM x GROUP BY bucket";
+        String sql = "SELECT bucket, ISNULL(SUM(CASE WHEN amount>0 THEN amount ELSE 0 END),0), COUNT_BIG(CASE WHEN amount>0 THEN 1 END) FROM (SELECT " + bucket + " bucket, (" + remain + ") amount FROM dbo.sailfact " + where + ") g GROUP BY bucket";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             try (ResultSet r = ps.executeQuery()) { while (r.next()) { JSONObject o = new JSONObject(); o.put("label", r.getString(1) == null ? "\u2014" : r.getString(1)); o.put("value", r.getDouble(2)); o.put("docs", r.getLong(3)); arr.put(o); } }
         }
