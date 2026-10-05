@@ -623,6 +623,15 @@ def main():
         aq("warehouses", "SELECT COUNT(*) FROM dbo.anbars a LEFT JOIN dbo.inventory_anbars ia ON TRY_CONVERT(nvarchar(100),ia.[rdf_anbars])=TRY_CONVERT(nvarchar(100),a.[rdf_anbar])")
         aq("profit_join", "SELECT COUNT(*) FROM dbo.subsailfact d LEFT JOIN dbo.inventory i ON TRY_CONVERT(nvarchar(100),i.[shka])=TRY_CONVERT(nvarchar(100),d.[SHKA])")
         aq("checks", "SELECT COUNT(*) FROM dbo.getchk")
+        aq("checks_put", "SELECT COUNT(*) FROM dbo.putchk")
+        aq("customers", "SELECT COUNT(*) FROM dbo.customers")
+        aq("today", "SELECT COUNT(*) FROM (SELECT DISTINCT x.* FROM dbo.sailfact x WHERE TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))=" + maxd + ") h")
+        aq("purchases", "SELECT COUNT(*), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[all])),0) FROM dbo.buyfact")
+        aq("debtors", "SELECT COUNT(*) FROM dbo.sailfact WHERE [tasvieh]='f'")
+        aq("banks_dupcount", "SELECT TOP (20) TRY_CONVERT(nvarchar(250),b.BANKNAME), ISNULL(TRY_CONVERT(decimal(19,2),b.MAN),0), (SELECT COUNT(1) FROM dbo.BANK b2 WHERE TRY_CONVERT(nvarchar(250),b2.BANKNAME)=TRY_CONVERT(nvarchar(250),b.BANKNAME)) FROM dbo.BANK b ORDER BY ISNULL(TRY_CONVERT(decimal(19,2),b.MAN),0) DESC")
+        aq("top1_apply_pattern", "SELECT COUNT_BIG(1), ISNULL(SUM(q.v),0) FROM (SELECT DISTINCT TRY_CONVERT(nvarchar(100),st2.[shfacfo]) pk FROM dbo.sailfact st2) w OUTER APPLY (SELECT TOP (1) ISNULL(TRY_CONVERT(decimal(19,2),st.[all]),0) v FROM dbo.sailfact st WHERE TRY_CONVERT(nvarchar(100),st.[shfacfo])=w.pk ORDER BY st.[shfacfo]) q")
+        aq("monthly_profit", "SELECT TOP (12) LEFT(s.[date],7), ISNULL(SUM(TRY_CONVERT(decimal(19,2),d.[LINESUM])),0) FROM dbo.sailfact s JOIN dbo.subsailfact d ON d.shfacfo=s.shfacfo JOIN dbo.inventory i ON i.shka=d.SHKA GROUP BY LEFT(s.[date],7) ORDER BY LEFT(s.[date],7) DESC")
+        aq("stock_ledger", "SELECT COUNT(*), ISNULL(SUM(CAST(ISNULL(tedvah,0) AS decimal(19,3))),0) FROM dbo.ka_act WHERE active='t'")
     except Exception as ex:
         appq["suite"] = "ERR:" + str(ex)[:120]
     out["app_queries"] = appq

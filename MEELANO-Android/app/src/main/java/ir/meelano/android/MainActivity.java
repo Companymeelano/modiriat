@@ -18872,8 +18872,14 @@ public class MainActivity extends Activity {
             boolean hasOrder = !"(SELECT 0)".equals(orderList);
             String wh = resolveWarehouseColumn(safeCols);
             if (hasOrder) {
-                String partition = wh == null ? "N'__all__'" : "TRY_CONVERT(nvarchar(100),st.[" + wh + "])";
-                return "OUTER APPLY (SELECT COUNT_BIG(1) stock_rows, ISNULL(SUM(q.stock_qty),0) stock_qty FROM (SELECT " + bal + " stock_qty, ROW_NUMBER() OVER(PARTITION BY " + partition + " ORDER BY " + orderList + ") rn FROM dbo.[" + table + "] st" + where + ") q WHERE q.rn=1) " + a + " ";
+                // No window functions anywhere: the customer server rejects complex PARTITION
+                // expressions ("Incorrect syntax near 'mx'"), so pick the top row per warehouse
+                // with DISTINCT groups + a correlated TOP (1) instead - valid on every SQL Server.
+                if (wh == null) {
+                    return "OUTER APPLY (SELECT COUNT_BIG(1) stock_rows, ISNULL(SUM(q.stock_qty),0) stock_qty FROM (SELECT TOP (1) " + bal + " stock_qty FROM dbo.[" + table + "] st" + where + " ORDER BY " + orderList + ") q) " + a + " ";
+                }
+                String where2 = where.replace("st.", "st2.");
+                return "OUTER APPLY (SELECT COUNT_BIG(1) stock_rows, ISNULL(SUM(q.stock_qty),0) stock_qty FROM (SELECT DISTINCT TRY_CONVERT(nvarchar(100),st2.[" + wh + "]) pk FROM dbo.[" + table + "] st2" + where2 + ") w OUTER APPLY (SELECT TOP (1) " + bal + " stock_qty FROM dbo.[" + table + "] st" + where + " AND (TRY_CONVERT(nvarchar(100),st.[" + wh + "])=w.pk OR (w.pk IS NULL AND TRY_CONVERT(nvarchar(100),st.[" + wh + "]) IS NULL)) ORDER BY " + orderList + ") q) " + a + " ";
             }
             return "OUTER APPLY (SELECT COUNT_BIG(1) stock_rows, ISNULL(SUM(" + bal + "),0) stock_qty FROM dbo.[" + table + "] st" + where + ") " + a + " ";
         }
@@ -21009,7 +21015,8 @@ public class MainActivity extends Activity {
         String inflow = hasCol(get, "our_bankrdf") && hasCol(get, "getchkmab") ? "ISNULL((SELECT SUM(TRY_CONVERT(decimal(19,2),g.getchkmab)) FROM dbo.getchk g WHERE g.our_bankrdf=b.RDF),0)" : "CAST(0 AS decimal(19,2))";
         String outflow = hasCol(put, "bankrdf") && hasCol(put, "putchkmab") ? "ISNULL((SELECT SUM(TRY_CONVERT(decimal(19,2),p.putchkmab)) FROM dbo.putchk p WHERE p.bankrdf=b.RDF),0)" : "CAST(0 AS decimal(19,2))";
         String where = hasCol(bank, "Active") ? " WHERE ISNULL(b.Active,1)=1" : "";
-        String sql = "SELECT TOP (20) TRY_CONVERT(nvarchar(250),b.BANKNAME), ISNULL(TRY_CONVERT(decimal(19,2),b.MAN),0), " + inflow + ", " + outflow + ", " + branchExpr + ", COUNT(1) OVER (PARTITION BY TRY_CONVERT(nvarchar(250),b.BANKNAME)) FROM dbo.BANK b " + where + " ORDER BY ISNULL(TRY_CONVERT(decimal(19,2),b.MAN),0) DESC";
+        String dupCount = "(SELECT COUNT(1) FROM dbo.BANK b2 WHERE TRY_CONVERT(nvarchar(250),b2.BANKNAME)=TRY_CONVERT(nvarchar(250),b.BANKNAME))";
+        String sql = "SELECT TOP (20) TRY_CONVERT(nvarchar(250),b.BANKNAME), ISNULL(TRY_CONVERT(decimal(19,2),b.MAN),0), " + inflow + ", " + outflow + ", " + branchExpr + ", " + dupCount + " FROM dbo.BANK b " + where + " ORDER BY ISNULL(TRY_CONVERT(decimal(19,2),b.MAN),0) DESC";
         try (PreparedStatement ps = c.prepareStatement(sql); ResultSet r = ps.executeQuery()) {
             while (r.next()) { JSONObject o = new JSONObject(); o.put("label", stringOr(r.getString(1), "بدون نام")); o.put("balance", r.getDouble(2)); o.put("inflow", r.getDouble(3)); o.put("outflow", r.getDouble(4)); o.put("branch", stringOr(r.getString(5), "")); o.put("duplicate", r.getLong(6) > 1); o.put("value", r.getDouble(2)); out.put(o); }
         }
