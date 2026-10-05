@@ -12823,6 +12823,8 @@ public class MainActivity extends Activity {
             content.addView(c, new LinearLayout.LayoutParams(-1, -2));
             LinearLayout.LayoutParams cp2 = new LinearLayout.LayoutParams(-1, -2); cp2.setMargins(0, 0, 0, dp(12));
             c.setLayoutParams(cp2);
+        } else {
+            addPlaceholderCard("نبض فروش — روند ۷ روز", "به محض دسترسی به دادهٔ آتیران، نمودار زندهٔ روند فروش همین‌جا رسم می‌شود.", INFO);
         }
 
         JSONObject chk = m.optJSONObject("checkBuckets");
@@ -12854,6 +12856,8 @@ public class MainActivity extends Activity {
             c.addView(h, hp2);
             LinearLayout.LayoutParams cp3 = new LinearLayout.LayoutParams(-1, -2); cp3.setMargins(0, 0, 0, dp(12));
             content.addView(c, cp3);
+        } else {
+            addPlaceholderCard("وضعیت وصول — سررسید چک‌ها", "دونات توزیع چک‌ها (جاری/نزدیک سررسید/سررسید گذشته) پس از اتصال نمایش داده می‌شود.", SUCCESS);
         }
 
         JSONArray debtors = m.optJSONArray("debtors");
@@ -12869,6 +12873,8 @@ public class MainActivity extends Activity {
             c.addView(bars, bpl);
             LinearLayout.LayoutParams cp4 = new LinearLayout.LayoutParams(-1, -2); cp4.setMargins(0, 0, 0, dp(12));
             content.addView(c, cp4);
+        } else {
+            addPlaceholderCard("بدهکاران برتر", "رتبه‌بندی میله‌ای مطالبات فعال پس از دریافت داده فعال می‌شود.", DANGER);
         }
 
         JSONObject sales = m.optJSONObject("sales"), recv = m.optJSONObject("receivables");
@@ -12877,10 +12883,10 @@ public class MainActivity extends Activity {
         cat.addView(text("دسته‌بندی روزانه", 12.5f, tc(GOLD), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
         double sv = sales == null ? 0 : sales.optDouble("total", 0);
         double pv = m.optJSONObject("purchases") == null ? 0 : m.optJSONObject("purchases").optDouble("total", 0);
-        addCatRow(cat, "فروش و اسناد", GOLD, "فروش بازه: " + (sv > 0 ? MeelanoCharts.rial(sv) : "—") + " • خرید: " + (pv > 0 ? MeelanoCharts.compact(pv) : "—") + " • حاشیه: " + MeelanoCharts.compact(sv - pv));
+        addCatRow(cat, "فروش و اسناد", GOLD, "فروش بازه: " + (sv > 0 ? MeelanoCharts.rial(sv) : "—") + " • خرید: " + (pv > 0 ? MeelanoCharts.compact(pv) : "—") + " • حاشیه: " + MeelanoCharts.compact(sv - pv), "mgr_cockpit");
         long soonC = bsoon == null ? 0 : bsoon.optLong("count", bsoon.optLong("docs", 0));
-        addCatRow(cat, "وصول و چک‌ها", WARNING, "مطالبات: " + (recv != null && recv.optDouble("total", 0) > 0 ? MeelanoCharts.compact(recv.optDouble("total", 0)) : "—") + " • چک نزدیک سررسید: " + faDigits(String.valueOf(soonC)) + " فقره");
-        addCatRow(cat, "مشتریان و میدان", INFO, "مشتریان بدهکار: " + (recv != null ? faDigits(String.valueOf(recv.optLong("count", 0))) : "—") + " • ویزیتورها: " + faDigits(String.valueOf(m.optJSONArray("visitors") == null ? 0 : m.optJSONArray("visitors").length())));
+        addCatRow(cat, "وصول و چک‌ها", WARNING, "مطالبات: " + (recv != null && recv.optDouble("total", 0) > 0 ? MeelanoCharts.compact(recv.optDouble("total", 0)) : "—") + " • چک نزدیک سررسید: " + faDigits(String.valueOf(soonC)) + " فقره", "mgr_collection");
+        addCatRow(cat, "مشتریان و میدان", INFO, "مشتریان بدهکار: " + (recv != null ? faDigits(String.valueOf(recv.optLong("count", 0))) : "—") + " • ویزیتورها: " + faDigits(String.valueOf(m.optJSONArray("visitors") == null ? 0 : m.optJSONArray("visitors").length())), "mgr_credit");
         content.addView(cat, new LinearLayout.LayoutParams(-1, -2));
 
         JSONArray errs = m.optJSONArray("errors");
@@ -12903,10 +12909,10 @@ public class MainActivity extends Activity {
         parent.addView(r, rp);
     }
 
-    private void addCatRow(LinearLayout parent, String title, int accent, String detail) {
+    private void addCatRow(LinearLayout parent, String title, int accent, String detail, final String target) {
         LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.HORIZONTAL); r.setGravity(Gravity.CENTER_VERTICAL);
         r.setBackground(unifiedCardBg(accent, 14, false));
-        int pad = dp(9); r.setPadding(pad, pad, pad, pad);
+        int pad = dp(9); r.setPadding(pad, pad, dp(4), pad);
         r.addView(text("◆", 11, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
         LinearLayout tt = new LinearLayout(this); tt.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, -2, 1f); tp.setMargins(dp(8), 0, 0, 0);
@@ -12914,8 +12920,24 @@ public class MainActivity extends Activity {
         TextView d = text(detail, 9.6f, MUTED, Typeface.NORMAL); d.setLineSpacing(dp(2), 1f);
         tt.addView(d, new LinearLayout.LayoutParams(-1, -2));
         r.addView(tt, tp);
+        r.addView(text("‹", 14, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        r.setClickable(true); applyTouchFeedback(r);
+        r.setOnClickListener(v -> showApp(target));
+        r.setContentDescription(title + " — باز کردن بخش");
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(7), 0, 0);
         parent.addView(r, rp);
+    }
+
+    /** Keeps the home layout complete and premium even before data arrives. */
+    private void addPlaceholderCard(String title, String msg, int accent) {
+        LinearLayout c = card();
+        c.setBackground(roundedStroke(alpha(accent, 20), dp(16), alpha(accent, 90)));
+        c.addView(text(title, 12f, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        TextView m2 = text(msg, 10f, MUTED, Typeface.NORMAL); m2.setLineSpacing(dp(2), 1f);
+        LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(-1, -2); mp.setMargins(0, dp(6), 0, 0);
+        c.addView(m2, mp);
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2); cp.setMargins(0, 0, 0, dp(12));
+        content.addView(c, cp);
     }
 
     private void loadManagerDrill() {
