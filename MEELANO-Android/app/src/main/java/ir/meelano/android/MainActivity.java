@@ -4595,9 +4595,9 @@ public class MainActivity extends Activity {
     }
 
     /** Refuse a half-dead connection: prove it can execute before handing it to the app. */
-    private Connection validatedConnection(Connection cc) throws Exception {
+    private static Connection validatedConnection(Connection cc) throws Exception {
         try (java.sql.Statement st = cc.createStatement()) { st.setQueryTimeout(5); st.execute("SELECT 1"); }
-        catch (Exception ve) { try { cc.close(); } catch (Exception ignored) { } throw new DbException(diagnoseDbError(ve)); }
+        catch (Exception ve) { try { cc.close(); } catch (Exception ignored) { } throw ve; }
         return cc;
     }
 
