@@ -4487,6 +4487,11 @@ public class MainActivity extends Activity {
         Button b = primaryButton("تلاش مجدد ✦");
         b.setOnClickListener(v -> retry.run());
         c.addView(b, new LinearLayout.LayoutParams(-1, dp(50)));
+        Button cfg = secondaryButton("تنظیم اتصال سرور");
+        cfg.setTextSize(fs(10.2f));
+        cfg.setOnClickListener(v -> showDbOverrideDialog(retry));
+        LinearLayout.LayoutParams cfgp = new LinearLayout.LayoutParams(-1, dp(46)); cfgp.setMargins(0, dp(8), 0, 0);
+        c.addView(cfg, cfgp);
         content.addView(c, new LinearLayout.LayoutParams(-1, -2));
     }
 
@@ -4547,14 +4552,46 @@ public class MainActivity extends Activity {
         bindSqlNetworkForVpnIfNeeded();
         Class.forName("net.sourceforge.jtds.jdbc.Driver");
         String host = (debugDbHost != null && isDebuggableBuild()) ? debugDbHost : hidden(S_HOST);
-        String url = "jdbc:jtds:sqlserver://" + host + ":" + SQL_PORT + "/" + hidden(S_DB)
-                + ";loginTimeout=10;socketTimeout=30;appName=MEELANOAndroid;";
+        String hostOv = prefs == null ? "" : prefs.getString("db_host_override", "").trim();
+        String portOv = prefs == null ? "" : prefs.getString("db_port_override", "").trim();
+        if (!hostOv.isEmpty()) host = hostOv;
+        int port = SQL_PORT; try { if (!portOv.isEmpty()) port = Integer.parseInt(portOv); } catch (Exception ignored) { }
+        String url = "jdbc:jtds:sqlserver://" + host + ":" + port + "/" + hidden(S_DB)
+                + ";loginTimeout=8;socketTimeout=30;appName=MEELANOAndroid;";
         Properties props = new Properties();
         props.setProperty("user", hidden(S_USER));
         props.setProperty("password", hidden(S_PASS));
         props.setProperty("charset", "UTF-8");
         props.setProperty("sendStringParametersAsUnicode", "true");
-        return DriverManager.getConnection(url, props);
+        try {
+            return DriverManager.getConnection(url, props);
+        } catch (Exception first) {
+            Thread.sleep(700); // one automatic retry — mobile networks drop first attempts often
+            try { return DriverManager.getConnection(url, props); } catch (Exception second) { throw new DbException(diagnoseDbError(second)); }
+        }
+    }
+
+    /** Persian, actionable diagnosis instead of a raw driver string. */
+    private String diagnoseDbError(Exception e) {
+        String m = String.valueOf(e == null ? "" : e.getMessage());
+        if (m.contains("reset") || m.contains("Reset")) return "خطای شبکه: اتصال در لحظهٔ شروع پروتکل قطع شد (Connection Reset). سرویس SQL Server روی سرور متوقف است یا فایروال/آنتی‌ویروس سمت سرور آن را مسدود می‌کند — سرویس SQL Server و پورت سرور بررسی شود.";
+        if (m.contains("timed out") || m.contains("timeout") || m.contains("Timeout")) return "سرور پاسخ نداد (timeout). وضعیت شبکه/اینترنت و روشن‌بودن سرور و سرویس SQL Server بررسی شود.";
+        if (m.contains("refused")) return "سرور در این پورت سرویسی ندارد (Connection Refused). پورت/آدرس سرور تغییر کرده است.";
+        return "خطای اتصال: " + m;
+    }
+
+    private void showDbOverrideDialog(final Runnable retry) {
+        LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(18); box.setPadding(pad, pad, pad, 0);
+        final EditText eh = new EditText(this); eh.setHint("آدرس سرور (خالی = آدرس فعلی)"); eh.setText(prefs.getString("db_host_override", ""));
+        final EditText ep = new EditText(this); ep.setHint("پورت (خالی = 1433)"); ep.setText(prefs.getString("db_port_override", "")); ep.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        box.addView(eh, new LinearLayout.LayoutParams(-1, -2));
+        box.addView(ep, new LinearLayout.LayoutParams(-1, -2));
+        new android.app.AlertDialog.Builder(this).setView(box).setTitle("تنظیم اتصال سرور")
+            .setPositiveButton("ذخیره و تلاش مجدد", (d, w) -> {
+                prefs.edit().putString("db_host_override", eh.getText().toString().trim()).putString("db_port_override", ep.getText().toString().trim()).apply();
+                retry.run();
+            }).setNegativeButton("انصراف", null).show();
     }
 
     /** Same server and credentials as {@link #openConnection()}, for the staff app's background delivery job (no Activity). */
