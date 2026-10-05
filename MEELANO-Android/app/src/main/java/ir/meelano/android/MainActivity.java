@@ -18693,11 +18693,12 @@ public class MainActivity extends Activity {
 
     private String factorUniqueRowExpr(Set<String> cols, String alias) {
         String prefix = alias == null || alias.trim().isEmpty() ? "" : alias + ".";
-        for (String candidate : new String[]{"rdf", "RDF", "id", "ID", "serial", "Serial", "row_id", "RowID", "autoid", "AutoID", "radif", "Radif"}) {
+        for (String candidate : new String[]{"rdf__", "Rdf__", "rdf", "RDF", "id", "ID", "serial", "Serial", "row_id", "RowID", "autoid", "AutoID", "radif", "Radif"}) {
             String col = resolveFlexible(cols, candidate);
-            if (col != null) return "N'__row__' + COALESCE(TRY_CONVERT(nvarchar(120)," + prefix + "[" + col + "]),CONVERT(nvarchar(36),NEWID()))";
+            if (col != null) return "N'__row__' + COALESCE(TRY_CONVERT(nvarchar(120)," + prefix + "[" + col + "]),CONVERT(nvarchar(40),BINARY_CHECKSUM(*)))";
         }
-        return "N'__row__' + CONVERT(nvarchar(36),NEWID())";
+        // deterministic fallback — NEWID() inside OVER(...) raises a SQL Server error and silently killed every sailfact query
+        return "N'__row__' + CONVERT(nvarchar(40),BINARY_CHECKSUM(*))";
     }
 
     private String falseLikeCondition(String field) {
@@ -20890,9 +20891,8 @@ public class MainActivity extends Activity {
         List<Object> params = new ArrayList<>();
         if (session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where = appendWhere(where, "TRY_CONVERT(int,s.[vis_rdf])=?"); params.add(session.visitorId); }
         if (hasFunction(c, "dif_date_alan")) {
-            String sql = "WITH x AS (SELECT TRY_CONVERT(int,-dbo.dif_date_alan(s.[date])) age_days, TRY_CONVERT(decimal(19,2),s.[all]) amount FROM dbo.sailfact s " + where + "), " +
-                    "b AS (SELECT (age_days/7) week_index, SUM(amount) total FROM x WHERE age_days BETWEEN 0 AND 55 GROUP BY (age_days/7)) " +
-                    "SELECT TOP (8) CASE WHEN week_index=0 THEN N'هفته جاری' ELSE N'هفته ' + CONVERT(nvarchar(10),week_index+1) END, ISNULL(total,0) FROM b ORDER BY week_index DESC";
+            String sql = "SELECT TOP (8) CASE WHEN week_index=0 THEN N'هفته جاری' ELSE N'هفته ' + CONVERT(nvarchar(10),week_index+1) END, ISNULL(total,0) FROM " +
+                    "(SELECT (age_days/7) week_index, SUM(amount) total FROM (SELECT TRY_CONVERT(int,-dbo.dif_date_alan(s.[date])) age_days, TRY_CONVERT(decimal(19,2),s.[all]) amount FROM dbo.sailfact s " + where + ") x WHERE age_days BETWEEN 0 AND 55 GROUP BY (age_days/7)) b ORDER BY week_index DESC";
             return reverse(readPoints(c, sql, params));
         }
         return loadMonthlyMoney(c, "sailfact", "date", "all", true);
@@ -20971,7 +20971,7 @@ public class MainActivity extends Activity {
         List<Object> params = new ArrayList<>();
         if (session != null && session.visitorId != null && hasCol(cols, "vis_rdf")) { where += " AND TRY_CONVERT(int,[vis_rdf])=?"; params.add(session.visitorId); }
         String bucket = "CASE WHEN dbo.dif_date_alan([t_date]) >= 0 THEN N'۰ / جاری' WHEN -dbo.dif_date_alan([t_date]) <= 30 THEN N'۱ تا ۳۰ روز' WHEN -dbo.dif_date_alan([t_date]) <= 60 THEN N'۳۱ تا ۶۰ روز' WHEN -dbo.dif_date_alan([t_date]) <= 90 THEN N'۶۱ تا ۹۰ روز' WHEN -dbo.dif_date_alan([t_date]) <= 180 THEN N'۹۱ تا ۱۸۰ روز' ELSE N'۱۸۰+ روز' END";
-        String sql = "WITH x AS (SELECT " + bucket + " bucket, (" + remain + ") amount FROM dbo.sailfact " + where + ") SELECT bucket, SUM(CASE WHEN amount>0 THEN amount ELSE 0 END) FROM x GROUP BY bucket";
+        String sql = "SELECT bucket, SUM(CASE WHEN amount>0 THEN amount ELSE 0 END) FROM (SELECT " + bucket + " bucket, (" + remain + ") amount FROM dbo.sailfact " + where + ") x GROUP BY bucket";
         return readPoints(c, sql, params);
     }
 
