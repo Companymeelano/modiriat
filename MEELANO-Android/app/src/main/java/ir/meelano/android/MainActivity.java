@@ -12808,7 +12808,8 @@ public class MainActivity extends Activity {
             dp2.add(new MeelanoCharts.Point("سررسیددار", vover, DANGER));
             dp2.add(new MeelanoCharts.Point("نزدیک سررسید", vsoon, WARNING));
             dp2.add(new MeelanoCharts.Point("جاری", vok, SUCCESS));
-            donut.setPoints(dp2, null).setCenterTitle(MeelanoCharts.compact(vok + vsoon + vover));
+            donut.setPoints(dp2, null);
+            donut.setCenterTitle(MeelanoCharts.compact(vok + vsoon + vover));
             h.addView(donut, new LinearLayout.LayoutParams(dp(140), dp(140)));
             LinearLayout legend = new LinearLayout(this); legend.setOrientation(LinearLayout.VERTICAL);
             LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(0, -2, 1f); llp.setMargins(dp(12), 0, 0, 0);
