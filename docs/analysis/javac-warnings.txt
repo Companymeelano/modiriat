@@ -54,71 +54,10 @@ app/src/main/java/ir/meelano/android/MainActivity.java:22457: warning: [deprecat
 app/src/main/java/ir/meelano/android/MainActivity.java:28470: warning: [serial] serializable class DbException has no definition of serialVersionUID
 app/src/main/java/ir/meelano/android/MainActivity.java:28750: warning: [deprecation] onBackPressed() in Activity has been deprecated
 app/src/main/java/ir/meelano/android/MainActivity.java:28758: warning: [deprecation] onBackPressed() in Activity has been deprecated
+app/src/main/java/ir/meelano/android/MainActivity.java:3858: warning: [fallthrough] possible fall-through into case
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:212: warning: [try] explicit call to close() on an auto-closeable resource
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:715: warning: [deprecation] Builder(Context) in Builder has been deprecated
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:723: warning: [deprecation] PRIORITY_HIGH in Notification has been deprecated
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:723: warning: [deprecation] setPriority(int) in Builder has been deprecated
 app/src/main/java/ir/meelano/android/MeelanoDelivery.java:723: warning: [deprecation] setDefaults(int) in Builder has been deprecated
 app/src/main/java/ir/meelano/android/MeelanoFitText.java:20: warning: [deprecation] scaledDensity in DisplayMetrics has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:132: warning: [deprecation] setStatusBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:133: warning: [deprecation] setNavigationBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:134: warning: [deprecation] SYSTEM_UI_FLAG_LIGHT_STATUS_BAR in View has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:135: warning: [deprecation] SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR in View has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:134: warning: [deprecation] setSystemUiVisibility(int) in View has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:146: warning: [deprecation] getSystemWindowInsetLeft() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:146: warning: [deprecation] getSystemWindowInsetTop() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:146: warning: [deprecation] getSystemWindowInsetRight() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:146: warning: [deprecation] getSystemWindowInsetBottom() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:162: warning: [deprecation] onBackPressed() in Activity has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:163: warning: [deprecation] onBackPressed() in Activity has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxActivity.java:273: warning: [deprecation] getAllNetworks() in ConnectivityManager has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxUi.java:522: warning: [deprecation] SOFT_INPUT_ADJUST_RESIZE in LayoutParams has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:245: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:355: warning: [deprecation] SOFT_INPUT_ADJUST_RESIZE in LayoutParams has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1074: warning: [deprecation] announceForAccessibility(CharSequence) in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1571: warning: [deprecation] setDecorFitsSystemWindows(boolean) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1572: warning: [deprecation] setStatusBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1573: warning: [deprecation] setNavigationBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1580: warning: [deprecation] SYSTEM_UI_FLAG_LAYOUT_STABLE in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1580: warning: [deprecation] SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1580: warning: [deprecation] SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1582: warning: [deprecation] setStatusBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1583: warning: [deprecation] SYSTEM_UI_FLAG_LIGHT_STATUS_BAR in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1585: warning: [deprecation] setStatusBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1588: warning: [deprecation] setNavigationBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1589: warning: [deprecation] SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1591: warning: [deprecation] setNavigationBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1592: warning: [deprecation] SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1594: warning: [deprecation] setNavigationBarColor(int) in Window has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1596: warning: [deprecation] setSystemUiVisibility(int) in View has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1615: warning: [deprecation] getSystemWindowInsetTop() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1615: warning: [deprecation] getSystemWindowInsetBottom() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1616: warning: [deprecation] getSystemWindowInsetLeft() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:1616: warning: [deprecation] getSystemWindowInsetRight() in WindowInsets has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:2677: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:4651: warning: [deprecation] getAllNetworks() in ConnectivityManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:5287: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8910: warning: [deprecation] getConnectionInfo() in WifiManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8910: warning: [deprecation] getDhcpInfo() in WifiManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8910: warning: [deprecation] getDhcpInfo() in WifiManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:8977: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:11040: warning: [deprecation] setCalendarViewShown(boolean) in DatePicker has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:11041: warning: [deprecation] setSpinnersShown(boolean) in DatePicker has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:16699: warning: [deprecation] canAuthenticate() in BiometricManager has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:16784: warning: [deprecation] versionCode in PackageInfo has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21218: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21218: warning: [deprecation] Locale(String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21218: warning: [deprecation] Locale(String,String) in Locale has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:21244: warning: [deprecation] EXTRA_CHECK_VOICE_DATA_FOR in TextToSpeech.Engine has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:22359: warning: [deprecation] speak(String,int,HashMap<String,String>) in TextToSpeech has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:22457: warning: [deprecation] Builder(Context) in Builder has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:28750: warning: [deprecation] onBackPressed() in Activity has been deprecated
-app/src/main/java/ir/meelano/android/MainActivity.java:28758: warning: [deprecation] onBackPressed() in Activity has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoDelivery.java:715: warning: [deprecation] Builder(Context) in Builder has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoDelivery.java:723: warning: [deprecation] PRIORITY_HIGH in Notification has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoDelivery.java:723: warning: [deprecation] setPriority(int) in Builder has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoDelivery.java:723: warning: [deprecation] setDefaults(int) in Builder has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoFitText.java:20: warning: [deprecation] scaledDensity in DisplayMetrics has been deprecated
-app/src/main/java/ir/meelano/android/MeelanoTaxApi.java:64: warning: [serial] serializable class ApiException has no definition of serialVersionUID
-app/src/main/java/ir/meelano/android/MainActivity.java:28470: warning: [serial] serializable class DbException has no definition of serialVersionUID
-app/src/main/java/ir/meelano/android/MeelanoDelivery.java:212: warning: [try] explicit call to close() on an auto-closeable resource
