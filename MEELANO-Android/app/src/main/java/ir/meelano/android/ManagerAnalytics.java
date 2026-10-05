@@ -800,6 +800,7 @@ final class ManagerAnalytics {
         JSONArray errors = new JSONArray();
         out.put("range", range);
         out.put("syncAt", System.currentTimeMillis());
+        try { JSONObject t = new JSONObject(); t.put("sales", rangeBlock(c, true, 0)); t.put("purchases", rangeBlock(c, false, 0)); out.put("today", t); } catch (Exception e) { errors.put("today: " + String.valueOf(e.getMessage())); }
         try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception e) { errors.put("sales: " + String.valueOf(e.getMessage())); }
         try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception e) { errors.put("purchases: " + String.valueOf(e.getMessage())); }
         try { out.put("trend", trend(c, 7)); } catch (Exception e) { errors.put("trend: " + String.valueOf(e.getMessage())); }

@@ -12723,17 +12723,27 @@ public class MainActivity extends Activity {
         parent.addView(row, rp);
     }
 
+    private void addTodayTile(LinearLayout parent, String title, String value, String sub, int accent, final String drill) {
+        LinearLayout t = new LinearLayout(this); t.setOrientation(LinearLayout.VERTICAL);
+        t.setBackground(unifiedCardBg(accent, 16, false));
+        int pad = dp(10); t.setPadding(pad, pad, pad, pad);
+        t.addView(text(title, 9.6f, MUTED, Typeface.NORMAL), new LinearLayout.LayoutParams(-1, -2));
+        TextView v = text(value, 16.5f, TEXT, Typeface.BOLD); v.setSingleLine(true); v.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(-1, -2); vp.setMargins(0, dp(4), 0, 0);
+        t.addView(v, vp);
+        t.addView(text(sub, 9.2f, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        if (drill != null) { t.setClickable(true); applyTouchFeedback(t); t.setOnClickListener(vv -> { managerDrillKind = drill; showApp("mgr_drill"); }); }
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -2, 1f); lp.setMargins(dp(3), dp(6), dp(3), 0);
+        parent.addView(t, lp);
+    }
+
     private void renderManagerExecutive(JSONObject m) {
         content.removeAllViews();
-        addHero("داشبورد اجرایی", "KPIهای زنده از آتیران — هر کارت قابل دریل‌داون به رکوردهای واقعی است. آخرین بروزرسانی: " + freshnessText(m.optLong("syncAt", System.currentTimeMillis())));
-        LinearLayout filters = new LinearLayout(this); filters.setOrientation(LinearLayout.HORIZONTAL);
-        String[] labels = {"امروز", "۷ روز", "۳۰ روز"};
-        for (int i = 0; i < 3; i++) { final int rr = i; Button b = i == m.optInt("range", 0) ? primaryButton(labels[i]) : secondaryButton(labels[i]); b.setOnClickListener(v -> { managerReportRange = rr; loadManagerExecutive(); }); filters.addView(b, weightedButtonLp()); }
-        LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
-        HorizontalScrollView fhs = hScrollWrap(filters);
-        content.addView(fhs, fp);
-        JSONObject sales = m.optJSONObject("sales"), purchases = m.optJSONObject("purchases"), recv = m.optJSONObject("receivables"), cust = m.optJSONObject("customers"), chk = m.optJSONObject("checkBuckets");
-        JSONArray visitors = m.optJSONArray("visitors");
+        addHero("خانه مدیریت", "نمای زندهٔ روزانهٔ شرکت از آتیران — فروش، وصول، چک‌ها و میدان، دسته‌بندی‌شده و همیشه قابل دریل‌داون.");
+        TextView dateLine = text("امروز: " + MeelanoJalali.format(MeelanoJalali.today()) + " • بروزرسانی: " + freshnessText(m.optLong("syncAt", System.currentTimeMillis())), 10.5f, MUTED, Typeface.NORMAL);
+        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(-1, -2); dlp.setMargins(0, 0, 0, dp(10));
+        content.addView(dateLine, dlp);
+        content.addView(managerRangeRow(() -> loadManagerExecutive()));
         LinearLayout quick = new LinearLayout(this); quick.setOrientation(LinearLayout.HORIZONTAL);
         Button q1 = secondaryButton("اتاق فروش"); q1.setTextSize(fs(9.6f)); q1.setOnClickListener(v -> showApp("mgr_cockpit")); quick.addView(q1, weightedButtonLp());
         Button q2 = secondaryButton("وصول"); q2.setTextSize(fs(9.6f)); q2.setOnClickListener(v -> showApp("mgr_collection")); quick.addView(q2, weightedButtonLp());
@@ -12747,101 +12757,131 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-1, -2); ep.setMargins(0, dp(8), 0, dp(12));
         for (int ei = 0; ei < export.getChildCount(); ei++) export.getChildAt(ei).setMinimumWidth(dp(150));
         content.addView(hScrollWrap(export), ep);
-        LinearLayout grid = new LinearLayout(this); grid.setOrientation(LinearLayout.HORIZONTAL);
-        double sv = sales == null ? 0 : sales.optDouble("total", 0);
-        double pv = purchases == null ? 0 : purchases.optDouble("total", 0);
-        double dSales = pctDelta(sv, sales == null ? 0 : sales.optDouble("prevTotal", 0));
-        addKpiCard(grid, "فروش", "↗", GOLD, sv > 0 ? money(Math.round(sv)) : "—", Double.isNaN(dSales) ? null : (dSales >= 0 ? "▲ " : "▼ ") + faDigits(String.format(java.util.Locale.US, "%.1f", Math.abs(dSales))) + "٪", (sales == null ? "" : formatNumber(sales.optLong("docs", 0)) + " سند"), "sales");
-        double margin = sv - pv;
-        addKpiCard(grid, "حاشیه ناخالص", "◎", margin >= 0 ? SUCCESS : DANGER, money(Math.round(margin)), sv > 0 ? faDigits(String.format(java.util.Locale.US, "%.0f", margin / sv * 100.0)) + "٪ از فروش" : null, "فروش − خرید", null);
-        grid.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
-        content.addView(grid, new LinearLayout.LayoutParams(-1, -2));
-        LinearLayout grid2 = new LinearLayout(this); grid2.setOrientation(LinearLayout.HORIZONTAL);
-        addKpiCard(grid2, "مطالبات", "♙", WARNING, recv != null && recv.optDouble("total", 0) > 0 ? money(Math.round(recv.optDouble("total", 0))) : "—", null, recv == null ? "" : formatNumber(recv.optLong("count", 0)) + " مشتری بدهکار", "debtors");
-        JSONObject soon = chk == null ? null : chk.optJSONObject("soon");
-        addKpiCard(grid2, "چک نزدیک سررسید", "✓", soon != null ? WARNING : SUCCESS, soon != null ? formatNumber(soon.optLong("count", 0)) + " فقره" : "۰", soon != null ? money(Math.round(soon.optDouble("total", 0))) : null, "≤ ۷ روز آینده", "checks");
-        grid2.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
-        content.addView(grid2, new LinearLayout.LayoutParams(-1, -2));
-        LinearLayout grid3 = new LinearLayout(this); grid3.setOrientation(LinearLayout.HORIZONTAL);
-        addKpiCard(grid3, "مشتری فعال", "♟", INFO, cust == null ? "—" : formatNumber(cust.optLong("active", 0)), null, cust == null ? "" : "بدون خرید: " + formatNumber(cust.optLong("noPurchase", 0)), "debtors");
-        long vOrders = 0; for (int i = 0; visitors != null && i < visitors.length(); i++) vOrders += visitors.optJSONObject(i) == null ? 0 : visitors.optJSONObject(i).optLong("orders", 0);
-        addKpiCard(grid3, "سفارش ویزیتورها", "♜", navAccent("personnel"), formatNumber(vOrders), null, visitors == null ? "" : formatNumber(visitors.length()) + " ویزیتور فعال", "visitors");
-        grid3.addView(new View(this), new LinearLayout.LayoutParams(dp(8), -2));
-        content.addView(grid3, new LinearLayout.LayoutParams(-1, -2));
+
+        JSONObject today = m.optJSONObject("today");
+        JSONObject tSales = today == null ? null : today.optJSONObject("sales");
+        JSONObject tPur = today == null ? null : today.optJSONObject("purchases");
+        double ts = tSales == null ? 0 : tSales.optDouble("total", 0);
+        long tDocs = tSales == null ? 0 : tSales.optLong("docs", 0);
+        long tParties = tSales == null ? 0 : tSales.optLong("parties", 0);
+        double tp = tPur == null ? 0 : tPur.optDouble("total", 0);
+        LinearLayout band = card();
+        band.setOrientation(LinearLayout.VERTICAL);
+        band.setBackground(unifiedCardBg(GOLD, 24, false));
+        band.addView(text("امروز در یک نگاه", 12.5f, tc(GOLD), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout trow = new LinearLayout(this); trow.setOrientation(LinearLayout.HORIZONTAL);
+        addTodayTile(trow, "فروش روز", ts > 0 ? MeelanoCharts.compact(ts) : "—", ts > 0 ? "ریال • آخرین روز کاری" : "بدون سند", GOLD, "sales");
+        addTodayTile(trow, "اسناد روز", tDocs > 0 ? faDigits(String.valueOf(tDocs)) : "—", faDigits(String.valueOf(tParties)) + " مشتری", INFO, "sales");
+        addTodayTile(trow, "خرید روز", tp > 0 ? MeelanoCharts.compact(tp) : "—", tp > 0 ? "ریال" : "بدون سند", WARNING, null);
+        band.addView(trow, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, -2); bp.setMargins(0, 0, 0, dp(12));
+        content.addView(band, bp);
+
         JSONArray trend = m.optJSONArray("trend");
-        if (trend != null && trend.length() > 0) {
-            LinearLayout c = addReportCard("روند فروش ۷ روز اخیر", "↯", GOLD);
-            c.addView(new ManagerTrendChartView(this, trend), new LinearLayout.LayoutParams(-1, dp(150)));
+        if (trend != null && trend.length() > 1) {
+            LinearLayout c = card();
+            c.addView(text("نبض فروش — روند ۷ روز اخیر", 12.5f, tc(INFO), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+            java.util.List<MeelanoCharts.Point> pts = new java.util.ArrayList<>();
+            for (int i = 0; i < trend.length(); i++) { JSONObject o = trend.optJSONObject(i); if (o != null) pts.add(new MeelanoCharts.Point(o.optString("label", "—"), o.optDouble("value", 0))); }
+            MeelanoCharts.Area area = new MeelanoCharts.Area(this, INFO, TEXT, MUTED, null);
+            area.setPoints(pts, null);
+            LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, dp(180)); ap.setMargins(0, dp(8), 0, 0);
+            c.addView(area, ap);
+            content.addView(c, new LinearLayout.LayoutParams(-1, -2));
+            LinearLayout.LayoutParams cp2 = new LinearLayout.LayoutParams(-1, -2); cp2.setMargins(0, 0, 0, dp(12));
+            c.setLayoutParams(cp2);
         }
-        if (chk != null) {
-            LinearLayout c = addReportCard("وضعیت وصول — سررسید چک‌ها", "✓", SUCCESS);
-            double mx = 1;
-            JSONObject over = chk.optJSONObject("over");
-            mx = Math.max(mx, over == null ? 0 : over.optDouble("total", 0)); mx = Math.max(mx, soon == null ? 0 : soon.optDouble("total", 0)); mx = Math.max(mx, chk.optJSONObject("ok") == null ? 0 : chk.optJSONObject("ok").optDouble("total", 0));
-            if (over != null) addBarLine(c, "معوق", money(Math.round(over.optDouble("total", 0))), over.optDouble("total", 0), mx, DANGER);
-            if (soon != null) addBarLine(c, "≤ ۷ روز", money(Math.round(soon.optDouble("total", 0))), soon.optDouble("total", 0), mx, WARNING);
-            if (chk.optJSONObject("ok") != null) addBarLine(c, "سررسید نشده", money(Math.round(chk.optJSONObject("ok").optDouble("total", 0))), chk.optJSONObject("ok").optDouble("total", 0), mx, SUCCESS);
+
+        JSONObject chk = m.optJSONObject("checkBuckets");
+        JSONObject bok = chk == null ? null : chk.optJSONObject("ok");
+        JSONObject bsoon = chk == null ? null : chk.optJSONObject("soon");
+        JSONObject bover = chk == null ? null : chk.optJSONObject("over");
+        if (bok != null || bsoon != null || bover != null) {
+            double vok = bok == null ? 0 : bok.optDouble("total", bok.optDouble("amount", 0));
+            double vsoon = bsoon == null ? 0 : bsoon.optDouble("total", bsoon.optDouble("amount", 0));
+            double vover = bover == null ? 0 : bover.optDouble("total", bover.optDouble("amount", 0));
+            LinearLayout c = card();
+            c.addView(text("وضعیت وصول — سررسید چک‌ها", 12.5f, tc(SUCCESS), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+            LinearLayout h = new LinearLayout(this); h.setOrientation(LinearLayout.HORIZONTAL); h.setGravity(Gravity.CENTER_VERTICAL);
+            MeelanoCharts.Donut donut = new MeelanoCharts.Donut(this, GOLD, TEXT, MUTED, null);
+            java.util.List<MeelanoCharts.Point> dp2 = new java.util.ArrayList<>();
+            dp2.add(new MeelanoCharts.Point("سررسیددار", vover, DANGER));
+            dp2.add(new MeelanoCharts.Point("نزدیک سررسید", vsoon, WARNING));
+            dp2.add(new MeelanoCharts.Point("جاری", vok, SUCCESS));
+            donut.setPoints(dp2, null).setCenterTitle(MeelanoCharts.compact(vok + vsoon + vover));
+            h.addView(donut, new LinearLayout.LayoutParams(dp(140), dp(140)));
+            LinearLayout legend = new LinearLayout(this); legend.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(0, -2, 1f); llp.setMargins(dp(12), 0, 0, 0);
+            addLegendRow(legend, SUCCESS, "جاری / خوش‌حساب", vok, bok);
+            addLegendRow(legend, WARNING, "نزدیک سررسید (≤۷ روز)", vsoon, bsoon);
+            addLegendRow(legend, DANGER, "سررسید گذشته", vover, bover);
+            h.addView(legend, llp);
+            LinearLayout.LayoutParams hp2 = new LinearLayout.LayoutParams(-1, -2); hp2.setMargins(0, dp(8), 0, 0);
+            c.addView(h, hp2);
+            LinearLayout.LayoutParams cp3 = new LinearLayout.LayoutParams(-1, -2); cp3.setMargins(0, 0, 0, dp(12));
+            content.addView(c, cp3);
         }
-        JSONArray aging = m.optJSONArray("aging");
-        if (aging != null && aging.length() > 0) {
-            LinearLayout c = addReportCard("سبد سنی مطالبات", "◔", WARNING);
-            double mx = 1; for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) mx = Math.max(mx, o.optDouble("value", 0)); }
-            for (int i = 0; i < aging.length(); i++) { JSONObject o = aging.optJSONObject(i); if (o != null) addBarLine(c, o.optString("label", "—"), money(Math.round(o.optDouble("value", 0))), o.optDouble("value", 0), mx, agingColor(o.optString("label", ""))); }
+
+        JSONArray debtors = m.optJSONArray("debtors");
+        if (debtors != null && debtors.length() > 0) {
+            LinearLayout c = card();
+            c.addView(text("بدهکاران برتر — مطالبات فعال", 12.5f, tc(DANGER), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+            java.util.List<MeelanoCharts.Point> pts = new java.util.ArrayList<>();
+            int n = 0;
+            for (int i = 0; i < debtors.length() && n < 5; i++) { JSONObject o = debtors.optJSONObject(i); if (o != null) { pts.add(new MeelanoCharts.Point(o.optString("party", o.optString("name", "—")), o.optDouble("amount", o.optDouble("total", 0)), DANGER)); n++; } }
+            MeelanoCharts.Bars bars = new MeelanoCharts.Bars(this, DANGER, TEXT, MUTED, null);
+            bars.setPoints(pts, null);
+            LinearLayout.LayoutParams bpl = new LinearLayout.LayoutParams(-1, MeelanoCharts.Bars.heightFor(pts.size(), getResources().getDisplayMetrics().density)); bpl.setMargins(0, dp(8), 0, 0);
+            c.addView(bars, bpl);
+            LinearLayout.LayoutParams cp4 = new LinearLayout.LayoutParams(-1, -2); cp4.setMargins(0, 0, 0, dp(12));
+            content.addView(c, cp4);
         }
-        addAlertsCard(m);
-        addInsightsCard(m);
+
+        JSONObject sales = m.optJSONObject("sales"), recv = m.optJSONObject("receivables");
+        LinearLayout cat = card();
+        cat.setOrientation(LinearLayout.VERTICAL);
+        cat.addView(text("دسته‌بندی روزانه", 12.5f, tc(GOLD), Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        double sv = sales == null ? 0 : sales.optDouble("total", 0);
+        double pv = m.optJSONObject("purchases") == null ? 0 : m.optJSONObject("purchases").optDouble("total", 0);
+        addCatRow(cat, "فروش و اسناد", GOLD, "فروش بازه: " + (sv > 0 ? MeelanoCharts.rial(sv) : "—") + " • خرید: " + (pv > 0 ? MeelanoCharts.compact(pv) : "—") + " • حاشیه: " + MeelanoCharts.compact(sv - pv));
+        long soonC = bsoon == null ? 0 : bsoon.optLong("count", bsoon.optLong("docs", 0));
+        addCatRow(cat, "وصول و چک‌ها", WARNING, "مطالبات: " + (recv != null && recv.optDouble("total", 0) > 0 ? MeelanoCharts.compact(recv.optDouble("total", 0)) : "—") + " • چک نزدیک سررسید: " + faDigits(String.valueOf(soonC)) + " فقره");
+        addCatRow(cat, "مشتریان و میدان", INFO, "مشتریان بدهکار: " + (recv != null ? faDigits(String.valueOf(recv.optLong("count", 0))) : "—") + " • ویزیتورها: " + faDigits(String.valueOf(m.optJSONArray("visitors") == null ? 0 : m.optJSONArray("visitors").length())));
+        content.addView(cat, new LinearLayout.LayoutParams(-1, -2));
+
         JSONArray errs = m.optJSONArray("errors");
         if (errs != null && errs.length() > 0) {
-            LinearLayout c = addReportCard("اعتبارسنجی داده — بخش‌های بدون خروجی", "⚠", DANGER);
-            for (int i = 0; i < errs.length(); i++) addReportLine(c, String.valueOf(errs.opt(i)), "بدون داده", tc(DANGER));
+            LinearLayout c = addReportCard("خطاهای دریافت گزارش — این متن را برای پشتیبانی بفرستید", "!", DANGER);
+            for (int i = 0; i < errs.length(); i++) addReportLine(c, "بدون داده", errs.optString(i, "—"), DANGER);
         }
-        addActionCenterCard(m);
-        addActivityFeedCard(m.optJSONArray("feed"));
         addDeveloperCredit(content);
     }
 
-    private void addActionCenterCard(JSONObject m) {
-        JSONArray debtors = m.optJSONArray("debtors");
-        JSONObject chk = m.optJSONObject("checkBuckets");
-        JSONObject cust = m.optJSONObject("customers");
-        JSONObject prods = m.optJSONObject("products");
-        JSONObject soon = chk == null ? null : chk.optJSONObject("soon");
-        int nDebt = debtors == null ? 0 : debtors.length();
-        int nSoon = soon == null ? 0 : (int) soon.optLong("count", 0);
-        long nNoP = cust == null ? 0 : cust.optLong("noPurchase", 0);
-        long nIna = cust == null ? 0 : cust.optLong("inactive", 0);
-        int nIdle = prods == null || prods.optJSONArray("idle") == null ? 0 : prods.optJSONArray("idle").length();
-        if (nDebt + nSoon + nNoP + nIna + nIdle == 0) return;
-        LinearLayout c = addReportCard("اقدامات ضروری امروز", "!", WARNING);
-        if (nDebt > 0) addActionLine(c, formatNumber(nDebt) + " مشتری بدهکار — وصول اولویت اول", DANGER, "debtors");
-        if (nSoon > 0) addActionLine(c, formatNumber(nSoon) + " چک نزدیک سررسید — موجودی بانک را چک کنید", WARNING, "checks");
-        if (nNoP > 0) addActionLine(c, formatNumber(nNoP) + " مشتری بدون خرید — برنامه ویزیت بچینید", INFO, "debtors");
-        if (nIna > 0) addActionLine(c, formatNumber(nIna) + " مشتری غیرفعال ۶۰ روزه — تماس فعال‌سازی", WARNING, "debtors");
-        if (nIdle > 0) addActionLine(c, formatNumber(nIdle) + " کالای بدون فروش در بازه — بررسی قیمت/موجودی", MUTED, "products");
+    private void addLegendRow(LinearLayout parent, int color, String label, double value, JSONObject src) {
+        LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.HORIZONTAL); r.setGravity(Gravity.CENTER_VERTICAL);
+        View dot = new View(this); dot.setBackgroundColor(color);
+        r.addView(dot, new LinearLayout.LayoutParams(dp(10), dp(10)));
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, -2, 1f); tp.setMargins(dp(6), 0, 0, 0);
+        r.addView(text(label, 10f, MUTED, Typeface.NORMAL), tp);
+        long cnt = src == null ? 0 : src.optLong("count", src.optLong("docs", 0));
+        r.addView(text(MeelanoCharts.compact(value) + (cnt > 0 ? " • " + faDigits(String.valueOf(cnt)) : ""), 10.5f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(6), 0, 0);
+        parent.addView(r, rp);
     }
 
-    private void addActionLine(LinearLayout parent, String label, int accent, String drillKind) {
-        LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.HORIZONTAL); row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setBackground(roundedStroke(alpha(accent, 20), 14, alpha(accent, 70)));
-        row.setPadding(dp(10), dp(8), dp(10), dp(8));
-        TextView t = text(label, 10.8f, TEXT, Typeface.BOLD);
-        row.addView(t, new LinearLayout.LayoutParams(0, -2, 1f));
-        row.addView(text("‹", 13, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
-        row.setClickable(true); applyTouchFeedback(row);
-        row.setOnClickListener(v -> { managerDrillKind = drillKind; showApp("mgr_drill"); });
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.setMargins(0, dp(6), 0, 0);
-        parent.addView(row, lp);
-    }
-
-    private void addActivityFeedCard(JSONArray feed) {
-        if (feed == null || feed.length() == 0) return;
-        LinearLayout c = addReportCard("فعالیت‌های اخیر", "◷", INFO);
-        for (int i = 0; i < Math.min(8, feed.length()); i++) {
-            JSONObject o = feed.optJSONObject(i); if (o == null) continue;
-            String type = o.optString("type", "sale");
-            String title = "sale".equals(type) ? "فروش " + (o.optString("number", "").isEmpty() ? "" : " #" + faDigits(o.optString("number", ""))) : "چک دریافتی";
-            addReportLine(c, faDigits(o.optString("date", "—")) + " • " + title + (o.optString("party", "").isEmpty() ? "" : " • " + o.optString("party", "")), money(Math.round(o.optDouble("amount", 0))), "sale".equals(type) ? tc(SUCCESS) : tc(INFO));
-        }
+    private void addCatRow(LinearLayout parent, String title, int accent, String detail) {
+        LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.HORIZONTAL); r.setGravity(Gravity.CENTER_VERTICAL);
+        r.setBackground(unifiedCardBg(accent, 14, false));
+        int pad = dp(9); r.setPadding(pad, pad, pad, pad);
+        r.addView(text("◆", 11, tc(accent), Typeface.BOLD), new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout tt = new LinearLayout(this); tt.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, -2, 1f); tp.setMargins(dp(8), 0, 0, 0);
+        tt.addView(text(title, 11f, TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(-1, -2));
+        TextView d = text(detail, 9.6f, MUTED, Typeface.NORMAL); d.setLineSpacing(dp(2), 1f);
+        tt.addView(d, new LinearLayout.LayoutParams(-1, -2));
+        r.addView(tt, tp);
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.setMargins(0, dp(7), 0, 0);
+        parent.addView(r, rp);
     }
 
     private void loadManagerDrill() {
