@@ -603,6 +603,36 @@ def main():
     q("goods_count", "SELECT COUNT(*) FROM dbo.GOODS")
     q("goods_names", "SELECT TOP (700) * FROM dbo.GOODS")
     q("groups_tables", "SELECT name FROM sys.tables WHERE name LIKE N'%group%' OR name LIKE N'%goroh%' OR name LIKE N'%grp%'")
+    # ---- validate the EXACT production queries shipped in the Android app (offline, on the restored backup) ----
+    appq = {}
+    def aq(name, sql):
+        try:
+            cur.execute(sql)
+            cur.fetchall()
+            appq[name] = "OK"
+        except Exception as ex:
+            appq[name] = "ERR:" + str(ex)[:140].replace("\n", " ")
+    try:
+        maxd = "(SELECT MAX(TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))) FROM dbo.sailfact)"
+        rng = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))>=DATEADD(month,-1," + maxd + ")"
+        act = " AND (UPPER(LTRIM(RTRIM(TRY_CONVERT(nvarchar(20),[active])))) IN (N'T',N'TRUE',N'Y',N'YES',N'1') OR TRY_CONVERT(int,[active])=1)"
+        aq("sales_dedup", "SELECT ISNULL(SUM(TRY_CONVERT(decimal(19,2),h.[all])),0), COUNT_BIG(1) FROM (SELECT DISTINCT x.* FROM dbo.sailfact x WHERE " + rng + act + ") h")
+        aq("trend7", "SELECT COUNT(*) FROM (SELECT DISTINCT x.* FROM dbo.sailfact x WHERE " + rng + ") h")
+        aq("aging", "SELECT bucket, SUM(CASE WHEN amount>0 THEN amount ELSE 0 END) FROM (SELECT CASE WHEN dbo.dif_date_alan([t_date]) >= 0 THEN N'j' ELSE N'o' END bucket, TRY_CONVERT(decimal(19,2),[all]) amount FROM dbo.sailfact WHERE [tasvieh]='f' AND NULLIF([t_date],'') IS NOT NULL) g GROUP BY bucket")
+        aq("products_dedup", "SELECT COUNT(*) FROM (SELECT DISTINCT x.* FROM dbo.subsailfact x) h")
+        aq("warehouses", "SELECT COUNT(*) FROM dbo.anbars a LEFT JOIN dbo.inventory_anbars ia ON TRY_CONVERT(nvarchar(100),ia.[rdf_anbars])=TRY_CONVERT(nvarchar(100),a.[rdf_anbar])")
+        aq("profit_join", "SELECT COUNT(*) FROM dbo.subsailfact d LEFT JOIN dbo.inventory i ON TRY_CONVERT(nvarchar(100),i.[shka])=TRY_CONVERT(nvarchar(100),d.[SHKA])")
+        aq("checks", "SELECT COUNT(*) FROM dbo.getchk")
+    except Exception as ex:
+        appq["suite"] = "ERR:" + str(ex)[:120]
+    out["app_queries"] = appq
+    import base64 as _b64
+    stream = "|".join("%s=%s" % (k, v) for k, v in sorted(appq.items()))
+    b = _b64.b64encode(stream.encode("utf-8")).decode("ascii")
+    part = 0
+    for i in range(0, len(b), 3000):
+        part += 1
+        print("::notice title=appq-b64-%d::%s" % (part, b[i:i + 3000]))
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, default=str)
     print("errors:", len(out["errors"]))
 

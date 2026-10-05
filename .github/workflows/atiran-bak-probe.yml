@@ -20,7 +20,7 @@ jobs:
       - name: Get the Atiran backup from main
         run: |
           git fetch --depth=1 origin main
-          git show origin/main:Atiran2.zip > "$RUNNER_TEMP/atiran.zip"
+          git show origin/main:14050603.zip > "$RUNNER_TEMP/atiran.zip"
           unzip -o -q "$RUNNER_TEMP/atiran.zip" -d "$RUNNER_TEMP/bak"
       - name: Start private SQL Server and copy the backup in
         run: |
@@ -28,7 +28,7 @@ jobs:
           E2E="E2e7$(openssl rand -hex 6)"; echo "::add-mask::$E2E"; echo "E2E_PASS=$E2E" >> "$GITHUB_ENV"
           docker run -d --name mssql -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=$SA" -e MSSQL_COLLATION=Arabic_CI_AS -e MSSQL_PID=Developer -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
           docker exec -u 0 mssql mkdir -p /var/opt/mssql/backup
-          docker cp "$RUNNER_TEMP/bak/Atiran2" mssql:/var/opt/mssql/backup/Atiran2.bak
+          docker cp "$RUNNER_TEMP/bak/14050603" mssql:/var/opt/mssql/backup/Atiran2.bak
           docker exec -u 0 mssql chown -R mssql /var/opt/mssql/backup
       - uses: actions/setup-python@v5
         with:

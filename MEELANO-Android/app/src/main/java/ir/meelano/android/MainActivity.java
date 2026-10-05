@@ -4578,10 +4578,10 @@ public class MainActivity extends Activity {
         props.setProperty("sendStringParametersAsUnicode", "true");
         preflightTcp(host, port);
         try {
-            return DriverManager.getConnection(url, props);
+            return validatedConnection(DriverManager.getConnection(url, props));
         } catch (Exception first) {
             Thread.sleep(700); // one automatic retry — mobile networks drop first attempts often
-            try { return DriverManager.getConnection(url, props); } catch (Exception second) { throw new DbException(diagnoseDbError(second)); }
+            try { return validatedConnection(DriverManager.getConnection(url, props)); } catch (Exception second) { throw new DbException(diagnoseDbError(second)); }
         }
     }
 
@@ -4592,6 +4592,13 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             throw new DbException(diagnoseDbError(e));
         }
+    }
+
+    /** Refuse a half-dead connection: prove it can execute before handing it to the app. */
+    private Connection validatedConnection(Connection cc) throws Exception {
+        try (java.sql.Statement st = cc.createStatement()) { st.setQueryTimeout(5); st.execute("SELECT 1"); }
+        catch (Exception ve) { try { cc.close(); } catch (Exception ignored) { } throw new DbException(diagnoseDbError(ve)); }
+        return cc;
     }
 
     /** Persian, actionable diagnosis instead of a raw driver string. */
@@ -4632,7 +4639,7 @@ public class MainActivity extends Activity {
         props.setProperty("password", hidden(S_PASS));
         props.setProperty("charset", "UTF-8");
         props.setProperty("sendStringParametersAsUnicode", "true");
-        return DriverManager.getConnection(url, props);
+        return validatedConnection(DriverManager.getConnection(url, props));
     }
 
     private void bindSqlNetworkForVpnIfNeeded() {
