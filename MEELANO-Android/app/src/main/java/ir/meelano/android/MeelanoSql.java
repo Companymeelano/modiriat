@@ -1,9 +1,5 @@
 package ir.meelano.android;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -54,14 +50,15 @@ final class MeelanoSql {
     private static final class Pooled {
         Connection raw;
         long lastUsed;
-        long createdAt;
+        long generation;
         boolean poisoned;      // a socket-level failure was seen on this connection: never reuse it
     }
 
     private static final ArrayDeque<Pooled> IDLE = new ArrayDeque<>();
-    private static int live = 0;                 // idle + leased
+    private static int live = 0;                 // idle + leased + connection attempts in progress
+    private static long poolGeneration = 0;
     private static long connects = 0, leases = 0, reconnects = 0, failures = 0;
-    private static long lastConnectMs = 0, lastLeaseMs = 0;
+    private static long lastConnectMs = 0;
     private static String lastError = "";
     private static volatile String lastReconnectReason = "";
 
@@ -96,18 +93,30 @@ final class MeelanoSql {
     /** A warm pooled connection. close() returns it to the pool instead of closing the socket. */
     static Connection lease() throws Exception {
         Pooled p = take();
-        if (p != null) {
-            synchronized (LOCK) { leases++; }
-            return wrap(p);
+        if (p.raw != null) {
+            Connection stale = null;
+            synchronized (LOCK) {
+                if (p.raw != null && p.generation == poolGeneration) {
+                    leases++;
+                    return wrap(p);
+                }
+                stale = p.raw;
+                p.raw = null;
+                live = Math.max(0, live - 1);
+                LOCK.notifyAll();
+            }
+            closeQuietly(stale);
+            throw new SQLException("اتصال هنگام تغییر شبکه یا تنظیمات نامعتبر شد؛ دوباره تلاش کنید.");
         }
-        // no idle connection and the pool is not full: create one outside the lock (never block the UI thread pool)
+
+        // A new connection is built outside LOCK; slow network I/O must never block other borrowers/releases.
         long started = System.currentTimeMillis();
         Connection raw;
         try {
             raw = build();
         } catch (Exception ex) {
             synchronized (LOCK) {
-                live--;
+                live = Math.max(0, live - 1);
                 failures++;
                 lastError = shortMessage(ex);
                 LOCK.notifyAll();
@@ -115,38 +124,79 @@ final class MeelanoSql {
             throw ex;
         }
         long took = System.currentTimeMillis() - started;
+        boolean stale;
         synchronized (LOCK) {
-            Pooled np = new Pooled();
-            np.raw = raw;
-            np.createdAt = System.currentTimeMillis();
-            np.lastUsed = np.createdAt;
-            connects++;
-            lastConnectMs = took;
-            leases++;
-            LOCK.notifyAll();
-            return wrap(np);
-        }
-    }
-
-    /** Take an idle connection, or reserve a slot (returns null when the caller must connect). */
-    private static Pooled take() throws SQLException {
-        long deadline = System.currentTimeMillis() + 20_000L;
-        synchronized (LOCK) {
-            while (true) {
-                while (!IDLE.isEmpty()) {
-                    Pooled p = IDLE.pollFirst();
-                    if (healthy(p)) return p;
-                    discard(p);
-                }
-                if (live < POOL_MAX) { live++; return null; }
-                long wait = deadline - System.currentTimeMillis();
-                if (wait <= 0) throw new SQLException("ظرفیت اتصال به سرور پر است؛ چند لحظه بعد دوباره تلاش کنید.");
-                try { LOCK.wait(Math.min(wait, 400L)); } catch (InterruptedException ignored) { }
+            stale = p.generation != poolGeneration;
+            if (stale) {
+                live = Math.max(0, live - 1);
+                failures++;
+                lastError = "اتصال هنگام تغییر شبکه یا تنظیمات لغو شد.";
+                LOCK.notifyAll();
+            } else {
+                p.raw = raw;
+                p.lastUsed = System.currentTimeMillis();
+                connects++;
+                lastConnectMs = took;
+                leases++;
+                LOCK.notifyAll();
             }
         }
+        if (stale) {
+            closeQuietly(raw);
+            throw new SQLException("اتصال هنگام تغییر شبکه یا تنظیمات نامعتبر شد؛ دوباره تلاش کنید.");
+        }
+        return wrap(p);
     }
 
-    /** Cheap liveness check; only touches the server when the connection has been idle for a while. */
+    /** Take a healthy idle connection or reserve a slot. Validation happens outside LOCK. */
+    private static Pooled take() throws SQLException {
+        long deadline = System.currentTimeMillis() + 20_000L;
+        while (true) {
+            Pooled candidate = null;
+            Pooled reservation = null;
+            Connection stale = null;
+            synchronized (LOCK) {
+                if (!IDLE.isEmpty()) {
+                    Pooled idle = IDLE.pollFirst();
+                    if (idle.generation == poolGeneration) candidate = idle;
+                    else {
+                        stale = idle.raw;
+                        idle.raw = null;
+                        live = Math.max(0, live - 1);
+                    }
+                }
+                if (candidate == null && live < POOL_MAX) {
+                    reservation = new Pooled();
+                    reservation.generation = poolGeneration;
+                    live++;
+                } else if (candidate == null) {
+                    long wait = deadline - System.currentTimeMillis();
+                    if (wait <= 0) throw new SQLException("ظرفیت اتصال به سرور پر است؛ چند لحظه بعد دوباره تلاش کنید.");
+                    try { LOCK.wait(Math.min(wait, 400L)); }
+                    catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new SQLException("درخواست اتصال لغو شد.", e);
+                    }
+                }
+            }
+            closeQuietly(stale);
+            if (reservation != null) return reservation;
+            if (candidate == null) continue;
+
+            boolean valid = healthy(candidate);
+            Connection discard = null;
+            synchronized (LOCK) {
+                if (valid && candidate.generation == poolGeneration) return candidate;
+                discard = candidate.raw;
+                candidate.raw = null;
+                live = Math.max(0, live - 1);
+                LOCK.notifyAll();
+            }
+            closeQuietly(discard);
+        }
+    }
+
+    /** Cheap liveness check; network validation runs outside LOCK so other pool users can make progress. */
     private static boolean healthy(Pooled p) {
         try {
             if (p.raw == null || p.raw.isClosed()) return false;
@@ -154,30 +204,42 @@ final class MeelanoSql {
             if (idleFor > IDLE_VALIDATE_MS) {
                 try (Statement st = p.raw.createStatement()) {
                     st.setQueryTimeout(8);
-                    try (ResultSet r = st.executeQuery("SELECT 1")) { r.next(); }
+                    try (ResultSet r = st.executeQuery("SELECT 1")) { return r.next(); }
                 }
             }
             return true;
-        } catch (Throwable t) {
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private static void discard(Pooled p) {
-        live = Math.max(0, live - 1);
-        try { if (p.raw != null) p.raw.close(); } catch (Throwable ignored) { }
+    private static void closeQuietly(Connection c) {
+        try { if (c != null) c.close(); } catch (Exception ignored) { }
     }
 
+    /** Return a borrowed connection; stale generations and double-closes are never reinserted. */
     static void release(Pooled p) {
+        if (p == null || p.raw == null) {
+            synchronized (LOCK) { LOCK.notifyAll(); }
+            return;
+        }
+        Connection raw = p.raw;
+        boolean physicallyClosed;
+        try { physicallyClosed = raw.isClosed(); } catch (Exception e) { physicallyClosed = true; }
+        Connection close = null;
         synchronized (LOCK) {
-            if (p == null || p.raw == null) { LOCK.notifyAll(); return; }
+            if (p.raw == null) { LOCK.notifyAll(); return; }
             p.lastUsed = System.currentTimeMillis();
-            boolean usable;
-            try { usable = !p.poisoned && !p.raw.isClosed(); } catch (Throwable t) { usable = false; }
+            boolean usable = !physicallyClosed && !p.poisoned && p.generation == poolGeneration;
             if (usable && IDLE.size() < POOL_MAX) IDLE.addFirst(p);
-            else discard(p);
+            else {
+                close = p.raw;
+                p.raw = null;
+                live = Math.max(0, live - 1);
+            }
             LOCK.notifyAll();
         }
+        closeQuietly(close);
     }
 
     /** jTDS raises these when the socket to the server died; the whole pool must be rebuilt. */
@@ -191,14 +253,22 @@ final class MeelanoSql {
                 || all.contains("sockettimeout") || all.contains("unexpected end of stream");
     }
 
-    /** Drop every pooled connection (used after a timeout/retry, and by the connection-health page). */
+    /** Drop idle connections and mark every outstanding lease stale for its next release. */
     static void invalidateAll(String reason) {
+        java.util.List<Connection> toClose = new java.util.ArrayList<>();
         synchronized (LOCK) {
-            while (!IDLE.isEmpty()) discard(IDLE.pollFirst());
+            poolGeneration++;
+            while (!IDLE.isEmpty()) {
+                Pooled p = IDLE.pollFirst();
+                if (p.raw != null) toClose.add(p.raw);
+                p.raw = null;
+                live = Math.max(0, live - 1);
+            }
             reconnects++;
             if (reason != null && !reason.isEmpty()) { lastError = reason; lastReconnectReason = reason; }
             LOCK.notifyAll();
         }
+        for (Connection c : toClose) closeQuietly(c);
         COLUMNS.clear(); TABLES.clear(); FUNCTIONS.clear(); LATEST.clear(); QUALIFIED.clear();
         todayValue = ""; todayAt = 0L;
     }
@@ -222,39 +292,18 @@ final class MeelanoSql {
         return m.length() > 160 ? m.substring(0, 160) : m;
     }
 
-    /** Proxy so that legacy try-with-resources blocks release (not close) the pooled connection. */
     private static Connection wrap(final Pooled p) {
-        return (Connection) Proxy.newProxyInstance(MeelanoSql.class.getClassLoader(), new Class<?>[]{Connection.class},
-                new InvocationHandler() {
-                    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        String name = method.getName();
-                        if ("close".equals(name)) { release(p); return null; }
-                        if ("isClosed".equals(name)) {
-                            try { return p.raw == null || p.raw.isClosed(); } catch (Throwable t) { return true; }
-                        }
-                        if ("toString".equals(name)) return "meelano-pooled-connection";
-                        // Last line of defence for generated SQL: a missing parenthesis in a builder used to
-                        // reach the server and come back as «Incorrect syntax near 'mx'», silently emptying a
-                        // whole dashboard section. Validate locally so the exact statement is reported.
-                        if (("prepareStatement".equals(name) || "createStatement".equals(name) || "prepareCall".equals(name))
-                                && args != null && args.length > 0 && args[0] instanceof String) {
-                            checkSqlParentheses((String) args[0]);
-                        }
-                        if ("hashCode".equals(name)) return System.identityHashCode(p);
-                        if ("equals".equals(name)) return proxy == (args == null || args.length == 0 ? null : args[0]);
-                        try {
-                            return method.invoke(p.raw, args);
-                        } catch (InvocationTargetException ex) {
-                            Throwable cause = ex.getCause() == null ? ex : ex.getCause();
-                            boolean lost = connectionLost(cause);
-                            synchronized (LOCK) {
-                                lastError = shortMessage(cause);
-                                if (lost) { p.poisoned = true; reconnects++; lastReconnectReason = shortMessage(cause); }
-                            }
-                            throw cause;
-                        }
-                    }
-                });
+        return MeelanoConnectionLease.wrap(p.raw, () -> release(p), failure -> {
+            boolean lost = connectionLost(failure);
+            String message = shortMessage(failure);
+            synchronized (LOCK) {
+                lastError = message;
+                if (lost) { p.poisoned = true; lastReconnectReason = message; }
+            }
+            // A network/socket failure usually affects every pooled socket, not only the one that
+            // reported it. Retire idle connections now and make all other borrowers retire theirs.
+            if (lost) invalidateAll(message);
+        });
     }
 
     // ------------------------------------------------------------------ cached metadata

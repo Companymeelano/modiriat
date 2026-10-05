@@ -173,16 +173,32 @@ final class MeelanoCharts {
         private int selected = -1;
         private float plotLeft = 0, plotRight = 0;
 
-        Area(Context c, int accent, int textColor, int muted, Typeface font) { super(c, accent, textColor, muted, font); }
+        Area(Context c, int accent, int textColor, int muted, Typeface font) {
+            super(c, accent, textColor, muted, font);
+            setClickable(true);
+        }
+
+        @Override public boolean performClick() {
+            super.performClick();
+            return true;
+        }
 
         @Override public boolean onTouchEvent(MotionEvent e) {
             if (points.size() < 2 || plotRight <= plotLeft) return false;
-            if (e.getAction() == MotionEvent.ACTION_DOWN || e.getAction() == MotionEvent.ACTION_MOVE) {
+            int action = e.getActionMasked();
+            if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_UP) {
                 float step = (plotRight - plotLeft) / (points.size() - 1);
                 int i = Math.round((plotRight - e.getX()) / step);
                 selected = Math.max(0, Math.min(points.size() - 1, i));
-                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
+                Point point = points.get(selected);
+                setContentDescription(point.label + "، " + formatter.format(point.value));
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(action != MotionEvent.ACTION_UP);
                 invalidate();
+                if (action == MotionEvent.ACTION_UP) performClick();
+                return true;
+            }
+            if (action == MotionEvent.ACTION_CANCEL) {
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
                 return true;
             }
             return super.onTouchEvent(e);

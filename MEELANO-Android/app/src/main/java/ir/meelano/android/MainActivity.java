@@ -326,8 +326,6 @@ public class MainActivity extends Activity {
     private EditText cartAddressInput;
     private EditText cartPaymentRefInput;
     private volatile boolean lastSqlVpnDetected = false;
-    private volatile boolean lastSqlVpnBypassed = false;
-    private volatile String lastSqlNetworkNote = "";
     private final Map<String, String> customerLedgerCache = new HashMap<>();
     // Bounded by bytes (1/8 of the heap) instead of an unbounded HashMap.
     private final android.util.LruCache<String, Bitmap> productBitmapCache = new android.util.LruCache<String, Bitmap>(
@@ -1732,6 +1730,9 @@ public class MainActivity extends Activity {
         return rounded(primary ? accent : alpha(accent, isLightTheme() ? 30 : 52), Math.min(radius, 999));
     }
 
+    // This listener only animates the view and always returns false; the native click/accessibility
+    // pipeline remains in charge of the actual click event.
+    @SuppressLint("ClickableViewAccessibility")
     private void applyTouchFeedback(View v) {
         if (v == null) return;
         v.setOnTouchListener((view, event) -> {
@@ -2653,8 +2654,14 @@ public class MainActivity extends Activity {
         return b.toString();
     }
 
+    @SuppressLint("ViewConstructor")
+    private static final class AccessibleEditText extends EditText {
+        AccessibleEditText(Context context) { super(context); }
+        @Override public boolean performClick() { super.performClick(); return true; }
+    }
+
     private EditText input(String hint, String value, boolean password) {
-        EditText e = new EditText(this);
+        AccessibleEditText e = new AccessibleEditText(this);
         e.setSingleLine(true);
         e.setHint(hint);
         e.setText(value == null ? "" : value);
@@ -2688,7 +2695,7 @@ public class MainActivity extends Activity {
     }
 
     /** Eye icon on the left edge of a password field that shows/hides the password. */
-    private void attachPasswordToggle(EditText e) {
+    private void attachPasswordToggle(AccessibleEditText e) {
         final boolean[] visible = {false};
         final Runnable paint = () -> {
             Drawable eye = tintedIcon(visible[0] ? R.drawable.mi_visibility_off : R.drawable.mi_visibility, MUTED, dp(22));
@@ -2707,6 +2714,7 @@ public class MainActivity extends Activity {
             e.setInputType(InputType.TYPE_CLASS_TEXT | (visible[0] ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD : InputType.TYPE_TEXT_VARIATION_PASSWORD));
             e.setTypeface(MEELANO_REGULAR);
             paint.run();
+            e.performClick(); // Announce the eye action to TalkBack; the EditText remains the single focus target.
             try { e.setSelection(Math.max(0, Math.min(sel < 0 ? e.length() : sel, e.length()))); } catch (Exception ignored) { }
             return true;
         });
@@ -4602,7 +4610,7 @@ public class MainActivity extends Activity {
 
     private Connection openConnection() throws Exception {
         if (designPreview) throw new DbException("حالت پیش‌نمایش طراحی: اتصال به پایگاه داده غیرفعال است.");
-        bindSqlNetworkForVpnIfNeeded();
+        inspectSqlNetworkRoute();
         Class.forName("net.sourceforge.jtds.jdbc.Driver");
         String host = (debugDbHost != null && isDebuggableBuild()) ? debugDbHost : hidden(S_HOST);
         // Warm pooled connection: pages that used to log in again per query now reuse one socket.
@@ -4649,41 +4657,25 @@ public class MainActivity extends Activity {
         return DriverManager.getConnection(url, props);
     }
 
-    private void bindSqlNetworkForVpnIfNeeded() {
+    /** Inspect connectivity for diagnostics without overriding the user's VPN or process-wide routing. */
+    private void inspectSqlNetworkRoute() {
         lastSqlVpnDetected = false;
-        lastSqlVpnBypassed = false;
-        lastSqlNetworkNote = "";
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
         try {
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
             if (cm == null) return;
             Network active = cm.getActiveNetwork();
-            NetworkCapabilities activeCaps = active == null ? null : cm.getNetworkCapabilities(active);
-            lastSqlVpnDetected = activeCaps != null && activeCaps.hasTransport(NetworkCapabilities.TRANSPORT_VPN);
-            if (!lastSqlVpnDetected) { cm.bindProcessToNetwork(null); lastSqlNetworkNote = "مسیر شبکه عادی"; return; }
-            Network best = null;
-            for (Network n : cm.getAllNetworks()) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(n);
-                if (caps == null) continue;
-                boolean internet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                boolean vpn = caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN);
-                boolean wifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-                boolean cell = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-                if (internet && !vpn && (wifi || cell || best == null)) { best = n; if (wifi) break; }
-            }
-            if (best != null && cm.bindProcessToNetwork(best)) {
-                lastSqlVpnBypassed = true;
-                lastSqlNetworkNote = "VPN فعال تشخیص داده شد؛ اتصال مرکزی از شبکه مستقیم دستگاه عبور داده شد.";
-            } else {
-                lastSqlNetworkNote = "VPN فعال تشخیص داده شد اما مسیر مستقیم قابل انتخاب نبود.";
-            }
-        } catch (Exception ignored) { lastSqlNetworkNote = "بررسی مسیر شبکه کامل نشد."; }
+            NetworkCapabilities caps = active == null ? null : cm.getNetworkCapabilities(active);
+            lastSqlVpnDetected = caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN);
+        } catch (Exception ignored) {
+            // Routing remains owned by Android even when this diagnostic check is unavailable.
+        }
     }
 
     private String sqlNetworkHint() {
-        if (!lastSqlVpnDetected) return "";
-        if (lastSqlVpnBypassed) return "\nVPN فعال بود و برنامه تلاش کرد اتصال مرکزی را از شبکه مستقیم دستگاه عبور دهد.";
-        return "\nVPN فعال تشخیص داده شد؛ اگر اتصال برقرار نشد، در تنظیمات VPN اجازه عبور پخش درخشان یا Split tunneling را فعال کنید.";
+        return lastSqlVpnDetected
+                ? "\nVPN فعال است؛ اتصال برنامه از مسیر انتخاب‌شده در تنظیمات شبکهٔ دستگاه عبور می‌کند."
+                : "";
     }
 
     private UserSession authenticate(String meelanoUser, String meelanoPassword) throws Exception {
@@ -6889,7 +6881,7 @@ public class MainActivity extends Activity {
 
     /** Owner directive: these logins ALWAYS have full access to every section — no stored role, permission set or disabled row can block them. */
     private boolean isPrivilegedLogin(String login) {
-        String v = login == null ? "" : login.trim().toLowerCase();
+        String v = login == null ? "" : login.trim().toLowerCase(Locale.ROOT);
         return v.equals("admin") || v.equals("administrator") || v.equals("modir") || v.equals("مدیر") || v.equals("مدير");
     }
 
@@ -18710,9 +18702,29 @@ public class MainActivity extends Activity {
     private class SignaturePadView extends View {
         private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Path path = new Path();
-        SignaturePadView(Context context) { super(context); p.setColor(TEXT); p.setStrokeWidth(dp(3)); p.setStyle(Paint.Style.STROKE); p.setStrokeCap(Paint.Cap.ROUND); p.setStrokeJoin(Paint.Join.ROUND); setBackground(roundedStroke(alpha(SURFACE_2, 220), 18, alpha(navAccent("cart"), 90))); }
+        SignaturePadView(Context context) {
+            super(context);
+            p.setColor(TEXT); p.setStrokeWidth(dp(3)); p.setStyle(Paint.Style.STROKE); p.setStrokeCap(Paint.Cap.ROUND); p.setStrokeJoin(Paint.Join.ROUND);
+            setBackground(roundedStroke(alpha(SURFACE_2, 220), 18, alpha(navAccent("cart"), 90)));
+            setClickable(true);
+            setContentDescription("محل رسم امضای مشتری");
+        }
         @Override protected void onDraw(Canvas c) { super.onDraw(c); c.drawPath(path, p); }
-        @Override public boolean onTouchEvent(MotionEvent e) { float x=e.getX(), y=e.getY(); if(e.getAction()==MotionEvent.ACTION_DOWN){ path.moveTo(x,y); invalidate(); return true; } if(e.getAction()==MotionEvent.ACTION_MOVE){ path.lineTo(x,y); invalidate(); return true; } return true; }
+        @Override public boolean performClick() { super.performClick(); return true; }
+        @Override public boolean onTouchEvent(MotionEvent e) {
+            float x = e.getX(), y = e.getY();
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    path.moveTo(x, y); invalidate(); return true;
+                case MotionEvent.ACTION_MOVE:
+                    path.lineTo(x, y); invalidate(); return true;
+                case MotionEvent.ACTION_UP:
+                    path.lineTo(x, y); invalidate(); performClick(); return true;
+                case MotionEvent.ACTION_CANCEL:
+                    invalidate(); return true;
+                default: return super.onTouchEvent(e);
+            }
+        }
         void clear() { path.reset(); invalidate(); }
         @SuppressLint("WrongThread") // tiny signature bitmap; synchronous caller contract (cart receipt).
         String exportPngBase64() { try { Bitmap b=Bitmap.createBitmap(Math.max(1,getWidth()), Math.max(1,getHeight()), Bitmap.Config.ARGB_8888); Canvas c=new Canvas(b); draw(c); ByteArrayOutputStream out=new ByteArrayOutputStream(); b.compress(Bitmap.CompressFormat.PNG, 90, out); return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP); } catch(Exception ex){ return ""; } }

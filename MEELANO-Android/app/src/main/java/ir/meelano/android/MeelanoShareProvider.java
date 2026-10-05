@@ -13,6 +13,7 @@ import android.provider.OpenableColumns;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Minimal read-only file sharer (the project has no AndroidX, so no FileProvider).
@@ -69,7 +70,7 @@ public class MeelanoShareProvider extends ContentProvider {
     }
 
     @Override public String getType(Uri uri) {
-        String n = uri == null || uri.getLastPathSegment() == null ? "" : uri.getLastPathSegment().toLowerCase();
+        String n = uri == null || uri.getLastPathSegment() == null ? "" : uri.getLastPathSegment().toLowerCase(Locale.ROOT);
         if (n.endsWith(".pdf")) return "application/pdf";
         if (n.endsWith(".png")) return "image/png";
         if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";

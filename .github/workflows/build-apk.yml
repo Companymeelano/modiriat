@@ -4,6 +4,17 @@ on:
   push:
     branches: ['**']
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Optional version label for a one-off build (for example 6.0.1). The Android versionCode remains monotonically increasing."
+        required: false
+        default: ""
+        type: string
+      validation_only:
+        description: "Run tests, debug builds, static analysis and screenshots without signing or publishing release APKs."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -24,16 +35,25 @@ jobs:
 
       - name: Locate Android source
         id: src
+        env:
+          REQUESTED_VERSION: ${{ inputs.version_name || '' }}
         run: |
           # A freshly uploaded source zip takes precedence over the folder.
           ZIP=$(ls MEELANO-Android-*.zip 2>/dev/null | head -1 || true)
           if [ -n "$ZIP" ]; then
             echo "Using uploaded zip: $ZIP"; rm -rf MEELANO-Android; unzip -q -o "$ZIP"
           fi
-          # unique app version per build (fixes duplicate versionName across releases)
+          # Keep the Android versionCode higher than previous releases, even for a deliberately requested label.
           sed -i "s/versionCode [0-9]\+/versionCode $((1000 + ${{ github.run_number }}))/" MEELANO-Android/app/build.gradle
-          sed -i "s/versionName '[0-9.]\+'/versionName '6.2.${{ github.run_number }}'/" MEELANO-Android/app/build.gradle
-          VERSION=$(grep -oP "versionName\s+'\K[0-9.]+" MEELANO-Android/app/build.gradle)
+          if [ -n "$REQUESTED_VERSION" ]; then
+            if ! printf '%s' "$REQUESTED_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::version_name must use the numeric x.y.z form"; exit 1
+            fi
+            VERSION="$REQUESTED_VERSION"
+          else
+            VERSION="6.2.${{ github.run_number }}"
+          fi
+          sed -i "s/versionName '[0-9.]\+'/versionName '$VERSION'/" MEELANO-Android/app/build.gradle
           echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Building version $VERSION"
@@ -52,6 +72,7 @@ jobs:
           gradle-version: '8.11.1'
 
       - name: Prepare release keystore
+        if: ${{ inputs.validation_only != true }}
         env:
           KS_B64: ${{ secrets.MEELANO_KEYSTORE_BASE64 }}
           KS_PASS: ${{ secrets.MEELANO_KEYSTORE_PASSWORD }}
@@ -131,6 +152,7 @@ jobs:
           PY
 
       - name: Build signed release APK
+        if: ${{ inputs.validation_only != true }}
         working-directory: MEELANO-Android
         run: |
           gradle --no-daemon -Dorg.gradle.jvmargs=-Xmx4g assembleRelease \
@@ -140,6 +162,7 @@ jobs:
             -Pandroid.injected.signing.key.password="$SIGN_KEY_PASS"
 
       - name: Collect and verify APKs
+        if: ${{ inputs.validation_only != true }}
         run: |
           APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
           mkdir -p out
@@ -165,7 +188,17 @@ jobs:
           rm -f "$SIGN_STORE_FILE"
           ls -la out
 
+      - name: Collect debug APKs for validation-only run
+        if: ${{ inputs.validation_only == true }}
+        run: |
+          cp MEELANO-Android/app/build/outputs/apk/visitor/debug/*.apk app-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/store/debug/*.apk app-store-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/staff/debug/*.apk app-staff-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/tax/debug/*.apk app-tax-debug.apk
+          cp MEELANO-Android/app/build/outputs/apk/manager/debug/*.apk app-manager-debug.apk
+
       - uses: actions/upload-artifact@v4
+        if: ${{ inputs.validation_only != true }}
         with:
           name: MEELANO-APK
           path: out/*.apk
@@ -182,7 +215,7 @@ jobs:
           retention-days: 3
 
       - name: Commit APK to branch
-        if: github.event_name == 'push'
+        if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.version_name != '')) && inputs.validation_only != true
         run: |
           mkdir -p apk
           cp out/*.apk apk/
@@ -221,6 +254,7 @@ jobs:
           git log --oneline -1
 
       - name: Publish GitHub Release
+        if: ${{ inputs.validation_only != true }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION }}-build-${{ github.run_number }}

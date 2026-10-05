@@ -32,6 +32,7 @@ final class MeelanoSignatureView extends View {
         ink.setStrokeCap(Paint.Cap.ROUND); ink.setStrokeJoin(Paint.Join.ROUND);
         guide.setColor(guideColor); guide.setStrokeWidth(1f * d); guide.setStyle(Paint.Style.STROKE);
         setContentDescription("محل امضای مشتری");
+        setClickable(true);
     }
 
     void setOnChange(Runnable r) { onChange = r; }
@@ -55,6 +56,11 @@ final class MeelanoSignatureView extends View {
         canvas.drawPath(path, ink);
     }
 
+    @Override public boolean performClick() {
+        super.performClick();
+        return true;
+    }
+
     @Override public boolean onTouchEvent(MotionEvent e) {
         float x = e.getX(), y = e.getY();
         switch (e.getActionMasked()) {
@@ -69,8 +75,13 @@ final class MeelanoSignatureView extends View {
                 invalidate();
                 return true;
             case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
                 addPoint(x, y);
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
+                invalidate();
+                if (onChange != null) onChange.run();
+                performClick();
+                return true;
+            case MotionEvent.ACTION_CANCEL:
                 if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(false);
                 invalidate();
                 if (onChange != null) onChange.run();
