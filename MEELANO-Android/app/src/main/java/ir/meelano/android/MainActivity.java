@@ -18685,10 +18685,8 @@ public class MainActivity extends Activity {
         String a = alias == null || alias.trim().isEmpty() ? "h" : alias.trim();
         String where = innerWhere == null || innerWhere.trim().isEmpty() ? "" : innerWhere.trim();
         if (numberCol == null || numberCol.trim().isEmpty()) return "dbo.[" + table + "] " + a + (where.isEmpty() ? "" : " " + where.replace("x.", a + "."));
-        String numberExpr = "NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),x.[" + numberCol + "]))),N'')";
-        String rowExpr = factorUniqueRowExpr(cols, "x");
-        String partition = "COALESCE(" + numberExpr + "," + rowExpr + ")";
-        return "(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY " + partition + " ORDER BY " + factorLatestOrder(cols, "x") + ") AS _meelano_rn FROM dbo.[" + table + "] x " + where + ") mx WHERE mx._meelano_rn=1) " + a;
+        // Universal dedupe: DISTINCT strips exact duplicate copies and parses on EVERY SQL Server version.
+        return "(SELECT DISTINCT x.* FROM dbo.[" + table + "] x " + where + ") " + a;
     }
 
     private String factorUniqueRowExpr(Set<String> cols, String alias) {

@@ -154,9 +154,9 @@ final class ManagerAnalytics {
         String a = alias == null || alias.trim().isEmpty() ? "h" : alias.trim();
         String where = innerWhere == null || innerWhere.trim().isEmpty() ? "" : innerWhere.trim();
         if (numberCol == null || numberCol.trim().isEmpty()) return "dbo.[" + table + "] " + a + (where.isEmpty() ? "" : " " + where.replace("x.", a + "."));
-        String numberExpr = "NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),x.[" + numberCol + "]))),N'')";
-        String partition = "COALESCE(" + numberExpr + "," + factorUniqueRowExpr(cols, "x") + ")";
-        return "(SELECT * FROM (SELECT x.*, ROW_NUMBER() OVER(PARTITION BY " + partition + " ORDER BY " + factorLatestOrder(cols, "x") + ") AS _meelano_rn FROM dbo.[" + table + "] x " + where + ") mx WHERE mx._meelano_rn=1) " + a;
+        // Universal dedupe: DISTINCT strips exact duplicate copies and parses on EVERY SQL Server version
+        // (ROW_NUMBER/OVER with these expressions was rejected by the customer server — "Incorrect syntax near 'mx'").
+        return "(SELECT DISTINCT x.* FROM dbo.[" + table + "] x " + where + ") " + a;
     }
 
     static boolean tableExists(Connection c, String table) {
@@ -513,9 +513,9 @@ final class ManagerAnalytics {
     static JSONObject cockpit(Connection c, int range) throws Exception {
         JSONObject out = new JSONObject();
         JSONObject errs = new JSONObject();
-        try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception ex) { putErr(errs, "sales", ex); }
-        try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception ex) { putErr(errs, "purchases", ex); }
-        try { out.put("top", products(c, range).optJSONArray("top")); } catch (Exception ex) { putErr(errs, "top", ex); }
+        if (!c.isClosed()) try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception ex) { putErr(errs, "sales", ex); }
+        if (!c.isClosed()) try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception ex) { putErr(errs, "purchases", ex); }
+        if (!c.isClosed()) try { out.put("top", products(c, range).optJSONArray("top")); } catch (Exception ex) { putErr(errs, "top", ex); }
         JSONArray byDay = new JSONArray();
         Set<String> cols = columns(c, "sailfact");
         String dateCol = resolve(cols, "date");
@@ -533,9 +533,9 @@ final class ManagerAnalytics {
             }
         }
         out.put("byDay", byDay);
-        try { out.put("periods", periodSales(c)); } catch (Exception ex) { putErr(errs, "periods", ex); }
-        try { out.put("profit", productProfit(c, range)); } catch (Exception ex) { putErr(errs, "profit", ex); }
-        try { out.put("warehouses", warehouses(c)); } catch (Exception ex) { putErr(errs, "warehouses", ex); }
+        if (!c.isClosed()) try { out.put("periods", periodSales(c)); } catch (Exception ex) { putErr(errs, "periods", ex); }
+        if (!c.isClosed()) try { out.put("profit", productProfit(c, range)); } catch (Exception ex) { putErr(errs, "profit", ex); }
+        if (!c.isClosed()) try { out.put("warehouses", warehouses(c)); } catch (Exception ex) { putErr(errs, "warehouses", ex); }
         if (errs.length() > 0) out.put("errors", errs);
         return out;
     }
@@ -801,18 +801,18 @@ final class ManagerAnalytics {
         out.put("range", range);
         out.put("syncAt", System.currentTimeMillis());
         try { JSONObject t = new JSONObject(); t.put("sales", rangeBlock(c, true, 0)); t.put("purchases", rangeBlock(c, false, 0)); out.put("today", t); } catch (Exception e) { errors.put("today: " + String.valueOf(e.getMessage())); }
-        try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception e) { errors.put("sales: " + String.valueOf(e.getMessage())); }
-        try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception e) { errors.put("purchases: " + String.valueOf(e.getMessage())); }
-        try { out.put("trend", trend(c, 7)); } catch (Exception e) { errors.put("trend: " + String.valueOf(e.getMessage())); }
-        try { out.put("receivables", receivables(c)); } catch (Exception e) { errors.put("receivables: " + String.valueOf(e.getMessage())); }
-        try { out.put("debtors", debtors(c, 8)); } catch (Exception e) { errors.put("debtors: " + String.valueOf(e.getMessage())); }
-        try { out.put("customers", customerCategories(c, range)); } catch (Exception e) { errors.put("customers: " + String.valueOf(e.getMessage())); }
-        try { out.put("visitors", visitorGoals(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage())); }
-        try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage())); }
-        try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage())); }
-        try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage())); }
-        try { out.put("credit", creditRisk(c)); } catch (Exception e) { errors.put("credit: " + String.valueOf(e.getMessage())); }
-        try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("sales", rangeBlock(c, true, range)); } catch (Exception e) { errors.put("sales: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("purchases", rangeBlock(c, false, range)); } catch (Exception e) { errors.put("purchases: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("trend", trend(c, 7)); } catch (Exception e) { errors.put("trend: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("receivables", receivables(c)); } catch (Exception e) { errors.put("receivables: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("debtors", debtors(c, 8)); } catch (Exception e) { errors.put("debtors: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("customers", customerCategories(c, range)); } catch (Exception e) { errors.put("customers: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("visitors", visitorGoals(c, range)); } catch (Exception e) { errors.put("visitors: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("products", products(c, range)); } catch (Exception e) { errors.put("products: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("checkBuckets", checkBuckets(c)); } catch (Exception e) { errors.put("checkBuckets: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("aging", collection(c)); } catch (Exception e) { errors.put("aging: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("credit", creditRisk(c)); } catch (Exception e) { errors.put("credit: " + String.valueOf(e.getMessage())); }
+        if (!c.isClosed()) try { out.put("feed", activityFeed(c)); } catch (Exception e) { errors.put("feed: " + String.valueOf(e.getMessage())); }
         out.put("errors", errors);
         return out;
     }
