@@ -2545,10 +2545,10 @@ public class MainActivity extends Activity {
             b.setLetterSpacing(0f);
             android.animation.StateListAnimator sla = new android.animation.StateListAnimator();
             android.animation.ObjectAnimator down = android.animation.ObjectAnimator.ofPropertyValuesHolder(b,
-                    android.util.PropertyValuesHolder.ofFloat("scaleX", 0.96f), android.util.PropertyValuesHolder.ofFloat("scaleY", 0.96f));
+                    android.animation.PropertyValuesHolder.ofFloat("scaleX", 0.96f), android.animation.PropertyValuesHolder.ofFloat("scaleY", 0.96f));
             down.setDuration(110);
             android.animation.ObjectAnimator up = android.animation.ObjectAnimator.ofPropertyValuesHolder(b,
-                    android.util.PropertyValuesHolder.ofFloat("scaleX", 1f), android.util.PropertyValuesHolder.ofFloat("scaleY", 1f));
+                    android.animation.PropertyValuesHolder.ofFloat("scaleX", 1f), android.animation.PropertyValuesHolder.ofFloat("scaleY", 1f));
             up.setDuration(170);
             sla.addState(new int[]{android.R.attr.state_pressed}, down);
             sla.addState(new int[]{}, up);
