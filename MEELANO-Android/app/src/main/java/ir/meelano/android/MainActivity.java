@@ -3848,6 +3848,7 @@ public class MainActivity extends Activity {
             case "sales": loadTable("فروش و اسناد", "نمای مستقیم از جدول فروش", "sailfact", ""); break;
             case "checks": loadTable("چک‌ها و وصول", "نمای مستقیم از چک‌های دریافتی", "getchk", ""); break;
             case "reports": if (MANAGER_EDITION) loadManagerReports(); else loadReports(); break;
+            case "diagnostics": loadDiagnosticsPage(); break;
             case "settings": renderSettings(); break;
             case "management": loadAccessManagement(); break;
             case "manager_more": renderManagerMorePage(); break;
@@ -11710,6 +11711,69 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(116), 1f); lp.setMargins(dp(4), 0, dp(4), 0); parent.addView(tile, lp);
     }
 
+    // =============================== on-device connection diagnostics (round 13) ===============================
+    private void loadDiagnosticsPage() {
+        content.removeAllViews();
+        addHero("\u062a\u0634\u062e\u06cc\u0635 \u0627\u062a\u0635\u0627\u0644", "\u0622\u0632\u0645\u0648\u0646 \u0645\u0631\u062d\u0644\u0647\u200c\u0628\u0647\u200c\u0645\u0631\u062d\u0644\u0647 \u0627\u062a\u0635\u0627\u0644 \u0628\u0647 \u0633\u0631\u0648\u0631 \u0622\u062a\u06cc\u0631\u0627\u0646 \u2014 \u0646\u062a\u06cc\u062c\u0647 \u0647\u0631 \u0645\u0631\u062d\u0644\u0647 \u0632\u0646\u062f\u0647 \u0646\u0645\u0627\u06cc\u0634 \u062f\u0627\u062f\u0647 \u0645\u06cc\u200c\u0634\u0648\u062f.");
+        LinearLayout card = card();
+        LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(-1, -2); clp.setMargins(0, 0, 0, dp(12));
+        content.addView(card, clp);
+        TextView ver = text("\u0646\u0633\u062e\u0647 \u0646\u0635\u0628\u200c\u0634\u062f\u0647: " + BuildConfigSafe.versionName(this) + "  \u2022  \u0633\u0631\u0648\u0631: " + hidden(S_HOST) + ":" + SQL_PORT + "  \u2022  \u062f\u06cc\u062a\u0627\u0628\u06cc\u0633: " + hidden(S_DB), 10.4f, MUTED, Typeface.BOLD);
+        card.addView(ver, new LinearLayout.LayoutParams(-1, -2));
+        final String host = hidden(S_HOST);
+        new Thread(() -> {
+            java.util.List<String[]> steps = new java.util.ArrayList<>();
+            long t0 = System.currentTimeMillis();
+            try (Socket sock = new Socket()) {
+                sock.connect(new java.net.InetSocketAddress(host, SQL_PORT), 6000);
+                steps.add(new String[]{"1. \u0628\u0627\u0632 \u0628\u0648\u062f\u0646 \u067e\u0648\u0631\u062a " + SQL_PORT, "OK", (System.currentTimeMillis() - t0) + "ms"});
+            } catch (Exception e) {
+                steps.add(new String[]{"1. \u0628\u0627\u0632 \u0628\u0648\u062f\u064f \u067e\u0648\u0631\u062a " + SQL_PORT, "ERR", String.valueOf(e.getMessage())});
+            }
+            Connection c = null;
+            if ("OK".equals(steps.get(0)[1])) {
+                long t1 = System.currentTimeMillis();
+                try {
+                    Class.forName("net.sourceforge.jtds.jdbc.Driver");
+                    String url = "jdbc:jtds:sqlserver://" + host + ":" + SQL_PORT + "/" + hidden(S_DB) + ";loginTimeout=12;socketTimeout=45;appName=MEELANODiag;";
+                    java.util.Properties props = new java.util.Properties();
+                    props.setProperty("user", hidden(S_USER));
+                    props.setProperty("password", hidden(S_PASS));
+                    props.setProperty("charset", "UTF-8");
+                    c = java.sql.DriverManager.getConnection(url, props);
+                    steps.add(new String[]{"2. \u0648\u0631\u0648\u062f \u0628\u0647 \u062f\u06cc\u062a\u0627\u0628\u06cc\u0633", "OK", (System.currentTimeMillis() - t1) + "ms"});
+                } catch (Exception e) {
+                    steps.add(new String[]{"2. \u0648\u0631\u0648\u062f \u0628\u0647 \u062f\u06cc\u062a\u0627\u0628\u06cc\u0633", "ERR", String.valueOf(e.getMessage())});
+                }
+            }
+            if (c != null) {
+                long t2 = System.currentTimeMillis();
+                try (java.sql.Statement st = c.createStatement()) { st.setQueryTimeout(8); st.execute("SELECT 1"); steps.add(new String[]{"3. \u0627\u062c\u0631\u0627\u06cc \u062f\u0633\u062a\u0648\u0631 SQL", "OK", (System.currentTimeMillis() - t2) + "ms"}); }
+                catch (Exception e) { steps.add(new String[]{"3. \u0627\u062c\u0631\u0627\u06cc \u062f\u0633\u062a\u0648\u0631 SQL", "ERR", String.valueOf(e.getMessage())}); }
+                long t3 = System.currentTimeMillis();
+                try (java.sql.Statement st = c.createStatement()) { st.setQueryTimeout(20); try (java.sql.ResultSet r = st.executeQuery("SELECT COUNT_BIG(1) FROM dbo.sailfact")) { r.next(); steps.add(new String[]{"4. \u062e\u0648\u0627\u0646\u062f\u0646 \u062f\u0627\u062f\u0647 \u0641\u0631\u0648\u0634", "OK", formatNumber(r.getLong(1)) + " \u0633\u0646\u062f \u2022 " + (System.currentTimeMillis() - t3) + "ms"}); } }
+                catch (Exception e) { steps.add(new String[]{"4. \u062e\u0648\u0627\u0646\u062f\u0646 \u062f\u0627\u062f\u0647 \u0641\u0631\u0648\u0634", "ERR", String.valueOf(e.getMessage())}); }
+                long t4 = System.currentTimeMillis();
+                try (java.sql.Statement st = c.createStatement()) { st.setQueryTimeout(25); try (java.sql.ResultSet r = st.executeQuery("SELECT COUNT(*) FROM (SELECT DISTINCT x.* FROM dbo.sailfact x) h")) { r.next(); steps.add(new String[]{"5. \u06a9\u0648\u0626\u0631\u06cc \u0648\u0627\u0642\u0639\u06cc \u06af\u0632\u0627\u0631\u0634\u0627\u062a", "OK", formatNumber(r.getLong(1)) + " \u0631\u062f\u06cc\u0641 \u2022 " + (System.currentTimeMillis() - t4) + "ms"}); } }
+                catch (Exception e) { steps.add(new String[]{"5. \u06a9\u0648\u0626\u0631\u06cc \u0648\u0627\u0642\u0639\u06cc \u06af\u0632\u0627\u0631\u0634\u0627\u062a", "ERR", String.valueOf(e.getMessage())}); }
+                try { c.close(); } catch (Exception ignored) { }
+            }
+            runOnUiThread(() -> {
+                for (String[] st : steps) {
+                    boolean ok = "OK".equals(st[1]);
+                    LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL);
+                    row.setPadding(dp(4), dp(8), dp(4), dp(8));
+                    TextView t = text((ok ? "\u2705 " : "\u274c ") + st[0] + "  \u2014  " + (ok ? st[2] : ""), 11.6f, ok ? tc(SUCCESS) : tc(DANGER), Typeface.BOLD);
+                    row.addView(t, new LinearLayout.LayoutParams(-1, -2));
+                    if (!ok) { TextView d = text(st[2], 9.8f, MUTED, Typeface.NORMAL); row.addView(d, new LinearLayout.LayoutParams(-1, -2)); }
+                    card.addView(row, new LinearLayout.LayoutParams(-1, -2));
+                }
+                TextView hint = text(steps.size() > 0 && "OK".equals(steps.get(steps.size() - 1)[1]) ? "\u0627\u062a\u0635\u0627\u0644 \u06a9\u0627\u0645\u0644 \u0628\u0631\u0642\u0631\u0627\u0631 \u0627\u0633\u062a \u2014 \u0627\u06af\u0631 \u0628\u062e\u0634\u06cc \u062e\u0627\u0644\u06cc \u0627\u0633\u062a\u060c \u062f\u0631 \u062f\u06cc\u062a\u0627\u0628\u06cc\u0633 \u062f\u0627\u062f\u0647\u200c\u0627\u06cc \u0628\u0631\u0627\u06cc \u0622\u0646 \u0628\u0627\u0632\u0647 \u0646\u06cc\u0633\u062a." : "\u0645\u0631\u062d\u0644\u0647 \u0634\u06a9\u0633\u062a\u200c\u062e\u0648\u0631\u062f\u0647 \u0631\u0627 \u0627\u0633\u06a9\u0631\u06cc\u0646\u200c\u0634\u0627\u062a \u0628\u06af\u06cc\u0631\u06cc\u062f \u062a\u0627 \u062f\u0642\u06cc\u0642 \u0631\u0641\u0639 \u0634\u0648\u062f.", 10.6f, MUTED, Typeface.BOLD);
+                card.addView(hint, new LinearLayout.LayoutParams(-1, -2));
+            });
+        }).start();
+    }
+
     // =============================== Phase 4+: smart categorized manager reports ===============================
     private void loadManagerReports() {
         content.removeAllViews();
@@ -11743,6 +11807,10 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2); fp.setMargins(0, 0, 0, dp(12));
         HorizontalScrollView fhs = hScrollWrap(filters);
         content.addView(fhs, fp);
+        Button diagBtn = secondaryButton("\ud83d\udd27 \u062a\u0634\u062e\u06cc\u0635 \u0627\u062a\u0635\u0627\u0644");
+        diagBtn.setOnClickListener(v -> showApp("diagnostics"));
+        LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(-1, -2); dlp.setMargins(0, 0, 0, dp(12));
+        content.addView(diagBtn, dlp);
         addManagerKpiStrip(dash);
         addTodayYesterdayCard(dash.optJSONArray("dailySeries"));
         addMonthlyGrowthCard(dash.optJSONArray("monthlySeries"));
