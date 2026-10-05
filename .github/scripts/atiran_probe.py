@@ -130,6 +130,15 @@ def main():
                 stream += "|" + "|".join("%s=%s" % (t, ",".join(perw[t])) for t in sorted(perw))
             except Exception as ex:
                 stream += "|ANBAR_ERR=" + type(ex).__name__
+            try:
+                maxd2 = "(SELECT MAX(TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))) FROM dbo.sailfact)"
+                rng2 = "TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date]))>=DATEADD(month,-1," + maxd2 + ")"
+                part2 = "COALESCE(NULLIF(LTRIM(RTRIM(TRY_CONVERT(nvarchar(120),[shfacfo]))),N''),N'__row__'+COALESCE(TRY_CONVERT(nvarchar(120),[rdf__]),CONVERT(nvarchar(40),BINARY_CHECKSUM(*))))"
+                ord2 = "CASE WHEN UPPER(LTRIM(RTRIM(TRY_CONVERT(nvarchar(20),[active])))) IN (N'T',N'TRUE',N'Y',N'YES',N'1') OR TRY_CONVERT(int,[active])=1 THEN 1 ELSE 0 END DESC, TRY_CONVERT(date,TRY_CONVERT(nvarchar(30),[date])) DESC"
+                fx = q("SELECT COUNT(*), ISNULL(SUM(TRY_CONVERT(decimal(19,2),[all])),0) FROM (SELECT [all], ROW_NUMBER() OVER(PARTITION BY " + part2 + " ORDER BY " + ord2 + ") rn FROM dbo.sailfact WHERE " + rng2 + ") z WHERE z.rn=1")
+                stream += "|FIXCHECK=" + ("%s/%s" % (str(fx["rows"][0][0]), str(fx["rows"][0][1])) if fx["rows"] else "none")
+            except Exception as ex:
+                stream += "|FIXCHECK_ERR=" + type(ex).__name__ + ":" + str(ex)[:200].replace("\n", " ")
             # ---- live data diagnostics: why do reports look empty? (exact app logic, 30d window) ----
             def one(sql):
                 r = q(sql)
