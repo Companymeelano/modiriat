@@ -123,11 +123,12 @@ final class ManagerAnalytics {
 
     private static String factorUniqueRowExpr(Set<String> cols, String alias) {
         String prefix = alias == null || alias.trim().isEmpty() ? "" : alias + ".";
-        for (String candidate : new String[]{"rdf", "RDF", "id", "ID", "serial", "Serial", "row_id", "RowID", "autoid", "AutoID", "radif", "Radif"}) {
+        for (String candidate : new String[]{"rdf__", "Rdf__", "rdf", "RDF", "id", "ID", "serial", "Serial", "row_id", "RowID", "autoid", "AutoID", "radif", "Radif"}) {
             String col = resolveFlexible(cols, candidate);
-            if (col != null) return "N'__row__' + COALESCE(TRY_CONVERT(nvarchar(120)," + prefix + "[" + col + "]),CONVERT(nvarchar(36),NEWID()))";
+            if (col != null) return "N'__row__' + COALESCE(TRY_CONVERT(nvarchar(120)," + prefix + "[" + col + "]),CONVERT(nvarchar(40),BINARY_CHECKSUM(*)))";
         }
-        return "N'__row__' + CONVERT(nvarchar(36),NEWID())";
+        // deterministic fallback — NEWID() inside OVER(...) raises a SQL Server error and silently killed every sailfact query
+        return "N'__row__' + CONVERT(nvarchar(40),BINARY_CHECKSUM(*))";
     }
 
     private static String factorLatestOrder(Set<String> cols, String alias) {
