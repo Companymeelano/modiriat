@@ -1911,7 +1911,7 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17524:	Us
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17524:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17528:	AvoidDuplicateLiterals:	The String literal "Radif" appears 4 times in this file; the first occurrence is on line 17,528
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17530:	AvoidDuplicateLiterals:	The String literal "vahed" appears 4 times in this file; the first occurrence is on line 17,530
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17571:	AvoidDuplicateLiterals:	The String literal "rdf__" appears 4 times in this file; the first occurrence is on line 17,571
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17571:	AvoidDuplicateLiterals:	The String literal "rdf__" appears 5 times in this file; the first occurrence is on line 17,571
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17656:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17657:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:17697:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
@@ -2025,60 +2025,59 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18685:	In
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18686:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18687:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18695:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18709:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18713:	AvoidDuplicateLiterals:	The String literal "cancelled" appears 12 times in this file; the first occurrence is on line 18,713
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18780:	AvoidDuplicateLiterals:	The String literal "remaining" appears 6 times in this file; the first occurrence is on line 18,780
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18808:	AvoidDuplicateLiterals:	The String literal "log" appears 4 times in this file; the first occurrence is on line 18,808
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18813:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18829:	RedundantFieldInitializer:	Avoid using redundant field initializer for 'atiranLedgerOk'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18829:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18836:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18857:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18870:	AvoidDuplicateLiterals:	The String literal "] st" appears 5 times in this file; the first occurrence is on line 18,870
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18872:	AvoidDuplicateLiterals:	The String literal "OUTER APPLY (SELECT COUNT_BIG(1) stock_rows, ISNULL(SUM(" appears 4 times in this file; the first occurrence is on line 18,872
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18872:	AvoidDuplicateLiterals:	The String literal "),0) stock_qty FROM dbo.[" appears 4 times in this file; the first occurrence is on line 18,872
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18891:	LooseCoupling:	Avoid using implementation types like 'LinkedHashSet'; use the interface instead
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18895:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18914:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18958:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19022:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19086:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19088:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19088:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19088:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19092:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19094:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19094:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19094:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19154:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19162:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18710:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18714:	AvoidDuplicateLiterals:	The String literal "cancelled" appears 12 times in this file; the first occurrence is on line 18,714
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18781:	AvoidDuplicateLiterals:	The String literal "remaining" appears 6 times in this file; the first occurrence is on line 18,781
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18809:	AvoidDuplicateLiterals:	The String literal "log" appears 4 times in this file; the first occurrence is on line 18,809
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18814:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18830:	RedundantFieldInitializer:	Avoid using redundant field initializer for 'atiranLedgerOk'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18830:	AvoidUsingVolatile:	Use of modifier volatile is not recommended.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18837:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18858:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18871:	AvoidDuplicateLiterals:	The String literal "] st" appears 5 times in this file; the first occurrence is on line 18,871
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18873:	AvoidDuplicateLiterals:	The String literal "OUTER APPLY (SELECT COUNT_BIG(1) stock_rows, ISNULL(SUM(" appears 4 times in this file; the first occurrence is on line 18,873
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18873:	AvoidDuplicateLiterals:	The String literal "),0) stock_qty FROM dbo.[" appears 4 times in this file; the first occurrence is on line 18,873
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18892:	LooseCoupling:	Avoid using implementation types like 'LinkedHashSet'; use the interface instead
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18896:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18915:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:18959:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19023:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19087:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19089:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19089:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19089:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19093:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19095:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19095:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19095:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19155:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19163:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19164:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19165:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19166:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19262:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19335:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19339:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19342:	AvoidInstanceofChecksInCatchClause:	An instanceof check is being performed on the caught exception.  Create a separate catch clause for this exception type.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19351:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19167:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19263:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19336:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19340:	DoNotUseThreads:	To be compliant to J2EE, a webapp should not use any thread.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19343:	AvoidInstanceofChecksInCatchClause:	An instanceof check is being performed on the caught exception.  Create a separate catch clause for this exception type.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19352:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19368:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19411:	AvoidFieldNameMatchingMethodName:	Field atiranImages has the same name as a method
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19455:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19467:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19547:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19567:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19571:	AvoidDuplicateLiterals:	The String literal "\u0634\u06cc\u0631\u06cc\u0646\u06cc" appears 4 times in this file; the first occurrence is on line 19,571
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19572:	AvoidDuplicateLiterals:	The String literal "dairy_cup" appears 4 times in this file; the first occurrence is on line 19,572
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19572:	AvoidDuplicateLiterals:	The String literal "\u0644\u0628\u0646\u06cc" appears 4 times in this file; the first occurrence is on line 19,572
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19573:	AvoidDuplicateLiterals:	The String literal "cheese" appears 4 times in this file; the first occurrence is on line 19,573
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19578:	AvoidDuplicateLiterals:	The String literal "water_bottle" appears 4 times in this file; the first occurrence is on line 19,578
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19583:	AvoidDuplicateLiterals:	The String literal "pasta_pack" appears 4 times in this file; the first occurrence is on line 19,583
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19584:	AvoidDuplicateLiterals:	The String literal "staple_bag" appears 4 times in this file; the first occurrence is on line 19,584
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19589:	AvoidDuplicateLiterals:	The String literal "\u0627\u062f\u0648\u06cc\u0647" appears 5 times in this file; the first occurrence is on line 19,589
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19589:	AvoidDuplicateLiterals:	The String literal "spice_jar" appears 4 times in this file; the first occurrence is on line 19,589
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19595:	AvoidDuplicateLiterals:	The String literal "detergent_box" appears 4 times in this file; the first occurrence is on line 19,595
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19602:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19353:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19369:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19412:	AvoidFieldNameMatchingMethodName:	Field atiranImages has the same name as a method
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19456:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19468:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19548:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19568:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19572:	AvoidDuplicateLiterals:	The String literal "\u0634\u06cc\u0631\u06cc\u0646\u06cc" appears 4 times in this file; the first occurrence is on line 19,572
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19573:	AvoidDuplicateLiterals:	The String literal "dairy_cup" appears 4 times in this file; the first occurrence is on line 19,573
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19573:	AvoidDuplicateLiterals:	The String literal "\u0644\u0628\u0646\u06cc" appears 4 times in this file; the first occurrence is on line 19,573
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19574:	AvoidDuplicateLiterals:	The String literal "cheese" appears 4 times in this file; the first occurrence is on line 19,574
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19579:	AvoidDuplicateLiterals:	The String literal "water_bottle" appears 4 times in this file; the first occurrence is on line 19,579
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19584:	AvoidDuplicateLiterals:	The String literal "pasta_pack" appears 4 times in this file; the first occurrence is on line 19,584
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19585:	AvoidDuplicateLiterals:	The String literal "staple_bag" appears 4 times in this file; the first occurrence is on line 19,585
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19590:	AvoidDuplicateLiterals:	The String literal "\u0627\u062f\u0648\u06cc\u0647" appears 5 times in this file; the first occurrence is on line 19,590
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19590:	AvoidDuplicateLiterals:	The String literal "spice_jar" appears 4 times in this file; the first occurrence is on line 19,590
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19596:	AvoidDuplicateLiterals:	The String literal "detergent_box" appears 4 times in this file; the first occurrence is on line 19,596
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19603:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19604:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19605:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
@@ -2104,45 +2103,43 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19624:	Av
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19625:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19626:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19627:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19636:	UnusedFormalParameter:	Avoid unused method parameters such as 'group'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19748:	UnusedFormalParameter:	Avoid unused method parameters such as 'accent'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19752:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19787:	UnusedPrivateMethod:	Avoid unused private methods such as 'smartProductAccent(String)'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19791:	UnusedPrivateMethod:	Avoid unused private methods such as 'productGlyph(String)'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19808:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19834:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19834:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19628:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19637:	UnusedFormalParameter:	Avoid unused method parameters such as 'group'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19749:	UnusedFormalParameter:	Avoid unused method parameters such as 'accent'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19753:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19788:	UnusedPrivateMethod:	Avoid unused private methods such as 'smartProductAccent(String)'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19792:	UnusedPrivateMethod:	Avoid unused private methods such as 'productGlyph(String)'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19809:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19835:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19838:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19841:	AvoidDuplicateLiterals:	The String literal "chk" appears 11 times in this file; the first occurrence is on line 19,841
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19851:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19859:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19835:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19836:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19839:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19842:	AvoidDuplicateLiterals:	The String literal "chk" appears 11 times in this file; the first occurrence is on line 19,842
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19852:	LiteralsFirstInComparisons:	Position literals first in String comparisons
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19860:	LiteralsFirstInComparisons:	Position literals first in String comparisons
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19861:	LiteralsFirstInComparisons:	Position literals first in String comparisons
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19862:	LiteralsFirstInComparisons:	Position literals first in String comparisons
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19863:	LiteralsFirstInComparisons:	Position literals first in String comparisons
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19864:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19945:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19960:	CheckResultSet:	Always check the return of one of the navigation method (next,previous,first,last) of a ResultSet.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19991:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20003:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20027:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20041:	AvoidDuplicateLiterals:	The String literal "weeklySales" appears 12 times in this file; the first occurrence is on line 20,041
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20042:	AvoidDuplicateLiterals:	The String literal "monthlyPurchaseSales" appears 5 times in this file; the first occurrence is on line 20,042
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20046:	AvoidDuplicateLiterals:	The String literal "monthlyProfit" appears 10 times in this file; the first occurrence is on line 20,046
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20047:	AvoidDuplicateLiterals:	The String literal "netMargin" appears 11 times in this file; the first occurrence is on line 20,047
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20048:	AvoidDuplicateLiterals:	The String literal "categoryShare" appears 11 times in this file; the first occurrence is on line 20,048
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20051:	AvoidDuplicateLiterals:	The String literal "debtAging" appears 15 times in this file; the first occurrence is on line 20,051
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20053:	AvoidDuplicateLiterals:	The String literal "checkStatuses" appears 8 times in this file; the first occurrence is on line 20,053
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20057:	AvoidDuplicateLiterals:	The String literal "customerGrowth" appears 9 times in this file; the first occurrence is on line 20,057
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20066:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20073:	AvoidDuplicateLiterals:	The String literal "\u0633\u0648\u062f" appears 5 times in this file; the first occurrence is on line 20,073
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20177:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20178:	InsufficientStringBufferDeclaration:	StringBuilder has been initialized with size 16, but has at least 377 characters appended.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20179:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20179:	ConsecutiveLiteralAppends:	StringBuffer (or StringBuilder).append is called 2 consecutive times with literals. Use a single append with a single combined String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19865:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19946:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19961:	CheckResultSet:	Always check the return of one of the navigation method (next,previous,first,last) of a ResultSet.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:19992:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20004:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20028:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20042:	AvoidDuplicateLiterals:	The String literal "weeklySales" appears 12 times in this file; the first occurrence is on line 20,042
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20043:	AvoidDuplicateLiterals:	The String literal "monthlyPurchaseSales" appears 5 times in this file; the first occurrence is on line 20,043
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20047:	AvoidDuplicateLiterals:	The String literal "monthlyProfit" appears 10 times in this file; the first occurrence is on line 20,047
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20048:	AvoidDuplicateLiterals:	The String literal "netMargin" appears 11 times in this file; the first occurrence is on line 20,048
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20049:	AvoidDuplicateLiterals:	The String literal "categoryShare" appears 11 times in this file; the first occurrence is on line 20,049
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20052:	AvoidDuplicateLiterals:	The String literal "debtAging" appears 15 times in this file; the first occurrence is on line 20,052
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20054:	AvoidDuplicateLiterals:	The String literal "checkStatuses" appears 8 times in this file; the first occurrence is on line 20,054
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20058:	AvoidDuplicateLiterals:	The String literal "customerGrowth" appears 9 times in this file; the first occurrence is on line 20,058
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20067:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20074:	AvoidDuplicateLiterals:	The String literal "\u0633\u0648\u062f" appears 5 times in this file; the first occurrence is on line 20,074
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20178:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20179:	InsufficientStringBufferDeclaration:	StringBuilder has been initialized with size 16, but has at least 377 characters appended.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20180:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20180:	AppendCharacterWithChar:	Avoid appending characters as strings in StringBuffer.append.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20180:	ConsecutiveLiteralAppends:	StringBuffer (or StringBuilder).append is called 2 consecutive times with literals. Use a single append with a single combined String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20181:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20181:	AppendCharacterWithChar:	Avoid appending characters as strings in StringBuffer.append.
@@ -2161,35 +2158,37 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20185:	Ap
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20185:	ConsecutiveLiteralAppends:	StringBuffer (or StringBuilder).append is called 2 consecutive times with literals. Use a single append with a single combined String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20186:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20186:	AppendCharacterWithChar:	Avoid appending characters as strings in StringBuffer.append.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20186:	ConsecutiveLiteralAppends:	StringBuffer (or StringBuilder).append is called 7 consecutive times with literals. Use a single append with a single combined String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20186:	ConsecutiveLiteralAppends:	StringBuffer (or StringBuilder).append is called 2 consecutive times with literals. Use a single append with a single combined String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20187:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20187:	AppendCharacterWithChar:	Avoid appending characters as strings in StringBuffer.append.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20187:	ConsecutiveLiteralAppends:	StringBuffer (or StringBuilder).append is called 7 consecutive times with literals. Use a single append with a single combined String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20188:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20189:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20190:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20191:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20198:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20192:	ConsecutiveAppendsShouldReuse:	StringBuffer (or StringBuilder).append is called consecutively without reusing the target variable.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20199:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20204:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20229:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20236:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20200:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20205:	AvoidReassigningParameters:	Avoid reassigning parameters such as 'a'
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20230:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20237:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20242:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20238:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20243:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20254:	AvoidDuplicateLiterals:	The String literal "text/plain" appears 4 times in this file; the first occurrence is on line 20,254
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20256:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20244:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20255:	AvoidDuplicateLiterals:	The String literal "text/plain" appears 4 times in this file; the first occurrence is on line 20,255
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20257:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20296:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20299:	UnusedLocalVariable:	Avoid unused local variables such as 'cardTop'.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20311:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20315:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20319:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20325:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20338:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20351:	AvoidFileStream:	Avoid instantiating FileInputStream, FileOutputStream, FileReader, or FileWriter
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20392:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20392:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20463:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20551:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20258:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20297:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20300:	UnusedLocalVariable:	Avoid unused local variables such as 'cardTop'.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20312:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20316:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20320:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20326:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20339:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20352:	AvoidFileStream:	Avoid instantiating FileInputStream, FileOutputStream, FileReader, or FileWriter
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20393:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20393:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20464:	OneDeclarationPerLine:	Use one line for each declaration, it enhances code readability.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20552:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20553:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20554:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
@@ -2200,12 +2199,12 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20558:	Av
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20559:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20560:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20561:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20567:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20562:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20568:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20569:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20570:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20576:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20578:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20571:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20577:	InefficientEmptyStringCheck:	String.trim().length() == 0 / String.trim().isEmpty() is an inefficient way to validate a blank String.
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20579:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20580:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20581:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
@@ -2217,27 +2216,28 @@ MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20586:	Av
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20587:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20588:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20589:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20605:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20609:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20610:	AvoidDuplicateLiterals:	The String literal "secondaryValue" appears 5 times in this file; the first occurrence is on line 20,610
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20590:	AvoidLiteralsInIfCondition:	Avoid using literals in if statements
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20606:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20610:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20611:	AvoidDuplicateLiterals:	The String literal "secondaryValue" appears 5 times in this file; the first occurrence is on line 20,611
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20611:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20638:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20638:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20642:	UseStringBufferForStringAppends:	Prefer StringBuilder (non-synchronized) or StringBuffer (synchronized) over += for concatenating strings
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20648:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20786:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20800:	LiteralsFirstInComparisons:	Position literals first in String comparisons
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20810:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20810:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20813:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20832:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20837:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20612:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20639:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20639:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20643:	UseStringBufferForStringAppends:	Prefer StringBuilder (non-synchronized) or StringBuffer (synchronized) over += for concatenating strings
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20649:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20787:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20801:	LiteralsFirstInComparisons:	Position literals first in String comparisons
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20811:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20811:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20814:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20833:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20838:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20839:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20841:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20840:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20842:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
-MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20844:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20843:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
+MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20845:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20906:	LooseCoupling:	Avoid using implementation types like 'TreeSet'; use the interface instead
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20910:	AvoidInstantiatingObjectsInLoops:	Avoid instantiating new objects inside loops
 MEELANO-Android/app/src/main/java/ir/meelano/android/MainActivity.java:20957:	AvoidDuplicateLiterals:	The String literal "TRY_CONVERT(int,s.vis_rdf)=?" appears 4 times in this file; the first occurrence is on line 20,957
